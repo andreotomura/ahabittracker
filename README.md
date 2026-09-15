@@ -5,17 +5,54 @@ Inspired by the vibe of apps like HabitKit, but yours to keep: no account, no
 network, no spying. Your data lives in the browser and is yours to export as
 plain JSON — any time, any device.
 
-## Quick start
+## Setup on a new machine (clone → build → test)
+
+**Prerequisites:** [Node.js](https://nodejs.org) 14 or newer — it is only used for
+building, the dev server, and tests. The final app itself is a plain HTML file
+that needs **no Node, no dependencies, no internet**.
 
 ```bash
-npm run dev     # dev server → http://localhost:8000
-npm run build   # → dist/index.html  (single self-contained file)
+# 1. clone (replace the URL with yours)
+git clone <repo-url> ahabit
+cd ahabit
+
+# 2. build the single-file app (no `npm install` — there are no dependencies)
+npm run build        # → dist/index.html
+
+# 3. (optional) run the smoke tests
+npm test
+
+# 4. open the app — any of these work:
+open dist/index.html        # macOS
+xdg-open dist/index.html    # Linux
+start dist/index.html       # Windows
+# …or just double-click it in your file manager
 ```
 
-Open `dist/index.html` in any browser — it works from `file://`, a USB stick,
-or any static host. Everything (CSS, JS, data) is in that one file.
+The app runs straight from `file://` — you can copy `dist/index.html` to a USB
+stick, email it, or drop it on any static host and it works identically.
 
-> No dependencies, no npm install needed — `build.js` is plain Node.
+### Trying it in dev mode (while working on the code)
+
+```bash
+npm run dev     # little static server → http://localhost:8000
+```
+
+`src/` is served as-is (separate CSS/JS files), so edits are applied on reload —
+no bundling step in between. Use a different port if 8000 is taken:
+
+```bash
+PORT=9000 npm run dev
+```
+
+### First-run sanity checklist
+
+1. The Today view shows the empty state (with a “Load sample data” button).
+2. Create a habit, check it off — the progress bar + streak should update.
+3. Switch to **Calendar** and click a past day to backfill a check-in.
+4. **Stats** shows a live activity heatmap after a few check-ins.
+5. Menu (⋯) → **Export data (JSON)** downloads `ahabit-backup-YYYY-MM-DD.json`.
+6. Menu (⋯) → **Import data (JSON)** lets you re-load that file (replace or merge).
 
 ## Features (v1)
 
@@ -61,11 +98,24 @@ Backups wrap this in `{ "app": "AHA(bit) tracker", "exportedAt": …, "db": … 
 
 | Command            | What it does                                  |
 | ------------------ | --------------------------------------------- |
-| `npm run dev`      | static file server on `src/` (live without a bundler) |
 | `npm run build`    | inlines `styles.css` + `js/*.js` into `dist/index.html` |
+| `npm run dev`      | static file server on `src/` (live without a bundler) |
+| `npm test`         | smoke tests for the data layer + all views    |
 
 Source maps: none needed — keep code readable instead. Modules attach to global
 namespaces in dependency order: `Utils → UI → Store → Render → App`.
+
+> **Note:** `dist/` is git-ignored (it's a build artifact), so a fresh clone
+> always starts with `npm run build` first.
+
+## Troubleshooting
+
+| Problem                          | Fix                                        |
+| -------------------------------- | ------------------------------------------ |
+| `node: command not found`        | Install Node.js ≥ 14 — or just open `src/index.html` in a browser (dev mode works from `file://` too; `build` is only needed for the single-file output). |
+| `EADDRINUSE … 8000`              | `PORT=9000 npm run dev`                    |
+| Empty state has no sample button | That's normal — the button only shows while you have zero habits; “Add habit” works too. |
+| I lost my data                   | localStorage is per-browser/per-machine — keep `.json` backups via ⋯ → Export. There's no cloud sync (by design). |
 
 ## Roadmap
 
