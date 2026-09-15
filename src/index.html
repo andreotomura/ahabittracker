@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AHA(bit) tracker</title>
+  <meta name="description" content="A beautiful, local-first habit tracker that ships as a single HTML file. Your data stays yours — export/import as JSON.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d5df6'/%3E%3Cstop offset='1' stop-color='%23ff5c8a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='45' font-size='36' font-family='Arial,sans-serif' font-weight='bold' text-anchor='middle' fill='white'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <!--STYLES-->
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">A</span>
+        <span class="brand-name">AHA<small>(bit)</small> tracker</span>
+      </div>
+
+      <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="today">☀️ <span>Today</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="calendar">📅 <span>Calendar</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 <span>Stats</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="habits">✨ <span>Habits</span></button>
+      </nav>
+
+      <div class="actions">
+        <button id="theme-btn" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+        <div class="menu-wrap">
+          <button id="menu-btn" class="icon-btn" aria-label="Menu" title="Menu" aria-expanded="false">⋯</button>
+          <div class="menu hidden" id="menu" role="menu">
+            <button role="menuitem" data-action="export">⬇️ &nbsp;Export data (JSON)</button>
+            <button role="menuitem" data-action="import">⬆️ &nbsp;Import data (JSON)</button>
+            <hr>
+            <button role="menuitem" data-action="about">ℹ️ &nbsp;About</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="view-today" class="view active" role="tabpanel"></section>
+      <section id="view-calendar" class="view" role="tabpanel"></section>
+      <section id="view-stats" class="view" role="tabpanel"></section>
+      <section id="view-habits" class="view" role="tabpanel"></section>
+    </main>
+  </div>
+
+  <button id="fab" class="fab hidden" data-action="add" aria-label="Add habit" title="Add habit">＋</button>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
+
+  <!-- Dev mode loads the files separately; `node build.js build` replaces this block with one inline script. -->
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/app.js"></script>
+  <!--SCRIPTS-->
+</body>
+</html>
