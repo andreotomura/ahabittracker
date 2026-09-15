@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node build.js dev",
     "build": "node build.js build",
-    "test": "node scripts/smoke.js"
+    "test": "node scripts/smoke.js",
+    "session": "node scripts/new-session.js"
   },
   "engines": {
     "node": ">=14"

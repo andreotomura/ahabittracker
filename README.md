@@ -108,6 +108,19 @@ namespaces in dependency order: `Utils → UI → Store → Render → App`.
 > **Note:** `dist/` is git-ignored (it's a build artifact), so a fresh clone
 > always starts with `npm run build` first.
 
+## Working on this project across sessions
+
+This project is designed so you can **stop and resume with full context**, even
+with different agents/LLMs. The repo is the memory — start here:
+
+1. **Read `docs/CONTEXT.md`** — the resume entry point (state, file map, commands, conventions).
+2. **Read the newest `docs/sessions/*.md`** — grainier context from the last session.
+3. Follow the protocol in **`docs/WORKFLOW.md`** (start/end rituals, doc roles).
+4. Start a handoff note with `npm run session -- "topic"` when work begins.
+
+Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
+`docs/DECISIONS.md` (why-it's-built-this-way log), `docs/ROADMAP.md` (next up).
+
 ## Troubleshooting
 
 | Problem                          | Fix                                        |
