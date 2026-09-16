@@ -24,6 +24,7 @@ function fakeEl() {
 }
 
 global.window = global;
+global.addEventListener = () => {};
 const els = {}; // memoized querySelector targets so tests can inspect rendered innerHTML
 global.localStorage = {
   _s: {},
@@ -294,5 +295,18 @@ assert(document.documentElement.dataset.theme === 'brutalist', 'setTheme applies
 assert(document.querySelector('#theme-pop').innerHTML.includes('data-theme="brutalist"'), 'theme popover re-renders with the active theme');
 App.setTheme('zen');
 assert(document.documentElement.dataset.theme === 'zen', 'setTheme switches back');
+
+console.log('— custom cursor —');
+const mm = global.matchMedia;
+global.matchMedia = (q) => ({ matches: /pointer: fine/.test(q) });
+const bodyBefore = document.body.children.length;
+UI.initCursor();
+assert(document.body.children.length === bodyBefore + 1, 'initCursor adds the halo on a fine pointer');
+global.matchMedia = () => ({ matches: false });
+const bodySkip = document.body.children.length;
+UI.initCursor();
+assert(document.body.children.length === bodySkip, 'initCursor is skipped without a fine pointer');
+global.matchMedia = mm;
+assert(typeof UI.initCursor === 'function', 'initCursor is exposed on the UI namespace');
 
 console.log('\n✅ All smoke tests passed');

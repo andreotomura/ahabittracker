@@ -116,5 +116,56 @@ const UI = (() => {
     });
   }
 
-  return { q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, modalShell };
+  /* ---------------- Custom cursor (additive flair) ---------------- */
+
+  /**
+   * Optional lagging pointer halo. The base custom cursor is pure CSS; this adds
+   * a themed accent that grows over interactive elements and contracts on press.
+   * It never hides the native/custom cursor, and only runs on a fine pointer
+   * without reduced-motion — touch and reduced-motion users are untouched.
+   */
+  function initCursor() {
+    if (typeof matchMedia !== 'function') return;
+    if (!matchMedia('(pointer: fine)').matches) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const halo = el('div', { class: 'cursor-halo', 'aria-hidden': 'true' }, el('i', { class: 'cursor-dot' }));
+    document.body.appendChild(halo);
+
+    let tx = window.innerWidth / 2 || 0;
+    let ty = window.innerHeight / 2 || 0;
+    let x = tx;
+    let y = ty;
+    let raf = 0;
+
+    const tick = () => {
+      x += (tx - x) * 0.2;
+      y += (ty - y) * 0.2;
+      const done = Math.abs(x - tx) < 0.1 && Math.abs(y - ty) < 0.1;
+      if (done) { x = tx; y = ty; }
+      halo.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      raf = done ? 0 : requestAnimationFrame(tick);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+    const INTERACTIVE = 'a, button, input, textarea, select, [data-action], .habit, .cal-cell, .theme-opt, .chip';
+    document.addEventListener('mousemove', (e) => {
+      tx = e.clientX;
+      ty = e.clientY;
+      halo.classList.add('on');
+      kick();
+    }, { passive: true });
+    document.addEventListener('mouseover', (e) => {
+      if (e.target && e.target.closest && e.target.closest(INTERACTIVE)) halo.classList.add('hover');
+    });
+    document.addEventListener('mouseout', (e) => {
+      if (e.target && e.target.closest && e.target.closest(INTERACTIVE)) halo.classList.remove('hover');
+    });
+    document.addEventListener('mousedown', () => halo.classList.add('press'));
+    document.addEventListener('mouseup', () => halo.classList.remove('press'));
+    document.addEventListener('mouseleave', () => halo.classList.remove('on', 'press'));
+    window.addEventListener('blur', () => halo.classList.remove('on', 'press'));
+  }
+
+  return { q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, modalShell, initCursor };
 })();

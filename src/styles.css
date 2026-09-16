@@ -245,6 +245,46 @@ button:focus-visible, input:focus-visible {
 
 ::selection { background: rgba(109, 93, 246, .25); }
 
+/* ---------------- Custom cursor ---------------- */
+
+/* Base: a neutral custom pointer (white disc + dark ring) on precise pointers.
+   Browsers that ignore the image fall back to `auto`; touch devices are excluded. */
+@media (pointer: fine) {
+  body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='6.5' fill='white' stroke='%230a0a0a' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='11' r='2.3' fill='%230a0a0a'/%3E%3C/svg%3E") 11 11, auto;
+  }
+  input, textarea, [contenteditable="true"] { cursor: text; }
+}
+
+/* Flair: an additive, lagging halo (JS-enabled, fine pointer, no reduced-motion).
+   Decorative only — it never hides the native/custom cursor. */
+.cursor-halo {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  pointer-events: none;
+  z-index: 500;
+  opacity: 0;
+  transition: opacity .25s;
+}
+.cursor-halo.on { opacity: 1; }
+.cursor-dot {
+  display: block;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  transition: transform .18s cubic-bezier(.22, .8, .36, 1), border-color .18s, background .18s;
+  will-change: transform;
+}
+.cursor-halo.hover .cursor-dot { transform: scale(1.65); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.cursor-halo.press .cursor-dot { transform: scale(.72); background: color-mix(in srgb, var(--accent) 30%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-dot { transition: none; }
+}
+
 .app { max-width: 860px; margin: 0 auto; padding: 0 20px 120px; }
 
 @media (prefers-reduced-motion: reduce) {
