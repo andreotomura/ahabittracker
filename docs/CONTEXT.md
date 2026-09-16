@@ -138,7 +138,7 @@ archive) · 5 selectable themes incl. new-brutalist · JSON export/import
 
 1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day — all shipped ✅.
 2. Headless-browser e2e tests (would also verify SW install + theme rendering).
-3. Backlog: per-habit GitHub-style heatmaps (habit-colour, non-gradient ramp).
+3. Backlog: per-habit GitHub-style heatmaps (habit-colour ramp); a custom in-app cursor.
 
 ## Conventions (must follow)
 
