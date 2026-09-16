@@ -24,7 +24,7 @@ const SRC = path.join(ROOT, 'src');
 const DIST = path.join(ROOT, 'dist');
 
 // Load order matters — each file attaches to a global namespace (Utils, UI, Store, Render, App).
-const JS_ORDER = ['utils.js', 'ui.js', 'store.js', 'render.js', 'app.js'];
+const JS_ORDER = ['utils.js', 'ui.js', 'store.js', 'prefs.js', 'render.js', 'app.js'];
 
 /** Inline styles.css + all JS into the src/index.html shell. */
 function inlineHtml() {

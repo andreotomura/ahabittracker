@@ -7,7 +7,7 @@ const pwa = require('./pwa.js');
 
 function fakeEl() {
   return {
-    children: [], attrs: {}, style: {}, dataset: {},
+    children: [], attrs: {}, style: { setProperty() {}, removeProperty() {} }, dataset: {},
     className: '', textContent: '', value: '', innerHTML: '',
     classList: { toggle() {}, add() {}, remove() {}, contains() { return true; } },
     setAttribute(k, v) { this.attrs[k] = v; if (k === 'class') this.className = v; },
@@ -48,11 +48,11 @@ global.matchMedia = () => ({ matches: false });
 global.requestAnimationFrame = (fn) => fn();
 
 const src = path.join(__dirname, '..', 'src', 'js');
-const all = ['utils.js', 'ui.js', 'store.js', 'render.js', 'app.js']
+const all = ['utils.js', 'ui.js', 'store.js', 'prefs.js', 'render.js', 'app.js']
   .map((f) => fs.readFileSync(path.join(src, f), 'utf8'))
   .join('\n')
   // in Node the namespaces need to be real globals, not eval-local consts
-  .replace(/^const (Utils|UI|Store|Render|App) =/gm, 'globalThis.$1 =');
+  .replace(/^const (Utils|UI|Store|Prefs|Render|App) =/gm, 'globalThis.$1 =');
 (0, eval)(all);
 
 const assert = (cond, msg) => { if (!cond) throw new Error('FAIL: ' + msg); console.log('  ✓ ' + msg); };
@@ -311,5 +311,38 @@ UI.initCursor();
 assert(document.body.children.length === bodySkip, 'initCursor is skipped without a fine pointer');
 global.matchMedia = mm;
 assert(typeof UI.initCursor === 'function', 'initCursor is exposed on the UI namespace');
+
+console.log('— prefs / customization —');
+Prefs.load();
+assert(Prefs.get() && Object.keys(Prefs.get().colors).length === 0, 'prefs start empty');
+Prefs.setColor('--accent', '#ff0000');
+assert(Prefs.get().colors['--accent'] === '#ff0000' && Prefs.hasCustomColors(), 'setColor stores and flags custom colours');
+Prefs.setColor('--accent', 'not-a-color');
+assert(!Prefs.get().colors['--accent'], 'invalid colour is rejected');
+Prefs.setFont('body', 'serif');
+assert(Prefs.get().font === 'serif', 'setFont stores a stack');
+Prefs.setFont('body', 'bogus');
+assert(Prefs.get().font === 'theme', 'unknown font falls back to theme');
+Prefs.setColor('--accent', '#123456');
+Prefs.setFont('display', 'mono');
+Prefs.setHidden('stats.momentum', true);
+Prefs.save();
+Prefs.load();
+assert(Prefs.get().colors['--accent'] === '#123456' && Prefs.get().font === 'theme' && Prefs.get().displayFont === 'mono', 'prefs round-trip through storage');
+assert(Prefs.isHidden('stats.momentum') && !Prefs.isHidden('stats.insights'), 'isHidden reflects saved state');
+Render.renderStats();
+assert(!document.querySelector('#view-stats').innerHTML.includes('Momentum'), 'a hidden section is not rendered');
+assert(document.querySelector('#view-stats').innerHTML.includes('Insights'), 'other sections still render');
+Prefs.setHidden('stats.momentum', false);
+Render.renderSettings();
+const setHtml = document.querySelector('#view-settings').innerHTML;
+assert(setHtml.includes('Customize') && setHtml.includes('set-color') && setHtml.includes('Layout'), 'settings page renders appearance + layout controls');
+App.prevTab = 'today';
+App.switchTab('settings');
+assert(document.querySelector('#view-settings').innerHTML.includes('set-toggles'), 'settings view routes via switchTab');
+Prefs.clearColors();
+Prefs.clearFonts();
+Prefs.clearHidden();
+assert(!Prefs.hasCustomColors() && !Prefs.hasCustomFonts() && !Prefs.isHidden('stats.momentum'), 'reset helpers clear state');
 
 console.log('\n✅ All smoke tests passed');

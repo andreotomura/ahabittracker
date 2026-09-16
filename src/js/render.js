@@ -39,6 +39,26 @@ const Render = (() => {
         ${t.id === active ? '<span class="t-check">✓</span>' : ''}
       </button>`).join('');
 
+  // Sections the user can show/hide per tab (Layout settings). Render guards
+  // each with `Prefs.isHidden(id)`.
+  const SECTIONS = [
+    { id: 'today.welcome', view: 'Today', label: 'Welcome card' },
+    { id: 'today.progress', view: 'Today', label: 'Daily progress' },
+    { id: 'calendar.hint', view: 'Calendar', label: 'Backfill hint' },
+    { id: 'stats.overview', view: 'Stats', label: 'Summary numbers' },
+    { id: 'stats.momentum', view: 'Stats', label: 'Momentum' },
+    { id: 'stats.health', view: 'Stats', label: 'Habit health' },
+    { id: 'stats.weekday', view: 'Stats', label: 'Weekday rhythm' },
+    { id: 'stats.tod', view: 'Stats', label: 'Time of day' },
+    { id: 'stats.insights', view: 'Stats', label: 'Insights' },
+    { id: 'stats.heatmap', view: 'Stats', label: 'Activity heatmap' },
+    { id: 'stats.history', view: 'Stats', label: 'Habit history' },
+    { id: 'stats.note', view: 'Stats', label: 'Health-score note' },
+    { id: 'habits.archived', view: 'Habits', label: 'Archived list' },
+  ];
+
+  const hidden = (id) => Prefs.isHidden(id);
+
   // [label, weekday(Mon=1)]
   const DAY_CHIPS = [['M', 1], ['T', 2], ['W', 3], ['T', 4], ['F', 5], ['S', 6], ['S', 7]];
 
@@ -160,13 +180,13 @@ const Render = (() => {
         </div>
       </div>
 
-      ${showWelcome ? welcomeCard() : ''}
+      ${showWelcome && !hidden('today.welcome') ? welcomeCard() : ''}
 
       ${total ? `
-        <div class="progress-wrap card">
+        ${hidden('today.progress') ? '' : `<div class="progress-wrap card">
           <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
           <div class="progress-label"><strong>${done}</strong> of ${total} done · <em>${message}</em></div>
-        </div>
+        </div>`}
         <div class="habit-list">${rows}</div>` : empty}
     `;
   }
@@ -211,9 +231,9 @@ const Render = (() => {
       </div>
       <div class="cal-head">${Utils.WD.slice(1).map((d) => `<span>${d}</span>`).join('')}${'<span>Sun</span>'}</div>
       <div class="cal-grid">${cells}</div>
-      <p class="cal-hint">${!Object.keys(summary).length && Store.activeHabits().length
+      ${hidden('calendar.hint') ? '' : `<p class="cal-hint">${!Object.keys(summary).length && Store.activeHabits().length
         ? 'No check-ins this month — tap a day to backfill or add one.'
-        : 'Tip: click any day to backfill or fix a check-in.'}</p>
+        : 'Tip: click any day to backfill or fix a check-in.'}</p>`}
     `;
   }
 
@@ -449,13 +469,7 @@ const Render = (() => {
       insightItems.push('<li><span class="ins-ico">🌱</span> Keep checking in — insights unlock as history builds up.</li>');
     }
 
-    const view = UI.q('#view-stats');
-    view.innerHTML = `
-      <div class="stats-head">
-        <h2>Your stats</h2>
-        <p>Patterns, momentum, and per-habit health across all your check-ins.</p>
-      </div>
-
+    const overview = `
       <div class="grid-stats">
         <div class="stat-card card">
           <div class="stat-num">${stats.total}</div>
@@ -477,8 +491,9 @@ const Render = (() => {
           <div class="stat-num">${actives.length ? ins.avgHealth : '—'}</div>
           <div class="stat-label">Average health score</div>
         </div>
-      </div>
+      </div>`;
 
+    const momentum = `
       <div class="card trend-card">
         <div class="section-head">
           <h3>Momentum</h3>
@@ -489,10 +504,9 @@ const Render = (() => {
           <div><strong>${Math.round(now7 * 100)}%</strong><span> completion · last 7 days</span></div>
           <div class="trend-dir">${trendArrow(momDir)} ${momLabel}</div>
         </div>
-      </div>
+      </div>`;
 
-      ${healthList}
-
+    const weekday = `
       <div class="card weekday-card">
         <div class="section-head">
           <h3>Weekday rhythm</h3>
@@ -500,20 +514,40 @@ const Render = (() => {
         </div>
         ${weekdayBars(wdRates)}
         <p class="section-note">${rhythmNote}</p>
-      </div>
+      </div>`;
 
-      ${timeOfDayCard()}
-
+    const insightsCard = `
       <div class="card insights-card">
         <div class="section-head"><h3>Insights</h3></div>
         <ul class="insight-list">${insightItems.join('')}</ul>
+      </div>`;
+
+    const scoreNote = '<p class="section-note analytics-note">Health score = 40% consistency + 30% weekly-target attainment + 30% current streak (habits with no weekly goal use 70% consistency + 30% streak).</p>';
+
+    const view = UI.q('#view-stats');
+    view.innerHTML = `
+      <div class="stats-head">
+        <h2>Your stats</h2>
+        <p>Patterns, momentum, and per-habit health across all your check-ins.</p>
       </div>
 
-      ${heatmapCard()}
+      ${hidden('stats.overview') ? '' : overview}
 
-      ${habitHistory}
+      ${hidden('stats.momentum') ? '' : momentum}
 
-      <p class="section-note analytics-note">Health score = 40% consistency + 30% weekly-target attainment + 30% current streak (habits with no weekly goal use 70% consistency + 30% streak).</p>
+      ${hidden('stats.health') ? '' : healthList}
+
+      ${hidden('stats.weekday') ? '' : weekday}
+
+      ${hidden('stats.tod') ? '' : timeOfDayCard()}
+
+      ${hidden('stats.insights') ? '' : insightsCard}
+
+      ${hidden('stats.heatmap') ? '' : heatmapCard()}
+
+      ${hidden('stats.history') ? '' : habitHistory}
+
+      ${hidden('stats.note') ? '' : scoreNote}
     `;
   }
 
@@ -551,9 +585,111 @@ const Render = (() => {
              <div class="empty-sub">Create your first habit — the tiny steps are the big ones.</div>
              <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div></div>`}
 
-      ${archived.length ? `
+      ${!hidden('habits.archived') && archived.length ? `
         <h3 class="section-sub">Archived (${archived.length})</h3>
         <div class="manage-list">${archived.map(row).join('')}</div>` : ''}
+    `;
+  }
+
+  /* ================= Settings ================= */
+
+  /** Group the colour tokens for the settings UI. */
+  function prefColorGroups() {
+    const groups = [];
+    for (const c of Prefs.COLORS) {
+      const name = c.group || 'Colors';
+      let g = groups[groups.length - 1];
+      if (!g || g.name !== name) {
+        g = { name, items: [] };
+        groups.push(g);
+      }
+      g.items.push(c);
+    }
+    return groups;
+  }
+
+  function renderSettings() {
+    const theme = document.documentElement.dataset.theme;
+    const p = Prefs.get();
+    const visByView = {};
+    for (const s of SECTIONS) (visByView[s.view] || (visByView[s.view] = [])).push(s);
+
+    const colorGroupHtml = prefColorGroups()
+      .map((g) => `
+        <div class="set-group">
+          <h4>${g.name}</h4>
+          <div class="set-colors">
+            ${g.items.map((c) => `
+              <label class="set-color" title="${c.label}">
+                <input type="color" data-action="set-color" data-token="${c.token}" value="${Prefs.tokenValue(c.token)}" aria-label="${c.label}">
+                <span>${c.label}</span>
+              </label>`).join('')}
+          </div>
+        </div>`)
+      .join('');
+
+    const layoutHtml = Object.keys(visByView)
+      .map((v) => `
+        <div class="set-group">
+          <h4>${v}</h4>
+          <div class="set-toggles">
+            ${visByView[v].map((s) => `
+              <label class="set-toggle">
+                <input type="checkbox" data-action="toggle-section" data-section="${s.id}"${hidden(s.id) ? '' : ' checked'}>
+                <span>${s.label}</span>
+              </label>`).join('')}
+          </div>
+        </div>`)
+      .join('');
+
+    const fontOptions = (selected) => Prefs.FONT_OPTIONS
+      .map((o) => `<option value="${o.id}"${selected === o.id ? ' selected' : ''}>${o.label}</option>`)
+      .join('');
+
+    const view = UI.q('#view-settings');
+    view.innerHTML = `
+      <div class="settings-head">
+        <button class="icon-btn" data-action="close-settings" aria-label="Back" title="Back">‹</button>
+        <div>
+          <h2>Customize</h2>
+          <p>Make it yours — colors, fonts, and what each tab shows.</p>
+        </div>
+      </div>
+
+      <div class="card set-card">
+        <div class="section-head"><h3>Theme</h3><span>starting point</span></div>
+        <div class="set-themes">${themePickerHtml(theme)}</div>
+        <p class="set-hint">Picking a theme resets custom colors &amp; fonts below.</p>
+      </div>
+
+      <div class="card set-card">
+        <div class="section-head"><h3>Colors</h3><span>${Prefs.hasCustomColors() ? 'customised' : 'from theme'}</span></div>
+        ${colorGroupHtml}
+        <div class="btn-row"><button class="btn ghost" data-action="reset-colors">Reset colors</button></div>
+      </div>
+
+      <div class="card set-card">
+        <div class="section-head"><h3>Fonts</h3><span>system stacks only</span></div>
+        <div class="set-field">
+          <label for="set-font-body">Body</label>
+          <select id="set-font-body" data-action="set-font" data-which="body">${fontOptions(p.font)}</select>
+        </div>
+        <div class="set-field">
+          <label for="set-font-display">Headings &amp; numbers</label>
+          <select id="set-font-display" data-action="set-font" data-which="display">${fontOptions(p.displayFont)}</select>
+        </div>
+        <div class="btn-row"><button class="btn ghost" data-action="reset-fonts">Reset fonts</button></div>
+      </div>
+
+      <div class="card set-card">
+        <div class="section-head"><h3>Layout</h3><span>what each tab shows</span></div>
+        ${layoutHtml}
+        <div class="btn-row"><button class="btn ghost" data-action="reset-hidden">Show everything</button></div>
+      </div>
+
+      <div class="btn-row set-danger">
+        <button class="btn danger" data-action="reset-all">Reset all customizations</button>
+      </div>
     `;
   }
 
@@ -674,9 +810,11 @@ const Render = (() => {
     renderCalendar,
     renderStats,
     renderHabits,
+    renderSettings,
     dayModalHtml,
     habitEditorHtml,
     themePickerHtml,
     THEMES,
+    SECTIONS,
   };
 })();

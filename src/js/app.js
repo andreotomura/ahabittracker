@@ -9,6 +9,7 @@
 
 const App = {
   tab: 'today',
+  prevTab: 'today',
   monthOffset: 0,
   editorDraft: null,
 
@@ -37,6 +38,7 @@ const App = {
     else if (this.tab === 'calendar') Render.renderCalendar(this.monthOffset);
     else if (this.tab === 'stats') Render.renderStats();
     else if (this.tab === 'habits') Render.renderHabits();
+    else if (this.tab === 'settings') Render.renderSettings();
     this.syncFab();
   },
 
@@ -75,6 +77,11 @@ const App = {
   setTheme(id, persist = true) {
     const theme = Render.THEMES.find((t) => t.id === id) || Render.THEMES[0];
     document.documentElement.dataset.theme = theme.id;
+    // Choosing a preset is a fresh start for custom appearance (but not layout).
+    if (persist) {
+      Prefs.clearColors();
+      Prefs.clearFonts();
+    }
     if (persist) localStorage.setItem('ahabit.theme', theme.id);
     const btn = UI.q('#theme-btn');
     if (btn) btn.textContent = theme.emoji;
@@ -313,9 +320,16 @@ const App = {
         }
         case 'export': Store.exportJSON(); UI.toast('Backup downloaded ⬇️'); break;
         case 'dismiss-welcome': this.dismissWelcome(); break;
+        case 'open-settings': this.prevTab = this.tab; this.switchTab('settings'); break;
+        case 'close-settings': this.switchTab(this.prevTab || 'today'); break;
+        case 'reset-colors': Prefs.clearColors(); this.renderCurrent(); break;
+        case 'reset-fonts': Prefs.clearFonts(); this.renderCurrent(); break;
+        case 'reset-hidden': Prefs.clearHidden(); this.renderCurrent(); break;
+        case 'reset-all': Prefs.resetAll(); this.renderCurrent(); UI.toast('Customizations reset'); break;
         case 'set-theme':
           this.setTheme(btn.dataset.theme);
           this.closeThemePop();
+          if (this.tab === 'settings') this.renderCurrent();
           break;
         case 'import': UI.q('#import-file').click(); break;
         case 'load-sample':
@@ -343,11 +357,24 @@ const App = {
       }
     });
 
-    // Delegated input listener for per-check-in note fields (saved live).
+    // Delegated input listener — note fields and colour pickers (live).
     document.addEventListener('input', (e) => {
-      const t = e.target && e.target.closest && e.target.closest('[data-action="note"]');
-      if (!t) return;
-      Store.setNote(t.dataset.id, t.dataset.date, t.value);
+      const t = e.target;
+      if (!t || !t.dataset) return;
+      if (t.dataset.action === 'note') Store.setNote(t.dataset.id, t.dataset.date, t.value);
+      else if (t.dataset.action === 'set-color') Prefs.setColor(t.dataset.token, t.value);
+    });
+
+    // Delegated change listener — font pickers and layout toggles.
+    document.addEventListener('change', (e) => {
+      const t = e.target;
+      if (!t || !t.dataset) return;
+      if (t.dataset.action === 'set-font') {
+        Prefs.setFont(t.dataset.which === 'display' ? 'display' : 'body', t.value);
+        this.renderCurrent();
+      } else if (t.dataset.action === 'toggle-section') {
+        Prefs.setHidden(t.dataset.section, !t.checked);
+      }
     });
   },
 
@@ -355,7 +382,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.10.1 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.11.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },
@@ -364,7 +391,9 @@ const App = {
 
   init() {
     Store.load();
+    Prefs.load();
     this.initTheme();
+    Prefs.apply();
     this.bindEvents();
     UI.initCursor();
     this.switchTab('today');

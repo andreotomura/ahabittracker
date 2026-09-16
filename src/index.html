@@ -34,6 +34,8 @@
         <div class="menu-wrap">
           <button id="menu-btn" class="icon-btn" aria-label="Menu" title="Menu" aria-expanded="false">⋯</button>
           <div class="menu hidden" id="menu" role="menu">
+            <button role="menuitem" data-action="open-settings">🎨 &nbsp;Customize…</button>
+            <hr>
             <button role="menuitem" data-action="export">⬇️ &nbsp;Export data (JSON)</button>
             <button role="menuitem" data-action="import">⬆️ &nbsp;Import data (JSON)</button>
             <hr>
@@ -48,6 +50,7 @@
       <section id="view-calendar" class="view" role="tabpanel"></section>
       <section id="view-stats" class="view" role="tabpanel"></section>
       <section id="view-habits" class="view" role="tabpanel"></section>
+      <section id="view-settings" class="view" role="tabpanel"></section>
     </main>
   </div>
 
@@ -61,6 +64,7 @@
   <script src="js/utils.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/prefs.js"></script>
   <script src="js/render.js"></script>
   <script src="js/app.js"></script>
   <!--SCRIPTS-->
