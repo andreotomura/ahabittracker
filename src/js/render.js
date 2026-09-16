@@ -253,8 +253,10 @@ const Render = (() => {
     const trend = Store.habitTrend(h.id, 30) || { points: [], rate: 0, direction: 'flat' };
     const health = Store.healthScore(h.id) || { score: 0 };
     const wp = Store.weekProgress(h.id);
+    const peak = Store.habitPeakPeriod(h.id);
     const meta = [`${Math.round(trend.rate * 100)}% · 30 days`];
     if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
+    if (peak) meta.push(`⏰ ${peak.label}`);
     return `<div class="health-card card" style="--i:${i}">
       <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
       <div class="health-main">
@@ -266,6 +268,32 @@ const Render = (() => {
         <div class="health-meta">${meta.join(' · ')}</div>
       </div>
       ${scoreRing(health.score)}
+    </div>`;
+  }
+
+  const fmtHour = (h) => {
+    const ampm = h < 12 ? 'am' : 'pm';
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return `${hr}${ampm}`;
+  };
+
+  /** 24-hour histogram card of recorded check-in times. */
+  function timeOfDayCard() {
+    const tod = Store.timeOfDay();
+    const head = '<div class="section-head"><h3>Time of day</h3><span>when you check in</span></div>';
+    if (!tod.total) {
+      return `<div class="card tod-card">${head}
+        <p class="section-note">No timestamps yet — check in from Today and we'll learn your rhythm.</p></div>`;
+    }
+    const max = Math.max(1, ...tod.hours);
+    const bars = tod.hours.map((n, h) => `
+      <div class="tod-col" title="${fmtHour(h)} · ${Utils.plural(n, 'check-in')}">
+        <div class="tod-track"><div class="tod-fill" style="height:${Math.round((n / max) * 100)}%"></div></div>
+        <span class="tod-label">${h % 6 === 0 ? fmtHour(h) : ''}</span>
+      </div>`).join('');
+    return `<div class="card tod-card">${head}
+      <div class="tod-bars">${bars}</div>
+      <p class="section-note">You check in most in the <strong>${tod.peakPeriodLabel}</strong> · busiest around <strong>${fmtHour(tod.peakHour)}</strong>.</p>
     </div>`;
   }
 
@@ -438,6 +466,8 @@ const Render = (() => {
         ${weekdayBars(wdRates)}
         <p class="section-note">${rhythmNote}</p>
       </div>
+
+      ${timeOfDayCard()}
 
       <div class="card insights-card">
         <div class="section-head"><h3>Insights</h3></div>

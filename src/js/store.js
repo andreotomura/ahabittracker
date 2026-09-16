@@ -22,7 +22,7 @@ const Store = (() => {
 
   let db = null;
 
-  const emptyDb = () => ({ version: 1, habits: [], completions: {}, notes: {} });
+  const emptyDb = () => ({ version: 1, habits: [], completions: {}, notes: {}, times: {} });
 
   function load() {
     try {
@@ -30,7 +30,10 @@ const Store = (() => {
       if (raw) {
         db = JSON.parse(raw);
         if (!Array.isArray(db.habits) || typeof db.completions !== 'object') db = emptyDb();
-        else if (!db.notes || typeof db.notes !== 'object') db.notes = {}; // pre-notes backups
+        else {
+          if (!db.notes || typeof db.notes !== 'object') db.notes = {}; // pre-notes backups
+          if (!db.times || typeof db.times !== 'object') db.times = {}; // pre-timestamps backups
+        }
       } else {
         db = emptyDb();
       }
@@ -95,6 +98,7 @@ const Store = (() => {
     db.habits = db.habits.filter((h) => h.id !== id);
     delete db.completions[id];
     delete db.notes[id];
+    delete db.times[id];
     save();
   }
 
@@ -114,22 +118,55 @@ const Store = (() => {
       delete map[key];
       if (!Object.keys(map).length) delete db.completions[id];
     }
+    pruneTimes(id, key, count);
     save();
   }
 
-  /** Check-in / undo for a habit on a given day (0 ↔ 1 for now). */
+  /* ---------------- Check-in times (time-of-day analytics) ---------------- */
+
+  const timesFor = (id) => db.times[id] || {};
+  /** Recorded check-in timestamps for a habit on a day (may be shorter than count). */
+  const timesOn = (id, key) => (timesFor(id)[key] || []).slice();
+
+  function pushTimeAt(id, key, ms) {
+    const map = db.times[id] || (db.times[id] = {});
+    (map[key] = map[key] || []).push(ms);
+  }
+
+  function clearTimes(id, key) {
+    const map = db.times[id];
+    if (!map) return;
+    delete map[key];
+    if (!Object.keys(map).length) delete db.times[id];
+  }
+
+  /** Keep times from outnumbering the count, or outliving a cleared day. */
+  function pruneTimes(id, key, count) {
+    const arr = timesFor(id)[key];
+    if (!arr) return;
+    if (count <= 0) clearTimes(id, key);
+    else if (arr.length > count) arr.length = count;
+  }
+
+  /**
+   * Check-in / undo for a habit on a given day. Live check-ins record the time;
+   * backfilled days get no invented timestamp (honest data).
+   */
   function toggle(id, key) {
-    setCount(id, key, isDone(id, key) ? 0 : 1);
+    const wasDone = isDone(id, key);
+    setCount(id, key, wasDone ? 0 : 1);
+    if (!wasDone && key === Utils.todayKey()) { pushTimeAt(id, key, Date.now()); save(); }
   }
 
   /** Add one more check-in to a habit on a day (count-per-day). */
   function inc(id, key) {
     setCount(id, key, countFor(id, key) + 1);
+    if (key === Utils.todayKey()) { pushTimeAt(id, key, Date.now()); save(); }
   }
 
   /** Remove one check-in; at 1 this un-dones the habit. */
   function dec(id, key) {
-    setCount(id, key, countFor(id, key) - 1);
+    setCount(id, key, countFor(id, key) - 1); // setCount also drops the newest recorded time
   }
 
   /* ---------------- Notes ---------------- */
@@ -459,6 +496,74 @@ const Store = (() => {
     return { bestDay, worstDay, mostConsistent, avgHealth, gap };
   }
 
+  /* ---------------- Time-of-day analytics ---------------- */
+
+  const PERIODS = [
+    { id: 'morning', label: 'mornings', from: 5, to: 11 },
+    { id: 'afternoon', label: 'afternoons', from: 12, to: 16 },
+    { id: 'evening', label: 'evenings', from: 17, to: 21 },
+    { id: 'night', label: 'nights', from: 22, to: 4 },
+  ];
+
+  const periodOf = (hour) => {
+    for (const p of PERIODS) {
+      if (p.from <= p.to ? hour >= p.from && hour <= p.to : hour >= p.from || hour <= p.to) return p.id;
+    }
+    return 'night';
+  };
+
+  /** 24-bucket histogram of recorded check-in hours (all active habits, or one). */
+  function hourHistogram(id) {
+    const hours = new Array(24).fill(0);
+    const scan = (map) => {
+      for (const k in map) {
+        for (const t of map[k]) {
+          const h = new Date(t).getHours();
+          if (h >= 0 && h < 24) hours[h]++;
+        }
+      }
+    };
+    if (id) scan(timesFor(id));
+    else for (const h of activeHabits()) scan(timesFor(h.id));
+    return hours;
+  }
+
+  /** Time-of-day summary built from recorded timestamps (empty until people check in live). */
+  function timeOfDay(id) {
+    const hours = hourHistogram(id);
+    const total = hours.reduce((a, b) => a + b, 0);
+    const counts = {};
+    PERIODS.forEach((p) => (counts[p.id] = 0));
+    hours.forEach((n, h) => { counts[periodOf(h)] += n; });
+
+    let peakPeriod = null;
+    for (const p of PERIODS) if (peakPeriod === null || counts[p.id] > counts[peakPeriod]) peakPeriod = p.id;
+
+    // Busiest hour *within* the peak period, so the two highlights agree.
+    let peakHour = null, peakHourCount = 0;
+    if (total) {
+      hours.forEach((n, h) => {
+        if (periodOf(h) === peakPeriod && n > peakHourCount) { peakHourCount = n; peakHour = h; }
+      });
+    }
+
+    return {
+      hours,
+      total,
+      counts,
+      peakHour,
+      peakPeriod: total ? peakPeriod : null,
+      peakPeriodLabel: total ? (PERIODS.find((p) => p.id === peakPeriod) || {}).label : null,
+      byPeriod: PERIODS.map((p) => ({ ...p, count: counts[p.id] })),
+    };
+  }
+
+  /** Dominant time-of-day period for one habit, or null without timestamps. */
+  function habitPeakPeriod(id) {
+    const tod = timeOfDay(id);
+    return tod.total ? { id: tod.peakPeriod, label: tod.peakPeriodLabel, count: tod.total } : null;
+  }
+
   /* ---------------- Backup: export / import ---------------- */
 
   function exportJSON() {
@@ -531,14 +636,35 @@ const Store = (() => {
           if (Object.keys(out).length) notes[hid] = out;
         }
       }
-      return { ok: true, db: { version: 1, habits, completions, notes } };
+      const times = {};
+      if (data.times && typeof data.times === 'object') {
+        const known = new Set(habits.map((h) => h.id));
+        for (const hid in data.times) {
+          if (!known.has(hid)) continue;
+          const tm = data.times[hid];
+          if (!tm || typeof tm !== 'object') continue;
+          const out = {};
+          for (const k in tm) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) continue;
+            const arr = Array.isArray(tm[k])
+              ? tm[k].filter((n) => Number.isFinite(n) && n > 0).slice(0, 100)
+              : [];
+            if (arr.length) out[k] = arr;
+          }
+          if (Object.keys(out).length) times[hid] = out;
+        }
+      }
+      return { ok: true, db: { version: 1, habits, completions, notes, times } };
     } catch (_e) {
       return { ok: false, error: 'Could not read the file — invalid JSON.' };
     }
   }
 
   function replaceWith(db2) {
-    db = db2;
+    // Normalise: callers (import, tests) may omit optional maps.
+    db = Object.assign(emptyDb(), db2);
+    if (!db.notes || typeof db.notes !== 'object') db.notes = {};
+    if (!db.times || typeof db.times !== 'object') db.times = {};
     save();
   }
 
@@ -563,6 +689,12 @@ const Store = (() => {
         if (!(k in cur)) cur[k] = db2.notes[hid][k]; // gap-fill only, never clobber
       }
     }
+    for (const hid in db2.times || {}) {
+      const cur = db.times[hid] || (db.times[hid] = {});
+      for (const k in db2.times[hid]) {
+        if (!(k in cur)) cur[k] = db2.times[hid][k].slice();
+      }
+    }
     save();
   }
 
@@ -579,11 +711,19 @@ const Store = (() => {
     const added = fixtures.map((f) => addHabit({ ...f, days: [] }));
     // Backfill the last 90 days so the calendar + heatmap look alive.
     const today = new Date();
+    const baseHours = [8, 21, 18, 7, 20]; // plausible peak hour per habit (time-of-day demo)
     added.forEach((h, i) => {
       const prob = fixtures[i].prob;
+      const hour = baseHours[i % baseHours.length];
       for (let back = 90; back >= 1; back--) {
         const d = Utils.addDays(today, -back);
-        if (Math.random() < prob) setCount(h.id, Utils.keyOf(d), 1);
+        if (Math.random() < prob) {
+          const key = Utils.keyOf(d);
+          setCount(h.id, key, 1);
+          const at = new Date(d);
+          at.setHours(hour, Math.floor(Math.random() * 60), 0, 0);
+          pushTimeAt(h.id, key, at.getTime());
+        }
       }
     });
     // A couple of nice visible streaks.
@@ -594,6 +734,11 @@ const Store = (() => {
     setNote(added[1].id, Utils.keyOf(Utils.addDays(today, -1)), 'Chapter 3 — the plot thickens!');
     setNote(added[2].id, Utils.keyOf(Utils.addDays(today, -2)), '5 km run 🏃♂️');
     setCount(added[0].id, Utils.keyOf(today), 3); // demo: multiple check-ins in one day
+    [8, 10, 14].forEach((h) => {
+      const at = new Date(today);
+      at.setHours(h, 30, 0, 0);
+      pushTimeAt(added[0].id, Utils.keyOf(today), at.getTime());
+    });
     save();
   }
 
@@ -601,10 +746,12 @@ const Store = (() => {
     load, save,
     activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
     completionsFor, isDone, countFor, setCount, toggle, inc, dec,
+    timesFor, timesOn,
     doneCount, dailySummary, countsByDay,
     getNote, setNote,
     streakFor, weekProgress, totalCompletions, statsOverview,
     habitTrend, healthScore, weekdayRates, overallTrend, insights,
+    hourHistogram, timeOfDay, habitPeakPeriod,
     exportJSON, importJSON, replaceWith, mergeWith, loadSample,
   };
 })();

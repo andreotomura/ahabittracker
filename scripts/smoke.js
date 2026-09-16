@@ -128,6 +128,22 @@ assert(ov.total === 5 && ov.daysTracked === 5, `statsOverview total + daysTracke
 assert(typeof ov.rate7 === 'number', 'statsOverview rate7');
 assert(ov.best.days >= 3 && ov.best.name === 'Meditate', 'statsOverview best streak habit');
 
+console.log('— check-in times —');
+const tk = Utils.todayKey();
+Store.setCount(h.id, tk, 0);
+Store.toggle(h.id, tk);
+assert(Store.timesOn(h.id, tk).length === 1, 'toggle records a timestamp');
+Store.inc(h.id, tk);
+assert(Store.timesOn(h.id, tk).length === 2, 'inc records another timestamp');
+Store.dec(h.id, tk);
+assert(Store.timesOn(h.id, tk).length === 1 && Store.countFor(h.id, tk) === 1, 'dec drops a timestamp');
+Store.inc(h.id, tk);
+Store.toggle(h.id, tk); // undo all
+assert(Store.countFor(h.id, tk) === 0 && Store.timesOn(h.id, tk).length === 0, 'undo clears timestamps');
+Store.setCount(h.id, '2020-01-01', 1);
+assert(Store.timesOn(h.id, '2020-01-01').length === 0, 'backfilled days have no invented timestamps');
+Store.setCount(h.id, '2020-01-01', 0);
+
 console.log('— backup round trip —');
 Store.exportJSON(); // just ensure no throw
 const crafted = JSON.stringify({
@@ -135,6 +151,7 @@ const crafted = JSON.stringify({
   habits: [{ id: 'zz1', name: 'Import me', emoji: '🚀', color: 'bad', target: 9, days: [0, 1, 8], createdAt: 1, archived: false, sort: 0 }],
   completions: { zz1: { '2025-01-02': 3, 'nope': 5 } },
   notes: { zz1: { '2025-01-02': '  keep this note ', 'nope': 'bad' }, ghost: { '2025-01-02': 'drop me' } },
+  times: { zz1: { '2025-01-02': [1700000000000, 1700003600000], 'nope': [1] }, ghost: { '2025-01-02': [1700000000000] } },
 });
 const parsed = Store.importJSON(crafted);
 assert(parsed.ok, 'importJSON accepts valid file');
@@ -144,15 +161,19 @@ assert(parsed.db.habits[0].days.length === 1 && parsed.db.habits[0].days[0] === 
 assert(parsed.db.completions.zz1['2025-01-02'] === 3 && !('nope' in parsed.db.completions.zz1), 'completions filtered');
 assert(parsed.db.notes.zz1['2025-01-02'] === 'keep this note', 'notes trimmed and kept for known habits');
 assert(!('nope' in parsed.db.notes.zz1) && !('ghost' in parsed.db.notes), 'notes filtered (bad keys, unknown habits)');
+assert(parsed.db.times.zz1['2025-01-02'].length === 2, 'times kept for known habit + valid date');
+assert(!('nope' in parsed.db.times.zz1) && !('ghost' in parsed.db.times), 'times filtered (bad keys, unknown habits)');
 const bad = Store.importJSON('not json');
 assert(!bad.ok, 'importJSON rejects garbage');
 const mergedBefore = Store.totalCompletions();
 Store.mergeWith(parsed.db);
 assert(Store.totalCompletions() === mergedBefore + 3, 'merge adds new completions');
 assert(Store.getNote('zz1', '2025-01-02') === 'keep this note', 'merge fills note gaps');
+assert(Store.timesOn('zz1', '2025-01-02').length === 2, 'merge fills time gaps');
 Store.replaceWith(parsed.db);
 assert(Store.activeHabits().length === 1 && Store.getHabit('zz1').name === 'Import me', 'replace wipes + restores');
 assert(Store.getNote('zz1', '2025-01-02') === 'keep this note', 'replace restores notes');
+assert(Store.timesOn('zz1', '2025-01-02').length === 2, 'replace restores times');
 
 console.log('— rendering —');
 Store.loadSample();
@@ -191,11 +212,20 @@ assert(ins && ins.avgHealth >= 0 && ins.avgHealth <= 100, `insights avgHealth in
 assert(!ins.bestDay || !ins.worstDay || ins.bestDay.rate >= ins.worstDay.rate, 'best weekday ≥ worst weekday');
 assert(ins.mostConsistent && ins.mostConsistent.rate >= 0, 'insights finds a most-consistent habit');
 
+console.log('— time of day —');
+const tod = Store.timeOfDay();
+assert(tod.hours.length === 24 && tod.total > 0, 'timeOfDay builds a 24-hour histogram from sample data');
+assert(tod.peakPeriod && tod.peakPeriodLabel, 'timeOfDay reports a peak period');
+assert(tod.byPeriod.length === 4 && tod.byPeriod.reduce((a, p) => a + p.count, 0) === tod.total, 'period counts sum to the total');
+assert(Store.hourHistogram().length === 24, 'hourHistogram has 24 buckets');
+assert(Store.habitPeakPeriod(Store.activeHabits()[0].id), 'per-habit peak period available from sample timestamps');
+
 Render.renderToday();
 assert(document.querySelector('#view-today').innerHTML.includes('note-field'), 'Today rows render note inputs when done');
 assert(document.querySelector('#view-today').innerHTML.includes('step-btn') && document.querySelector('#view-today').innerHTML.includes('×3'), 'Today rows render count steppers with the right total');
 Render.renderCalendar(0);
 Render.renderStats();
+assert(document.querySelector('#view-stats').innerHTML.includes('Time of day'), 'Stats renders the time-of-day card');
 Render.renderHabits();
 App.openEditor();
 App.openEditor(Store.activeHabits()[0].id);
