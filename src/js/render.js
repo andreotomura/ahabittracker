@@ -47,7 +47,22 @@ const Render = (() => {
 
   /* ================= Today ================= */
 
-  function renderToday() {
+  /** First-run welcome card (dismissal is UI state owned by App). */
+  const welcomeCard = () => `
+    <div class="welcome card">
+      <span class="welcome-emoji">👋</span>
+      <div class="welcome-main">
+        <strong>Welcome to AHA(bit)</strong>
+        <ul class="welcome-tips">
+          <li>Tap the circle to check in — <b>＋</b> logs another for the same day.</li>
+          <li>Notes save as you type.</li>
+          <li>See momentum &amp; habit health in <b>Stats</b>.</li>
+        </ul>
+      </div>
+      <button class="btn ghost welcome-dismiss" data-action="dismiss-welcome">Got it</button>
+    </div>`;
+
+  function renderToday(showWelcome) {
     const tKey = Utils.todayKey();
     const habits = Store.activeHabits();
     const doneSet = habits.filter((h) => Store.isDone(h.id, tKey));
@@ -125,6 +140,8 @@ const Render = (() => {
         </div>
       </div>
 
+      ${showWelcome ? welcomeCard() : ''}
+
       ${total ? `
         <div class="progress-wrap card">
           <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -174,7 +191,9 @@ const Render = (() => {
       </div>
       <div class="cal-head">${Utils.WD.slice(1).map((d) => `<span>${d}</span>`).join('')}${'<span>Sun</span>'}</div>
       <div class="cal-grid">${cells}</div>
-      <p class="cal-hint">Tip: click any day to backfill or fix a check-in.</p>
+      <p class="cal-hint">${!Object.keys(summary).length && Store.activeHabits().length
+        ? 'No check-ins this month — tap a day to backfill or add one.'
+        : 'Tip: click any day to backfill or fix a check-in.'}</p>
     `;
   }
 
@@ -210,13 +229,13 @@ const Render = (() => {
     </div>`;
   };
 
-  function healthCard(h) {
+  function healthCard(h, i = 0) {
     const trend = Store.habitTrend(h.id, 30) || { points: [], rate: 0, direction: 'flat' };
     const health = Store.healthScore(h.id) || { score: 0 };
     const wp = Store.weekProgress(h.id);
     const meta = [`${Math.round(trend.rate * 100)}% · 30 days`];
     if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
-    return `<div class="health-card card">
+    return `<div class="health-card card" style="--i:${i}">
       <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
       <div class="health-main">
         <div class="health-top">
@@ -244,14 +263,8 @@ const Render = (() => {
 
   /* ================= Stats ================= */
 
-  function renderStats() {
-    const stats = Store.statsOverview();
-    const actives = Store.activeHabits();
-    const ins = Store.insights();
-    const wdRates = Store.weekdayRates(12);
-    const overall = Store.overallTrend(30);
-
-    // 53 weeks ending this week (anchored Monday) — GitHub-style heatmap.
+  /** 53-week activity heatmap card (colors by habits done per day). */
+  function heatmapCard() {
     const end = Utils.weekEnding(new Date())[6];
     const start = Utils.addDays(end, -(53 * 7 - 1));
     let cursor = start;
@@ -286,6 +299,44 @@ const Render = (() => {
       })
       .join('');
 
+    return `
+      <div class="card heat-card">
+        <div class="heat-head">
+          <h3>Activity heatmap</h3>
+          <span>last 12 months</span>
+        </div>
+        <div class="heat-months">${monthCells}</div>
+        <div class="heat-grid">${cellHtml}</div>
+        <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
+      </div>`;
+  }
+
+  function renderStats() {
+    const actives = Store.activeHabits();
+
+    // No active habits: one friendly empty state (but keep archived history visible).
+    if (!actives.length) {
+      UI.q('#view-stats').innerHTML = `
+        <div class="stats-head">
+          <h2>Your stats</h2>
+          <p>Patterns, momentum, and per-habit health across all your check-ins.</p>
+        </div>
+        <div class="empty">
+          <div class="empty-emoji">📊</div>
+          <div class="empty-title">No data to analyse yet</div>
+          <div class="empty-sub">Add a habit and check in for a few days — trends and health scores will appear here.</div>
+          <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div>
+        </div>
+        ${Store.totalCompletions() ? heatmapCard() : ''}
+      `;
+      return;
+    }
+
+    const stats = Store.statsOverview();
+    const ins = Store.insights();
+    const wdRates = Store.weekdayRates(12);
+    const overall = Store.overallTrend(30);
+
     // Momentum summary (trailing 7-day rate now vs a week ago).
     const now7 = overall.length ? overall[overall.length - 1] : 0;
     const was7 = overall.length > 7 ? overall[overall.length - 8] : (overall[0] || 0);
@@ -298,15 +349,8 @@ const Render = (() => {
       rhythmNote = `Strongest on <strong>${dayName(ins.bestDay)}</strong> · toughest on <strong>${dayName(ins.worstDay)}</strong>.`;
     }
 
-    const healthList = actives.length
-      ? `<h3 class="section-sub">Habit health</h3>
-         <div class="health-list">${actives.map(healthCard).join('')}</div>`
-      : `<div class="empty">
-           <div class="empty-emoji">📊</div>
-           <div class="empty-title">Nothing to analyse yet</div>
-           <div class="empty-sub">Add a habit and check in for a few days — trends and health scores will appear here.</div>
-           <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div>
-         </div>`;
+    const healthList = `<h3 class="section-sub">Habit health</h3>
+      <div class="health-list">${actives.map((h, i) => healthCard(h, i)).join('')}</div>`;
 
     const insightItems = [];
     if (ins.mostConsistent) {
@@ -380,15 +424,7 @@ const Render = (() => {
         <ul class="insight-list">${insightItems.join('')}</ul>
       </div>
 
-      <div class="card heat-card">
-        <div class="heat-head">
-          <h3>Activity heatmap</h3>
-          <span>last 12 months</span>
-        </div>
-        <div class="heat-months">${monthCells}</div>
-        <div class="heat-grid">${cellHtml}</div>
-        <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
-      </div>
+      ${heatmapCard()}
 
       <p class="section-note analytics-note">Health score = 40% consistency + 30% weekly-target attainment + 30% current streak (habits with no weekly goal use 70% consistency + 30% streak).</p>
     `;
@@ -463,17 +499,27 @@ const Render = (() => {
       UI.el('div', { class: 'day-head' },
         UI.el('div', {},
           UI.el('h3', {}, Utils.fmtDayTitle(dateKey)),
-          UI.el('p', {}, all.length ? `${doneN} of ${all.length} habits completed` : 'No active habits yet — create one first.'),
+          UI.el('p', {}, all.length ? `${doneN} of ${all.length} habits completed` : 'No active habits yet.'),
         ),
         UI.el('span', { class: `day-badge${doneN === all.length && all.length ? ' full' : ''}` }, all.length ? `${pct}%` : '—'),
       ),
-      all.length ? UI.el('div', { class: 'day-list' }, htmlToNode(rows)) : null,
+      all.length
+        ? UI.el('div', { class: 'day-list' }, htmlToNode(rows))
+        : UI.el('div', { class: 'empty compact' },
+            UI.el('div', { class: 'empty-emoji' }, '🌱'),
+            UI.el('div', { class: 'empty-title' }, 'No active habits'),
+            UI.el('div', { class: 'empty-sub' }, 'Create one to start checking in.'),
+          ),
     ]);
 
-    const foot = UI.el('div', { class: 'btn-row' },
-      UI.el('button', { class: 'btn ghost', 'data-action': 'day-none', 'data-date': dateKey, disabled: !all.length }, 'Clear day'),
-      UI.el('button', { class: 'btn primary', 'data-action': 'day-all', 'data-date': dateKey, disabled: !all.length }, 'All done'),
-    );
+    const foot = all.length
+      ? UI.el('div', { class: 'btn-row' },
+          UI.el('button', { class: 'btn ghost', 'data-action': 'day-none', 'data-date': dateKey }, 'Clear day'),
+          UI.el('button', { class: 'btn primary', 'data-action': 'day-all', 'data-date': dateKey }, 'All done'),
+        )
+      : UI.el('div', { class: 'btn-row' },
+          UI.el('button', { class: 'btn primary', 'data-action': 'add' }, '＋ Add habit'),
+        );
 
     return UI.modalShell({ title: 'Day details', body, footer: foot });
   }

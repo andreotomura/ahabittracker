@@ -48,6 +48,7 @@ const UI = (() => {
     overlay.innerHTML = '';
     overlay.appendChild(bodyNode);
     bodyNode.classList.add('modal');
+    bodyNode.classList.add('modal-enter');
     root.appendChild(overlay);
     requestAnimationFrame(() => {
       overlay.classList.add('open');

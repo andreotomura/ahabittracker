@@ -441,6 +441,37 @@ p { margin: 0; }
 .day-row .step-btn { width: 24px; height: 24px; font-size: 13px; }
 .day-row .step-count { min-width: 24px; font-size: 11.5px; }
 
+/* Welcome / onboarding card */
+.welcome {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  margin: 12px 0 4px;
+  background: var(--grad-soft);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  animation: row-in .34s cubic-bezier(.22, .8, .36, 1) both;
+}
+.welcome-emoji { font-size: 26px; line-height: 1.1; flex: none; }
+.welcome-main { flex: 1; min-width: 0; }
+.welcome-main strong { font-size: 15.5px; }
+.welcome-tips {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.welcome-tips b { color: var(--text); }
+.welcome-dismiss { flex: none; align-self: center; }
+
+@media (max-width: 560px) {
+  .welcome { flex-wrap: wrap; }
+  .welcome-dismiss { width: 100%; }
+}
+
 /* ---------------- Empty state ---------------- */
 
 .empty {
@@ -455,6 +486,7 @@ p { margin: 0; }
 .empty-emoji { font-size: 44px; }
 .empty-title { font-size: 20px; font-weight: 800; margin-top: 12px; }
 .empty-sub { color: var(--text-2); margin-top: 6px; font-size: 14.5px; }
+.empty.compact { padding: 30px 18px; margin-top: 2px; }
 
 /* ---------------- Buttons ---------------- */
 
@@ -596,7 +628,8 @@ p { margin: 0; }
   margin: 16px 0;
 }
 
-.stat-card { padding: 18px; }
+.stat-card { padding: 18px; transition: transform .16s, box-shadow .16s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .stat-num {
   font-size: 30px;
   font-weight: 800;
@@ -693,7 +726,8 @@ p { margin: 0; }
 
 /* Habit health */
 .health-list { display: flex; flex-direction: column; gap: 10px; }
-.health-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+.health-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; transition: transform .16s, box-shadow .16s; animation: row-in .3s cubic-bezier(.22, .8, .36, 1) both; animation-delay: min(calc(var(--i, 0) * 35ms), 210ms); }
+.health-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .health-main { flex: 1; min-width: 0; }
 .health-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 .health-top .h-name { font-weight: 650; font-size: 15px; }
@@ -806,6 +840,13 @@ p { margin: 0; }
 }
 
 .modal-overlay.open .modal-inner { transform: none; opacity: 1; }
+
+/* One-shot enter animation, applied only when a modal is opened (not refreshed) */
+.modal-enter .modal-body { animation: modal-body-in .34s cubic-bezier(.22, .8, .36, 1) .04s both; }
+@keyframes modal-body-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
 
 .modal-head {
   display: flex;

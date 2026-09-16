@@ -12,10 +12,28 @@ const App = {
   monthOffset: 0,
   editorDraft: null,
 
+  WELCOME_KEY: 'ahabit.welcome.v1',
+
+  /* ---------------- Onboarding ---------------- */
+
+  welcomeDismissed() {
+    return localStorage.getItem(this.WELCOME_KEY) === '1';
+  },
+
+  /** First-run welcome shows once there is at least one habit to act on. */
+  showWelcome() {
+    return !this.welcomeDismissed() && Store.activeHabits().length > 0;
+  },
+
+  dismissWelcome() {
+    localStorage.setItem(this.WELCOME_KEY, '1');
+    this.renderCurrent();
+  },
+
   /* ---------------- Rendering ---------------- */
 
   renderCurrent() {
-    if (this.tab === 'today') Render.renderToday();
+    if (this.tab === 'today') Render.renderToday(this.showWelcome());
     else if (this.tab === 'calendar') Render.renderCalendar(this.monthOffset);
     else if (this.tab === 'stats') Render.renderStats();
     else if (this.tab === 'habits') Render.renderHabits();
@@ -253,6 +271,7 @@ const App = {
           break;
         }
         case 'export': Store.exportJSON(); UI.toast('Backup downloaded ⬇️'); break;
+        case 'dismiss-welcome': this.dismissWelcome(); break;
         case 'import': UI.q('#import-file').click(); break;
         case 'load-sample':
           Store.loadSample();
@@ -291,7 +310,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.4.0 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.5.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },

@@ -203,4 +203,31 @@ App.switchTab('stats');
 App.switchTab('calendar');
 assert(true, 'tab switching works');
 
+console.log('— polish / empty states —');
+// Welcome card: shown for new users with habits, respects the dismissal flag.
+App.switchTab('today');
+assert(document.querySelector('#view-today').innerHTML.includes('welcome'), 'welcome card shows on Today for new users');
+localStorage.setItem('ahabit.welcome.v1', '1');
+App.switchTab('stats');
+App.switchTab('today');
+assert(!document.querySelector('#view-today').innerHTML.includes('welcome'), 'welcome card stays dismissed');
+localStorage.removeItem('ahabit.welcome.v1');
+// Direct render flag also controls it.
+Render.renderToday(true);
+assert(document.querySelector('#view-today').innerHTML.includes('dismiss-welcome'), 'Render.renderToday(true) includes the dismiss action');
+Render.renderToday(false);
+assert(!document.querySelector('#view-today').innerHTML.includes('welcome'), 'Render.renderToday(false) hides the welcome card');
+
+// Empty-database states (no active habits, no history).
+Store.replaceWith({ version: 1, habits: [], completions: {}, notes: {} });
+Render.renderStats();
+const statsHtml = document.querySelector('#view-stats').innerHTML;
+assert(statsHtml.includes('No data to analyse') && !statsHtml.includes('Activity heatmap'), 'Stats shows a single empty state (no charts) with no habits');
+Render.renderCalendar(0);
+assert(true, 'calendar renders with no habits');
+App.openDay(Utils.todayKey());
+assert(true, 'empty day modal renders without throwing');
+Store.loadSample();
+assert(Store.activeHabits().length > 0, 'sample data reloads after empty-state tests');
+
 console.log('\n✅ All smoke tests passed');
