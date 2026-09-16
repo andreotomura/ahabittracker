@@ -168,6 +168,7 @@ loader · single-file **and** installable PWA builds · dev server · smoke test
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | More cross-platform font options (v0.11.1) | `docs/sessions/2026-09-16-font-options.md` |
 | 2026-09-16 | Customization tool — colors, fonts, layout (v0.11) | `docs/sessions/2026-09-16-customization.md` |
 | 2026-09-16 | Readability + cursor consistency (v0.10.1) | `docs/sessions/2026-09-16-readability-cursor.md` |
 | 2026-09-16 | Per-habit heatmaps (v0.10) | `docs/sessions/2026-09-16-per-habit-heatmaps.md` |

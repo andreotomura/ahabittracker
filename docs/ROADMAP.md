@@ -33,7 +33,7 @@ database fully owned by the user as JSON.
 | **Custom cursor (v0.9)** | ✅ | CSS base + additive themed halo; a11y-gated (DECISIONS §18) |
 | **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
 | Readability + cursor consistency (v0.10.1) | ✅ | Text tokens ≥ 4.5:1; themed dot on every element (DECISIONS §20) |
-| **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides + per-tab section visibility (DECISIONS §21) |
+| **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides (15 font stacks) + per-tab section visibility (DECISIONS §21) |
 | In-app reminders (Notification API) | 💡 | While the tab is open |
 | Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 

@@ -145,7 +145,9 @@ DECISIONS §14).
 - Colour overrides are written as **inline CSS custom properties on `<html>`**
   (`Prefs.apply()`), so they layer over the active theme; `--grad` /
   `--grad-soft` / `--on-accent` are derived from the accents.
-- Fonts are system stacks only (`Prefs.FONTS`). Choosing a theme preset clears
+- Fonts are system stacks only (`Prefs.FONT_LIST`, 15 options; every stack ends
+  in a **generic family** so it resolves on any OS; display-only faces are hidden
+  from the body picker). Choosing a theme preset clears
   colour/font overrides (`App.setTheme` when persisting).
 - `Render.SECTIONS` is the registry of hideable sections; each render function
   guards with `Prefs.isHidden(id)`. The Settings view is `#view-settings`
