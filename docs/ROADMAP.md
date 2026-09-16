@@ -30,7 +30,8 @@ database fully owned by the user as JSON.
 | **PWA packaging (v0.6)** | ✅ | Additive `build:pwa` target: manifest, offline SW, generated icons (DECISIONS §15) |
 | **Theming system: multiple themes (incl. new-brutalist) (v0.7)** | ✅ | Zen · Midnight · Paper · Brutalist · Brutalist Dark; picker in topbar (DECISIONS §16) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
-| Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
+| **Time-of-day analytics (v0.8)** | ✅ | Live timestamps + hourly histogram & period peaks (DECISIONS §17) |
+| Per-habit heatmaps (contribution graph per habit) | 💡 | Backlog request — habit-colour (non-gradient) ramp (see Backlog) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
 | In-app reminders (Notification API) | 💡 | While tab is open |
 | Headless-browser e2e tests | 💡 | Playwright etc. would be a dev-only dep |
@@ -145,15 +146,36 @@ dependency, still one self-contained HTML file.
    migration, apply + persist.
 6. **Version** — bumped to 0.7.0.
 
+## Shipped milestone: Time-of-day analytics (v0.8)
+
+1. **Timestamps** — additive `times` map records **live** check-ins only; it
+   never invents times for backfilled days (DECISIONS §17).
+2. **Analytics** — `Store.timeOfDay()` (24-hour histogram + period peaks) and
+   `Store.habitPeakPeriod()`.
+3. **UI** — a “Time of day” card in Stats (24-bar histogram + “most in the
+   evenings · busiest around 9pm”) and a ⏰ peak tag on each habit’s health card.
+4. **Sample data** now carries plausible timestamps so the insight is visible on
+   first run.
+5. **Tests** — timestamp record/prune/clear, no-time-on-backfill, import
+   sanitisation, merge, histogram/period maths, and the Stats card rendering.
+6. **Version** — bumped to 0.8.0.
+
 ## Open questions
 
 - ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
   dashboards = active only; historical aggregates include archived.
 - ~~One global "AHA score" on Today, or per-habit only?~~ **Decided**: per-habit
   health scores + simple average on Stats; no score on Today.
-- **Export format**: keep `{version:1}` + additive schema (recommended) vs bump.
-  No bump happened in v0.2 (timestamps deferred), so this is still open for
-  the day timestamps arrive.
+- ~~**Export format**: keep `{version:1}` + additive schema vs bump?~~ **Decided
+  in practice**: notes (v0.3) and times (v0.8) both landed additively with no
+  version bump — keep additive.
+
+## Backlog / ideas
+
+- **Per-habit GitHub-style heatmaps** (requested): a contribution graph per habit
+  in Stats, alongside the global one. Unlike the global heatmap, these don't
+  need the shared purple gradient — use each habit's own colour as a flat /
+  opacity ramp so each map reads as *that* habit.
 
 ## Non-goals (for now)
 

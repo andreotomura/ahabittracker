@@ -17,10 +17,10 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.7 shipped and working** — analytics (v0.2), notes
-(v0.3), multi check-ins (v0.4), polish (v0.5), PWA packaging (v0.6), and the
-theming system (v0.7: Zen · Midnight · Paper · Brutalist · Brutalist Dark).
-What's next: deferred time-of-day analytics and/or headless e2e tests.
+Current milestone: **v0.8 shipped and working** — analytics (v0.2), notes
+(v0.3), multi check-ins (v0.4), polish (v0.5), PWA (v0.6), themes (v0.7), and
+time-of-day analytics (v0.8). What's next: headless e2e tests and smaller
+polish (per-habit heatmaps are in the roadmap backlog).
 
 ## Quick facts
 
@@ -78,6 +78,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
   },
   "notes": {
     "habitId": { "YYYY-MM-DD": "optional free-text note" }  // ≤ 240 chars
+  },
+  "times": {
+    "habitId": { "YYYY-MM-DD": [1726000000000] }  // live check-in timestamps
   }
 }
 ```
@@ -88,10 +91,12 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 - Per-check-in **notes** are a separate top-level map (same date keys),
   independent of counts — clearing a check-in never deletes the note
   (DECISIONS §12).
-- ⚠️ No timestamps stored per check-in — time-of-day analytics was explicitly
-  **deferred** (see `docs/DECISIONS.md` §9); the schema stays `{version:1}`
-  and additive. Don't silently change what a completion value means.
-- Backups wrap the DB as `{ app, exportedAt, db }` — export/import round-trips.
+- **Check-in times** live in a `times` map (same date keys) and record only
+  **live** check-ins; backfilled days intentionally have none (DECISIONS §17).
+  The schema stays `{version:1}` and additive — never silently change what a
+  completion value means.
+- Backups wrap the DB as `{ app, exportedAt, db }` — export/import round-trips
+  (notes and times included).
 
 ## How the app works (60-second version)
 
@@ -110,28 +115,30 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.7):** Today check-ins w/ streaks + weekly goals + inline notes +
+**Working (v0.8):** Today check-ins w/ streaks + weekly goals + inline notes +
 count steppers + dismissible first-run welcome card · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
 streaks, 7-day rate, heatmap, momentum trend, per-habit health scores,
-weekday rhythm, insights — all inline SVG/CSS, animated entrance) · habit CRUD
-(emoji/color pickers, target, allowed days, archive) · **5 selectable themes
-incl. new-brutalist** · JSON export/import (replace or merge, incl. notes) ·
-sample data loader · single-file **and** installable PWA builds · dev server ·
-smoke tests.
+weekday rhythm, **time-of-day histogram**, insights — all inline SVG/CSS,
+animated entrance) · habit CRUD (emoji/color pickers, target, allowed days,
+archive) · 5 selectable themes incl. new-brutalist · JSON export/import
+(replace or merge, incl. notes + times) · sample data loader · single-file
+**and** installable PWA builds · dev server · smoke tests.
 
 **Known limitations:**
-- No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
+- Time-of-day data accrues only from **live** check-ins — backfilled days carry
+  no timestamp (DECISIONS §17).
 - Heatmap colors by habits-done-per-day (breadth), not raw check-in count.
 - localStorage is per-browser/per-machine — no sync (by design; JSON backups).
-- No PWA installability (Service Worker can't run from `file://`).
+- Only the hosted `build:pwa` output is installable/offline; the single-file
+  build can't run a Service Worker (no `file://` install).
 - Day modal + editor modal are functional but could use visual polish passes.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes — all shipped ✅.
-2. Time-of-day insights still deferred (DECISIONS §9).
-3. Headless-browser e2e tests; optional heatmap-by-raw-count tweak.
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day — all shipped ✅.
+2. Headless-browser e2e tests (would also verify SW install + theme rendering).
+3. Backlog: per-habit GitHub-style heatmaps (habit-colour, non-gradient ramp).
 
 ## Conventions (must follow)
 
@@ -154,6 +161,7 @@ smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Time-of-day analytics (v0.8) | `docs/sessions/2026-09-16-time-of-day.md` |
 | 2026-09-16 | Theming system — 5 themes incl. new-brutalist (v0.7) | `docs/sessions/2026-09-16-themes.md` |
 | 2026-09-16 | PWA packaging (v0.6) | `docs/sessions/2026-09-16-pwa.md` |
 | 2026-09-16 | Polish: onboarding, empty states, modal motion (v0.5) | `docs/sessions/2026-09-16-polish.md` |

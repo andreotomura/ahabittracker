@@ -26,7 +26,7 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell` | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog` |
-| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
+| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
 | 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, stepper, heatmapCard, welcomeCard`) |
 | 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, bindEvents` |
 
@@ -79,6 +79,11 @@ DECISIONS §14).
 - Notes map mirrors completion keys: `notes[habitId][dateKey] = text` (≤ 240
   chars). Notes are fully independent of counts — toggling/clearing check-ins
   never touches them, and streaks/analytics ignore them (DECISIONS §12).
+- Times map also mirrors the keys: `times[habitId][dateKey] = [epochMs…]`,
+  recorded on **live** check-ins only (backfills get none), pruned to never
+  exceed the count, and cleared with the day (DECISIONS §17). Reads go through
+  `timesFor`/`timesOn`; time-of-day analytics (`hourHistogram`, `timeOfDay`,
+  `habitPeakPeriod`) only ever look here.
 - Counts > 1 are user-reachable via the steppers (`inc`/`dec`) since v0.4;
   mark-done logic everywhere tests `count ≥ 1` (truthiness), so multi counts
   don't change streaks/analytics (DECISIONS §13).
@@ -176,5 +181,6 @@ Three modes, all zero-dependency:
 - Charts are inline SVG (`Render.sparkline`/`scoreRing`/`weekdayBars`) — no
   dependencies, per DECISIONS §7.
 - Count-per-day schema — ready for multi-check-in UI.
-- Time-of-day analytics remains blocked on a timestamp schema decision —
-  deliberately deferred (DECISIONS §9).
+- Time-of-day analytics is now live: `times` records live check-ins, and
+  `hourHistogram`/`timeOfDay`/`habitPeakPeriod` back the Stats card (DECISIONS
+  §17). Backfilled days intentionally carry no timestamp.

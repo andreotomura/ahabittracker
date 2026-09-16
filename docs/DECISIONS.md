@@ -340,4 +340,32 @@ background.
 
 ---
 
+## 17. Check-in timestamps recorded additively (enables time-of-day analytics)
+
+**Date:** 2026-09-16 · **Status:** accepted · **Supersedes:** the §9 deferral
+
+**Context:** §9 deferred time-of-day analytics because completions are numeric
+counts with no timestamps, and it required an additive place to record *when* a
+check-in happened without changing what a completion value means.
+
+**Decision:** Add a top-level `times: { habitId: { 'YYYY-MM-DD': [epochMs…] } }`
+map (parallel to `notes`), leaving `completions` numeric and `version: 1`.
+Timestamps are recorded only for **live** check-ins (Today `toggle`/`inc`, plus
+sample data). Backfilled or `day-all` additions on past dates get **no invented
+time** — so a day's `times` array may be shorter than its count. `dec`/undo
+prune the array so it never outnumbers the count, and clearing a day removes it.
+`importJSON` sanitises times (known habits, valid date keys, finite positive
+numbers, ≤ 100/day); `mergeWith` gap-fills; `deleteHabit` drops them;
+`replaceWith` normalises a missing map to `{}`.
+
+**Consequences:** Time-of-day insight (24-hour histogram + morning / afternoon /
+evening / night peak, plus a per-habit ⏰ peak tag) works immediately, while
+older data simply contributes no timestamps until it is re-entered. The schema
+stays additive — no version bump, old backups import fine, and every existing
+streak/analytics path still reads only `completions`. UI: a “Time of day” card
+in Stats. Honest limitation (documented, not hidden): timestamps never exist for
+backfilled days.
+
+---
+
 *(New entries go below.)*

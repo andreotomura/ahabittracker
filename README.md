@@ -77,7 +77,7 @@ worker caches the app shell, so it keeps working with no connection.
   streaks, weekly targets
 - 📅 **Calendar** — monthly overview with per-day dots; click any day to backfill
 - 📊 **Stats** — momentum trends, per-habit health scores, weekday rhythm,
-  insights, GitHub-style heatmap
+  time-of-day histogram, insights, GitHub-style heatmap
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
 - 🎨 **Themes** — Zen, Midnight, Paper, Brutalist, and Brutalist Dark
   (switch from the palette button in the topbar)
@@ -111,6 +111,9 @@ Everything is stored in `localStorage` under one versioned key (`ahabit.db.v1`):
   },
   "notes": {
     "a1b2c3d4": { "2025-09-15": "finished chapter 3" }  // optional, ≤ 240 chars
+  },
+  "times": {
+    "a1b2c3d4": { "2025-09-15": [1757900000000] }       // live check-in timestamps
   }
 }
 ```
@@ -160,11 +163,12 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
 polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
-including new-brutalist).
+including new-brutalist) · time-of-day analytics.
 
 Next up:
 
-- ⏰ Time-of-day insights (needs a timestamp schema change)
+- 🗺️ **Per-habit heatmaps** — a contribution graph for each habit, using the
+  habit's own colour (no shared gradient)
 - 🔔 Gentle reminders (while the app is open)
 - 🧪 Headless-browser e2e tests
 
