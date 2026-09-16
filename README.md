@@ -84,6 +84,8 @@ worker caches the app shell, so it keeps working with no connection.
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
 - 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
+- 🖱️ **Custom cursor** — themed pointer with a subtle follow-halo (mouse devices
+  only; untouched on touch/reduced-motion)
 - 👀 **Sample data** — load it from the empty state to explore
 
 ## Data model
@@ -163,7 +165,7 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
 polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
-including new-brutalist) · time-of-day analytics.
+including new-brutalist) · time-of-day analytics · custom cursor.
 
 Next up:
 

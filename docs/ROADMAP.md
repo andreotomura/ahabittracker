@@ -32,7 +32,7 @@ database fully owned by the user as JSON.
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | **Time-of-day analytics (v0.8)** | ✅ | Live timestamps + hourly histogram & period peaks (DECISIONS §17) |
 | Per-habit heatmaps (contribution graph per habit) | 💡 | Backlog request — habit-colour (non-gradient) ramp (see Backlog) |
-| Custom cursor (CSS and/or JS-follow) | 💡 | Backlog request — easy CSS tier, intermediate module tier (see Backlog) |
+| **Custom cursor (v0.9)** | ✅ | CSS base + additive themed halo; a11y-gated (DECISIONS §18) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
 | In-app reminders (Notification API) | 💡 | While tab is open |
 | Headless-browser e2e tests | 💡 | Playwright etc. would be a dev-only dep |
@@ -161,6 +161,22 @@ dependency, still one self-contained HTML file.
    sanitisation, merge, histogram/period maths, and the Stats card rendering.
 6. **Version** — bumped to 0.8.0.
 
+## Shipped milestone: Custom cursor (v0.9)
+
+1. **Base cursor (CSS)** — a neutral custom pointer (white disc + dark ring,
+   centred hotspot) on `body` under `@media (pointer: fine)`, with an `auto`
+   fallback; text fields keep `cursor: text`. Inline SVG data URI (single-file
+   safe, no external asset).
+2. **Halo (JS flair)** — `UI.initCursor()` adds a themed, lagging accent that
+   grows over interactive elements and contracts on press. `pointer-events:
+   none`, above modals/toasts, and only on a fine pointer without
+   `prefers-reduced-motion`.
+3. **Never destructive** — the native cursor is never hidden, so touch,
+   keyboard, reduced-motion and Safari users all degrade gracefully
+   (DECISIONS §18).
+4. **Tests** — halo added on a fine pointer, skipped otherwise.
+5. **Version** — bumped to 0.9.0.
+
 ## Open questions
 
 - ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
@@ -177,19 +193,6 @@ dependency, still one self-contained HTML file.
   in Stats, alongside the global one. Unlike the global heatmap, these don't
   need the shared purple gradient — use each habit's own colour as a flat /
   opacity ramp so each map reads as *that* habit.
-- **Custom cursor inside the app** (requested — “how hard?”):
-  - **Easy tier (CSS only, ~15 lines):** `cursor: url(data:image/svg+xml,…) x y,
-    auto` on `body`. Zero JS. Caveat: SVG cursors are flaky in Safari; a 32×32
-    PNG data-URI is safer (we already have a zero-dep PNG encoder).
-  - **Fancy tier (small vanilla module, ~half a session):** `cursor: none` +
-    a `<div>` pointer that follows the mouse via `requestAnimationFrame`
-    (transform only), with optional lag/trail/glow and hover/click states.
-    Needs: `pointer-events:none`, skip on touch (`matchMedia('(pointer: coarse)')`),
-    honour `prefers-reduced-motion`, keep it above modals/toasts, and keep a
-    normal cursor fallback for keyboard users.
-  - Theme-aware via the existing tokens; could be per-theme (zen = soft dot,
-    brutalist = blocky crosshair). All assets must stay inline (no external
-    files) per DECISIONS §1/§7.
 
 ## Non-goals (for now)
 

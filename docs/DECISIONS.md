@@ -368,4 +368,33 @@ backfilled days.
 
 ---
 
+## 18. Custom cursor: CSS base + additive JS halo, never destructive
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Requested an in-app custom cursor. Done carelessly, custom cursors
+hurt usability/accessibility (hiding the real cursor, breaking text selection,
+running on touch), and Safari ignores SVG cursor images.
+
+**Decision:** Hybrid, degrading gracefully:
+- **Base (CSS only):** a neutral custom pointer — white disc + dark ring,
+  centred hotspot — on `body` inside `@media (pointer: fine)`, with the built-in
+  `auto` fallback. Text fields keep `cursor: text`. It is an inline SVG data URI,
+  so it stays a single-file asset (no external files — §1/§7).
+- **Flair (JS, additive):** `UI.initCursor()` appends a themed, lagging halo
+  (uses `--accent`, so it follows any theme) that grows over interactive
+  elements and contracts on press. It is `pointer-events: none`, `aria-hidden`,
+  sits above modals/toasts, and **only initialises on a fine pointer without
+  `prefers-reduced-motion`**.
+- The native cursor is **never** hidden (`cursor: none` is deliberately unused),
+  so keyboard/touch/reduced-motion users and any JS failure lose nothing.
+
+**Consequences:** The custom cursor is pure decoration over a fully usable UI.
+Touch devices never see it; reduced-motion users get no follow animation; Safari
+falls back to its normal cursor (the JS halo still appears, since it isn't an
+image). No new dependency and no new asset file — inline SVG plus ~40 lines in
+`ui.js`.
+
+---
+
 *(New entries go below.)*

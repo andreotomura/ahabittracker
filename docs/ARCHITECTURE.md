@@ -25,7 +25,7 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | # | File | Global | Responsibility | Key exports |
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
-| 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell` | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog` |
+| 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell`, custom cursor | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, initCursor` |
 | 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
 | 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, stepper, heatmapCard, welcomeCard`) |
 | 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, bindEvents` |
@@ -126,6 +126,10 @@ DECISIONS §14).
   (`--c`, `--d`, `--i`, `--ring`, `--p` are set inline by templates — not
   global theme tokens.)
 - `body.modal-open` locks scroll while a modal is open.
+- **Custom cursor**: base pointer is CSS (`.cursor` in `@media (pointer: fine)`,
+  inline SVG data URI, `auto` fallback); `UI.initCursor()` adds an additive
+  themed halo (`--accent`) gated on fine pointer + no reduced-motion. Never
+  hides the native cursor (DECISIONS §18).
 
 ## Build (`build.js`)
 
