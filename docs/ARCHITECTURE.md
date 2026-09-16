@@ -27,8 +27,9 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell`, custom cursor | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, initCursor` |
 | 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, habitCountsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
-| 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard`) |
-| 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, bindEvents` |
+| 4 | `src/js/prefs.js` | `Prefs` | UI-only customisation: colour/font token overrides + per-section visibility | `load, apply, get, tokenValue, COLORS, FONTS, FONT_OPTIONS, setColor, clearColors, hasCustomColors, setFont, clearFonts, hasCustomFonts, isHidden, setHidden, clearHidden, resetAll` |
+| 5 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, renderSettings, dayModalHtml, habitEditorHtml, THEMES, SECTIONS` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard, themePickerHtml`) |
+| 6 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, setTheme, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
 
@@ -136,6 +137,22 @@ DECISIONS §14).
   native cursor (DECISIONS §18, §20).
 - **Readability floor**: every theme's `--text` / `--text-2` / `--text-3` must be
   ≥ 4.5:1 against its `--card` (DECISIONS §20).
+
+## Customization (`Prefs` + Settings view)
+
+- `Prefs` is a UI-only state module (`localStorage['ahabit.prefs.v1']`): colour
+  overrides, font choices, and hidden sections. It never touches the DB.
+- Colour overrides are written as **inline CSS custom properties on `<html>`**
+  (`Prefs.apply()`), so they layer over the active theme; `--grad` /
+  `--grad-soft` / `--on-accent` are derived from the accents.
+- Fonts are system stacks only (`Prefs.FONTS`). Choosing a theme preset clears
+  colour/font overrides (`App.setTheme` when persisting).
+- `Render.SECTIONS` is the registry of hideable sections; each render function
+  guards with `Prefs.isHidden(id)`. The Settings view is `#view-settings`
+  (opened from the ⋯ menu, route `App.tab === 'settings'`), driven by delegated
+  `set-color`, `set-font`, `toggle-section` events and reset actions.
+- New themes still must meet the §20 contrast floor; user overrides may
+  deliberately exceed/ignore it.
 
 ## Build (`build.js`)
 

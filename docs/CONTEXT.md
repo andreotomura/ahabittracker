@@ -17,11 +17,11 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.10.1 shipped and working** — analytics (v0.2), notes
+Current milestone: **v0.11 shipped and working** — analytics (v0.2), notes
 (v0.3), multi check-ins (v0.4), polish (v0.5), PWA (v0.6), themes (v0.7),
-time-of-day (v0.8), custom cursor (v0.9), per-habit heatmaps (v0.10), plus a
-readability + cursor-consistency fix (v0.10.1). What's next: headless e2e tests
-and reminders.
+time-of-day (v0.8), custom cursor (v0.9), per-habit heatmaps (v0.10),
+readability + cursor fixes (v0.10.1), and the customization tool (v0.11:
+colors, fonts, per-tab layout). What's next: headless e2e tests and reminders.
 
 ## Quick facts
 
@@ -49,6 +49,7 @@ and reminders.
 | `src/js/utils.js` | Pure helpers: dates (`YYYY-MM-DD` keys), uid, escaping, month matrix |
 | `src/js/ui.js` | DOM helpers (`q/qa/el`), toasts, modal system, confirm/choice dialogs |
 | `src/js/store.js` | Data layer: habits + completions, streaks, weekly progress, import/export |
+| `src/js/prefs.js` | UI-only prefs: color/font overrides + per-section visibility (`ahabit.prefs.v1`) |
 | `src/js/render.js` | Pure view layer — state → HTML strings/nodes, no mutation |
 | `src/js/app.js` | Controller: tabs, theme, menu, import flow, delegated click + note-input handlers |
 | `build.js` | Zero-dep build tool: `dev [dir]` server / `build` (single file) / `pwa` (installable dir) |
@@ -59,8 +60,8 @@ and reminders.
 | `docs/` | The workflow memory — see sections below |
 
 **Script load order matters** (namespace pattern, not ES modules):
-`utils → ui → store → render → app` (see `build.js` `JS_ORDER`). Each file
-attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
+`utils → ui → store → prefs → render → app` (see `build.js` `JS_ORDER`). Each file
+attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundler —
 `build.js` concatenates in exactly this order.
 
 ## Data model (compact)
@@ -116,16 +117,16 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.10):** Today check-ins w/ streaks + weekly goals + inline notes +
+**Working (v0.11):** Today check-ins w/ streaks + weekly goals + inline notes +
 count steppers + dismissible first-run welcome card · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
-streaks, 7-day rate, global + **per-habit** heatmaps, momentum trend, per-habit
+streaks, 7-day rate, global + per-habit heatmaps, momentum trend, per-habit
 health scores, weekday rhythm, time-of-day histogram, insights — all inline
 SVG/CSS, animated entrance) · habit CRUD (emoji/color pickers, target, allowed
-days, archive) · 5 selectable themes incl. new-brutalist · themed custom cursor
-(CSS base + JS halo) · JSON export/import (replace or merge, incl. notes +
-times) · sample data loader · single-file **and** installable PWA builds · dev
-server · smoke tests.
+days, archive) · 5 preset themes + a **customization tool** (18 color tokens,
+fonts, per-tab section visibility) · themed custom cursor (CSS base + JS halo)
+· JSON export/import (replace or merge, incl. notes + times) · sample data
+loader · single-file **and** installable PWA builds · dev server · smoke tests.
 
 **Known limitations:**
 - Time-of-day data accrues only from **live** check-ins — backfilled days carry
@@ -138,7 +139,7 @@ server · smoke tests.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps — all shipped ✅.
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps · v0.10.1 readability · v0.11 customization — all shipped ✅.
 2. Headless-browser e2e tests (would also verify SW install + theme/cursor rendering).
 3. Gentle reminders (while the app is open). The feature backlog is otherwise clear.
 
@@ -155,6 +156,9 @@ server · smoke tests.
   structural tokens over hardcoded px so a theme can change shape/type, not just
   color. Keep `--text`/`--text-2`/`--text-3` at **≥ 4.5:1** on `--card`
   (DECISIONS §20). No external fonts (DECISIONS §7).
+- **UI preferences** (theme, welcome, `Prefs`) live in their own localStorage
+  keys — never in `ahabit.db.v1` (DECISIONS §14, §21). Add new hideable sections
+  to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`.
 - Run `npm test` before finishing; `npm run build` when HTML/CSS/JS output
   changes. Update `docs/CONTEXT.md` if behavior or commands change.
 - UX tone: fast, friendly, beautiful — emoji are fine, no clutter.
@@ -164,6 +168,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Customization tool — colors, fonts, layout (v0.11) | `docs/sessions/2026-09-16-customization.md` |
 | 2026-09-16 | Readability + cursor consistency (v0.10.1) | `docs/sessions/2026-09-16-readability-cursor.md` |
 | 2026-09-16 | Per-habit heatmaps (v0.10) | `docs/sessions/2026-09-16-per-habit-heatmaps.md` |
 | 2026-09-16 | Custom cursor (v0.9) | `docs/sessions/2026-09-16-cursor.md` |

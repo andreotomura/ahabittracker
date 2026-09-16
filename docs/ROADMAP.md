@@ -33,6 +33,7 @@ database fully owned by the user as JSON.
 | **Custom cursor (v0.9)** | ✅ | CSS base + additive themed halo; a11y-gated (DECISIONS §18) |
 | **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
 | Readability + cursor consistency (v0.10.1) | ✅ | Text tokens ≥ 4.5:1; themed dot on every element (DECISIONS §20) |
+| **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides + per-tab section visibility (DECISIONS §21) |
 | In-app reminders (Notification API) | 💡 | While the tab is open |
 | Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 
@@ -186,6 +187,21 @@ dependency, still one self-contained HTML file.
 3. **Data** — `Store.habitCountsByDay(id, start, end)` for raw per-habit counts.
 4. **Tests** — per-habit counts and the rendered Habit-history cards.
 5. **Version** — bumped to 0.10.0.
+
+## Shipped milestone: Customization tool (v0.11)
+
+1. **Settings view** — opened from the ⋯ menu (`#view-settings`), with live
+   preview (no modal).
+2. **Colors** — 18 token pickers (surfaces, text, accents, lines, feedback,
+   heatmap); `--grad` / `--grad-soft` / `--on-accent` are derived from the
+   accents.
+3. **Fonts** — body + display pickers, system stacks only.
+4. **Layout** — per-tab show/hide for 13 sections via a `Render.SECTIONS`
+   registry.
+5. **State** — `Prefs` (UI-only, `ahabit.prefs.v1`); choosing a theme preset
+   resets colour/font overrides; reset buttons for colors/fonts/layout/all.
+6. **Tests** — prefs round-trip, validation, section gating, settings render.
+7. **Version** — bumped to 0.11.0.
 
 ## Open questions
 

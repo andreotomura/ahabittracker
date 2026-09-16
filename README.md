@@ -82,6 +82,8 @@ worker caches the app shell, so it keeps working with no connection.
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
 - 🎨 **Themes** — Zen, Midnight, Paper, Brutalist, and Brutalist Dark
   (switch from the palette button in the topbar)
+- 🎛️ **Customize** — a settings view to override colors and fonts and to show
+  or hide sections on each tab (⋯ → Customize…)
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
 - 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
@@ -135,7 +137,7 @@ Backups wrap this in `{ "app": "AHA(bit) tracker", "exportedAt": …, "db": … 
 | `npm test`         | smoke tests for the data layer, views, and PWA assets |
 
 Source maps: none needed — keep code readable instead. Modules attach to global
-namespaces in dependency order: `Utils → UI → Store → Render → App`.
+namespaces in dependency order: `Utils → UI → Store → Prefs → Render → App`.
 
 > **Note:** `dist/` is git-ignored (it's a build artifact), so a fresh clone
 > always starts with `npm run build` first.
@@ -167,7 +169,7 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
 polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
 including new-brutalist) · time-of-day analytics · custom cursor · per-habit
-heatmaps.
+heatmaps · customization tool (colors, fonts, layout).
 
 Next up:
 

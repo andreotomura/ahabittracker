@@ -33,7 +33,7 @@ only if the app grows past a few thousand lines.
 concatenate naively without a bundler.
 
 **Decision:** Each file attaches to a global namespace
-(`Utils → UI → Store → Render → App`) in the order listed in `build.js`
+(`Utils → UI → Store → Prefs → Render → App`) in the order listed in `build.js`
 `JS_ORDER`. App = controller, Store = data, Render = pure views.
 
 **Consequences:** Simple, greppable, zero tooling. Downside: globals — mitigated
@@ -442,6 +442,33 @@ custom cursor reverted to the default hand over buttons because component
 **Consequences:** Text is legible and consistent across all themes, and the
 themed dot shows everywhere including buttons — no default hand. This refines
 §18, which only described `body`.
+
+---
+
+## 21. Customization is UI-only state: token overrides + section visibility
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Requested a settings tool to customise all colours and fonts, and
+show/hide elements per tab.
+
+**Decision:** A new `Prefs` namespace (`src/js/prefs.js`, loaded between Store
+and Render) holds **UI-only** preferences in
+`localStorage['ahabit.prefs.v1']` — never exported (cf. §14):
+- **Colours/fonts** are applied as **inline CSS custom properties on `<html>`**,
+  which layer over the active theme's token set. `--grad`, `--grad-soft` and
+  `--on-accent` are derived from the accent colours (with a luminance check so
+  ink on the accent stays readable). Fonts come from **system stacks only**
+  (§7). Selecting a theme preset clears colour/font overrides (fresh start).
+- **Visibility**: a `Render.SECTIONS` registry lists hideable sections per view;
+  Render guards each with `Prefs.isHidden(id)`.
+- The Settings surface is a dedicated `#view-settings` view (opened from the ⋯
+  menu), not a modal, so it has room and previews changes live.
+
+**Consequences:** Fully additive — no DB/schema change, no new dependency. User
+colours can intentionally override the §20 contrast floor (their call), while
+the built-in presets still meet it; the `--on-accent` derivation prevents the
+most common self-inflicted contrast bug.
 
 ---
 
