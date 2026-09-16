@@ -1,11 +1,13 @@
 {
   "name": "aha-bit-tracker",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "AHA(bit) tracker — a beautiful, local-first habit tracker that builds to a single HTML file. Data export/import as JSON.",
   "scripts": {
     "dev": "node build.js dev",
     "build": "node build.js build",
+    "build:pwa": "node build.js pwa",
+    "preview:pwa": "node build.js pwa && node build.js dev dist/pwa",
     "test": "node scripts/smoke.js",
     "session": "node scripts/new-session.js"
   },

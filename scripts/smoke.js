@@ -2,6 +2,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const icons = require('./icons.js');
+const pwa = require('./pwa.js');
 
 function fakeEl() {
   return {
@@ -229,5 +231,20 @@ App.openDay(Utils.todayKey());
 assert(true, 'empty day modal renders without throwing');
 Store.loadSample();
 assert(Store.activeHabits().length > 0, 'sample data reloads after empty-state tests');
+
+console.log('— pwa assets —');
+const png = icons.buildPng(192);
+assert(png.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), 'icon has a valid PNG signature');
+assert(png.readUInt32BE(16) === 192 && png.readUInt32BE(20) === 192, 'icon PNG IHDR reports 192×192');
+assert(png.length > 200, 'icon PNG has image data');
+const maskable = icons.buildPng(512, { maskable: true });
+assert(maskable.readUInt32BE(16) === 512, 'maskable icon is 512×512');
+const man = JSON.parse(pwa.manifest());
+assert(man.name && man.start_url === './' && man.display === 'standalone', 'manifest has required install fields');
+assert(man.icons.some((i) => i.sizes === '192x192') && man.icons.some((i) => i.purpose === 'maskable'), 'manifest declares 192px + maskable icons');
+const sw = pwa.serviceWorker('abc123');
+assert(sw.includes("const CACHE = 'ahabit-abc123'"), 'service worker cache is content-versioned');
+assert(sw.includes("addEventListener('install'") && sw.includes("addEventListener('activate'") && sw.includes("addEventListener('fetch'"), 'service worker handles install/activate/fetch');
+assert(pwa.PWA_HEAD.includes('rel="manifest"') && pwa.PWA_HEAD.includes('serviceWorker.register'), 'PWA head snippet has manifest + registration');
 
 console.log('\n✅ All smoke tests passed');
