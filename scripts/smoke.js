@@ -80,6 +80,23 @@ Store.setNote(h.id, 'not-a-date', 'nope');
 assert(Store.getNote(h.id, 'not-a-date') === '', 'invalid date keys rejected');
 assert(Store.getNote('ghost-id', Utils.todayKey()) === '', 'getNote safe for unknown habits');
 
+console.log('— multi check-ins —');
+assert(Store.countFor(h.id, Utils.todayKey()) === 0, 'countFor reads 0 when absent');
+Store.setCount(h.id, Utils.todayKey(), 2);
+assert(Store.countFor(h.id, Utils.todayKey()) === 2 && Store.isDone(h.id, Utils.todayKey()), 'count ≥ 1 counts as done');
+Store.inc(h.id, Utils.todayKey());
+assert(Store.countFor(h.id, Utils.todayKey()) === 3, 'inc adds a check-in');
+Store.dec(h.id, Utils.todayKey());
+Store.dec(h.id, Utils.todayKey());
+assert(Store.countFor(h.id, Utils.todayKey()) === 1, 'dec removes one at a time');
+Store.dec(h.id, Utils.todayKey());
+assert(Store.countFor(h.id, Utils.todayKey()) === 0 && !Store.isDone(h.id, Utils.todayKey()), 'dec at 1 un-dones the habit');
+Store.inc(h.id, Utils.todayKey());
+Store.inc(h.id, Utils.todayKey());
+assert(Store.countFor(h.id, Utils.todayKey()) === 2, 'inc works from zero too');
+Store.toggle(h.id, Utils.todayKey());
+assert(Store.countFor(h.id, Utils.todayKey()) === 0, 'toggle fully undoes a multi count');
+
 console.log('— streaks —');
 const y = Utils.addDays(new Date(), -1).getFullYear() - 1;
 // create a run of 3 consecutive days ending today
@@ -140,6 +157,7 @@ Store.loadSample();
 assert(Store.activeHabits().length > 0, 'sample data loads');
 const water = Store.activeHabits().find((x) => x.name === 'Drink water');
 assert(Store.getNote(water.id, Utils.todayKey()) === '2L so far 💪', 'sample data includes a note for today');
+assert(Store.countFor(water.id, Utils.todayKey()) === 3, 'sample data demos a multi-check-in day');
 
 console.log('— analytics —');
 // Deterministic: a fresh habit checked in for each of the last 10 days.
@@ -173,6 +191,7 @@ assert(ins.mostConsistent && ins.mostConsistent.rate >= 0, 'insights finds a mos
 
 Render.renderToday();
 assert(document.querySelector('#view-today').innerHTML.includes('note-field'), 'Today rows render note inputs when done');
+assert(document.querySelector('#view-today').innerHTML.includes('step-btn') && document.querySelector('#view-today').innerHTML.includes('×3'), 'Today rows render count steppers with the right total');
 Render.renderCalendar(0);
 Render.renderStats();
 Render.renderHabits();

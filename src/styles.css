@@ -400,6 +400,47 @@ p { margin: 0; }
 .note-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
 .day-row .note-field { margin-top: 5px; padding: 6px 10px; font-size: 12.5px; }
 
+/* Count stepper (− ×N ＋) */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.step-btn {
+  width: 28px; height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  transition: background .15s, color .15s, transform .1s;
+}
+.step-btn:hover:not(:disabled) { background: var(--bg-soft); color: var(--text); }
+.step-btn:active:not(:disabled) { transform: scale(.88); }
+.step-btn:disabled { opacity: .35; cursor: not-allowed; }
+.step-btn.inc:hover:not(:disabled) { background: var(--grad); color: #fff; box-shadow: 0 2px 8px rgba(109, 93, 246, .35); }
+.step-count {
+  min-width: 30px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.day-row .stepper { padding: 2px; }
+.day-row .step-btn { width: 24px; height: 24px; font-size: 13px; }
+.day-row .step-count { min-width: 24px; font-size: 11.5px; }
+
 /* ---------------- Empty state ---------------- */
 
 .empty {

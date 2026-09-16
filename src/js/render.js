@@ -25,6 +25,16 @@ const Render = (() => {
   const checkSvg = () =>
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4 4L19 7.5"/></svg>';
 
+  /** Compact − ×N + stepper for count-per-day check-ins. */
+  const stepper = (id, dateKey, count) => `
+    <div class="stepper" role="group" aria-label="Check-in count">
+      <button class="step-btn" data-action="dec" data-id="${id}" data-date="${dateKey}"
+        aria-label="One fewer check-in" title="One fewer"${count <= 1 ? ' disabled' : ''}>−</button>
+      <span class="step-count">×${count}</span>
+      <button class="step-btn inc" data-action="inc" data-id="${id}" data-date="${dateKey}"
+        aria-label="Add a check-in" title="Add another check-in">＋</button>
+    </div>`;
+
   const freqLabel = (h) => {
     if (h.target > 0) {
       const days = h.days.length
@@ -68,6 +78,7 @@ const Render = (() => {
     const rows = sorted
       .map((h) => {
         const isDone = Store.isDone(h.id, tKey);
+        const count = Store.countFor(h.id, tKey);
         const note = Store.getNote(h.id, tKey);
         const streak = Store.streakFor(h.id);
         const wp = Store.weekProgress(h.id);
@@ -78,7 +89,7 @@ const Render = (() => {
         return `
           <div class="habit${isDone ? ' done' : ''}">
             <button class="check${isDone ? ' done' : ''}" data-action="toggle" data-id="${h.id}"
-              aria-label="${isDone ? 'Mark as not done' : 'Mark as done'}" title="${isDone ? 'Undo' : 'Done'}">${checkSvg()}</button>
+              aria-label="${isDone ? 'Mark as not done' : 'Mark as done'}" title="${isDone ? (count > 1 ? `Undo all (×${count})` : 'Undo') : 'Done'}">${checkSvg()}</button>
             <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
             <div class="h-main">
               <div class="h-name">${Utils.esc(h.name)}</div>
@@ -89,6 +100,7 @@ const Render = (() => {
                     placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">`
                 : ''}
             </div>
+            ${isDone ? stepper(h.id, tKey, count) : ''}
           </div>`;
       })
       .join('');
@@ -431,17 +443,19 @@ const Render = (() => {
 
     const rows = all.map((h) => {
       const done = Store.isDone(h.id, dateKey);
+      const count = Store.countFor(h.id, dateKey);
       const note = Store.getNote(h.id, dateKey);
       return `
         <div class="habit compact day-row${done ? ' done' : ''}">
           <button class="check${done ? ' done' : ''}" data-action="toggle-day" data-id="${h.id}" data-date="${dateKey}"
-            aria-label="${done ? 'Mark as not done' : 'Mark as done'}" title="${done ? 'Undo' : 'Done'}">${checkSvg()}</button>
+            aria-label="${done ? 'Mark as not done' : 'Mark as done'}" title="${done ? (count > 1 ? `Undo all (×${count})` : 'Undo') : 'Done'}">${checkSvg()}</button>
           <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
           <div class="h-main">
             <div class="h-name">${Utils.esc(h.name)}</div>
             <input class="note-field" data-action="note" data-id="${h.id}" data-date="${dateKey}" maxlength="240"
               placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">
           </div>
+          ${done ? stepper(h.id, dateKey, count) : ''}
         </div>`;
     }).join('');
 

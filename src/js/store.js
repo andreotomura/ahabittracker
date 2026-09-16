@@ -102,6 +102,8 @@ const Store = (() => {
 
   const completionsFor = (id) => db.completions[id] || {};
   const isDone = (id, key) => (completionsFor(id)[key] || 0) > 0;
+  /** Raw count for a habit on a day (0 when absent). */
+  const countFor = (id, key) => completionsFor(id)[key] || 0;
 
   function setCount(id, key, count) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
@@ -118,6 +120,16 @@ const Store = (() => {
   /** Check-in / undo for a habit on a given day (0 ↔ 1 for now). */
   function toggle(id, key) {
     setCount(id, key, isDone(id, key) ? 0 : 1);
+  }
+
+  /** Add one more check-in to a habit on a day (count-per-day). */
+  function inc(id, key) {
+    setCount(id, key, countFor(id, key) + 1);
+  }
+
+  /** Remove one check-in; at 1 this un-dones the habit. */
+  function dec(id, key) {
+    setCount(id, key, countFor(id, key) - 1);
   }
 
   /* ---------------- Notes ---------------- */
@@ -581,13 +593,15 @@ const Store = (() => {
     setNote(added[0].id, Utils.keyOf(today), '2L so far 💪');
     setNote(added[1].id, Utils.keyOf(Utils.addDays(today, -1)), 'Chapter 3 — the plot thickens!');
     setNote(added[2].id, Utils.keyOf(Utils.addDays(today, -2)), '5 km run 🏃♂️');
+    setCount(added[0].id, Utils.keyOf(today), 3); // demo: multiple check-ins in one day
     save();
   }
 
   return {
     load, save,
     activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
-    completionsFor, isDone, setCount, toggle, doneCount, dailySummary, countsByDay,
+    completionsFor, isDone, countFor, setCount, toggle, inc, dec,
+    doneCount, dailySummary, countsByDay,
     getNote, setNote,
     streakFor, weekProgress, totalCompletions, statsOverview,
     habitTrend, healthScore, weekdayRates, overallTrend, insights,
