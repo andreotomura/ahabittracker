@@ -592,6 +592,111 @@ p { margin: 0; }
 
 .heat-legend { display: flex; align-items: center; gap: 5px; margin-top: 12px; font-size: 11px; color: var(--text-3); justify-content: flex-end; }
 
+/* ---------------- Analytics ---------------- */
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.section-head h3 { font-size: 16px; }
+.section-head span { color: var(--text-3); font-size: 12.5px; }
+
+.section-note { color: var(--text-3); font-size: 12.5px; margin-top: 12px; text-align: center; line-height: 1.5; }
+.section-note strong { color: var(--text-2); }
+.analytics-note { margin-top: 16px; }
+
+/* Sparklines */
+.spark { display: block; width: 100%; height: 40px; overflow: visible; }
+.spark-line {
+  fill: none;
+  stroke: var(--c, var(--accent));
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark-area { fill: var(--c, var(--accent)); opacity: .12; }
+
+/* Momentum */
+.trend-card { padding: 18px 20px; margin-bottom: 4px; }
+.trend-card .spark { height: 96px; margin: 2px 0 10px; }
+.trend-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.trend-foot strong { font-size: 24px; font-weight: 800; }
+.trend-foot span { color: var(--text-2); font-size: 13px; }
+.trend-dir { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); font-weight: 600; }
+
+.trend { font-size: 12px; font-weight: 800; }
+.trend.up { color: var(--ok); }
+.trend.down { color: var(--err); }
+.trend.flat { color: var(--text-3); }
+
+/* Habit health */
+.health-list { display: flex; flex-direction: column; gap: 10px; }
+.health-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+.health-main { flex: 1; min-width: 0; }
+.health-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.health-top .h-name { font-weight: 650; font-size: 15px; }
+.health-main .spark { height: 38px; margin: 6px 0 4px; }
+.health-meta { font-size: 12.5px; color: var(--text-3); }
+
+.score-ring {
+  width: 56px; height: 56px;
+  flex: none;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring, var(--accent)) calc(var(--p) * 1%), var(--border) 0);
+  display: grid;
+  place-items: center;
+}
+.score-inner {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Weekday rhythm */
+.weekday-card { padding: 18px 20px 14px; }
+.weekday-bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  height: 110px;
+  align-items: end;
+}
+.wd-col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.wd-track {
+  width: 100%;
+  max-width: 34px;
+  height: 88px;
+  background: var(--card-2);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid var(--border);
+}
+.wd-fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 7px;
+  background: var(--grad);
+  transition: height .4s cubic-bezier(.22, .8, .36, 1);
+}
+.wd-label { font-size: 11.5px; font-weight: 700; color: var(--text-3); }
+
+/* Insights */
+.insights-card { padding: 18px 20px; }
+.insight-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.insight-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); }
+.insight-list strong { color: var(--text); font-weight: 650; }
+.ins-ico { font-size: 16px; flex: none; }
+
 /* ---------------- Habits (manage) ---------------- */
 
 .habits-head { display: flex; align-items: center; justify-content: space-between; padding: 24px 2px 14px; }

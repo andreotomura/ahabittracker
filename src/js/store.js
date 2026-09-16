@@ -241,6 +241,189 @@ const Store = (() => {
     return { total, daysTracked: days.size, best, rate7 };
   }
 
+  /* ---------------- Analytics ---------------- */
+
+  /** Weekday number for a Date: 1=Mon … 7=Sun. */
+  const weekdayNum = (d) => ((d.getDay() + 6) % 7) + 1;
+
+  /** A day is "scheduled" when the habit allows that weekday (empty days = any day). */
+  const isScheduled = (h, d) => !h.days || !h.days.length || h.days.includes(weekdayNum(d));
+
+  /**
+   * First day that counts for a habit: the earlier of its creation date and
+   * its earliest completion (backfills/sample data can predate creation).
+   */
+  function trackingStart(h) {
+    let start = Utils.keyOf(new Date(h.createdAt || Date.now()));
+    const comps = completionsFor(h.id);
+    for (const k in comps) if (k < start) start = k;
+    return start;
+  }
+
+  /** Completion over the `days` days ending at `endDate`, scheduled days only. */
+  function windowRate(h, endDate, days) {
+    const comps = completionsFor(h.id);
+    const start = trackingStart(h);
+    const today = Utils.todayKey();
+    let done = 0, scheduled = 0;
+    for (let i = 0; i < days; i++) {
+      const d = Utils.addDays(endDate, -i);
+      const key = Utils.keyOf(d);
+      if (key < start || key > today) continue; // before tracking began / in the future
+      if (!isScheduled(h, d)) continue;
+      scheduled++;
+      if (comps[key]) done++;
+    }
+    return { done, scheduled, rate: scheduled ? done / scheduled : 0 };
+  }
+
+  /**
+   * Per-habit trend: a trailing 7-day completion rate sampled daily over the
+   * last `days` days (trimmed to when the habit started), plus the current vs
+   * previous window rate and a direction arrow.
+   */
+  function habitTrend(id, days = 30) {
+    const h = getHabit(id);
+    if (!h) return null;
+    const today = new Date();
+    const startDate = Utils.parseKey(trackingStart(h));
+    const points = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const end = Utils.addDays(today, -i);
+      if (Utils.addDays(end, -6) < startDate) continue; // whole 7-day window predates the habit
+      points.push(windowRate(h, end, 7).rate);
+    }
+    if (!points.length) points.push(windowRate(h, today, 7).rate);
+
+    const cur = windowRate(h, today, days);
+    const prev = windowRate(h, Utils.addDays(today, -days), days);
+    const delta = cur.rate - prev.rate;
+    const direction = delta > 0.05 ? 'up' : delta < -0.05 ? 'down' : 'flat';
+    return { points, rate: cur.rate, prevRate: prev.rate, delta, direction };
+  }
+
+  /**
+   * 0–100 explainable health score.
+   *   target habits:    40% 30-day consistency + 30% weekly-target attainment + 30% streak
+   *   no-target habits: 70% 30-day consistency + 30% streak
+   */
+  function healthScore(id) {
+    const h = getHabit(id);
+    if (!h) return null;
+    const today = new Date();
+    const c30 = windowRate(h, today, 30);
+    const streak = streakFor(id).current;
+    const streakScore = Math.min(streak, 14) / 14;
+
+    let targetScore = c30.rate;
+    if (h.target > 0) {
+      // Average attainment over the last 4 complete Mon–Sun weeks.
+      const monday = Utils.weekEnding(today)[0];
+      const start = trackingStart(h);
+      let sum = 0, n = 0;
+      for (let w = 1; w <= 4; w++) {
+        const m = Utils.addDays(monday, -7 * w);
+        if (Utils.keyOf(m) < start) continue; // week predates tracking
+        let d = 0;
+        for (let i = 0; i < 7; i++) if (isDone(id, Utils.keyOf(Utils.addDays(m, i)))) d++;
+        sum += Math.min(d / h.target, 1);
+        n++;
+      }
+      if (n) targetScore = sum / n;
+    }
+
+    const score = h.target > 0
+      ? 0.4 * c30.rate + 0.3 * targetScore + 0.3 * streakScore
+      : 0.7 * c30.rate + 0.3 * streakScore;
+
+    return {
+      score: Math.round(score * 100),
+      consistency: Math.round(c30.rate * 100),
+      target: Math.round(targetScore * 100),
+      streak: Math.round(streakScore * 100),
+      streakDays: streak,
+      hasTarget: h.target > 0,
+    };
+  }
+
+  /** Completion rate per weekday (1=Mon…7=Sun) over the last `weeks` weeks. */
+  function weekdayRates(weeks = 12) {
+    const out = Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, done: 0, scheduled: 0, rate: 0 }));
+    const today = new Date();
+    for (const h of activeHabits()) {
+      const comps = completionsFor(h.id);
+      const start = trackingStart(h);
+      for (let i = 0; i < weeks * 7; i++) {
+        const d = Utils.addDays(today, -i);
+        const key = Utils.keyOf(d);
+        if (key < start || key > Utils.todayKey()) continue;
+        if (!isScheduled(h, d)) continue;
+        const slot = out[weekdayNum(d) - 1];
+        slot.scheduled++;
+        if (comps[key]) slot.done++;
+      }
+    }
+    out.forEach((s) => { s.rate = s.scheduled ? s.done / s.scheduled : 0; });
+    return out;
+  }
+
+  /** Overall trailing 7-day completion rate sampled daily (all active habits). */
+  function overallTrend(days = 30) {
+    const habits = activeHabits();
+    const today = new Date();
+    const rateAt = (end) => {
+      let done = 0, scheduled = 0;
+      for (const h of habits) {
+        const r = windowRate(h, end, 7);
+        done += r.done;
+        scheduled += r.scheduled;
+      }
+      return scheduled ? done / scheduled : 0;
+    };
+    const points = [];
+    for (let i = days - 1; i >= 0; i--) points.push(rateAt(Utils.addDays(today, -i)));
+    return points;
+  }
+
+  /** Aggregate highlights for the Stats view. */
+  function insights() {
+    const habits = activeHabits();
+    const wd = weekdayRates(12).filter((s) => s.scheduled > 0);
+    let bestDay = null, worstDay = null;
+    for (const s of wd) {
+      if (!bestDay || s.rate > bestDay.rate) bestDay = s;
+      if (!worstDay || s.rate < worstDay.rate) worstDay = s;
+    }
+
+    let mostConsistent = null;
+    let avgHealth = 0;
+    const today = new Date();
+    if (habits.length) {
+      for (const h of habits) {
+        const r = windowRate(h, today, 30);
+        if (r.scheduled > 0 && (!mostConsistent || r.rate > mostConsistent.rate)) {
+          mostConsistent = { name: h.name, emoji: h.emoji, color: h.color, rate: r.rate };
+        }
+        avgHealth += (healthScore(h.id) || { score: 0 }).score;
+      }
+      avgHealth = Math.round(avgHealth / habits.length);
+    }
+
+    // Longest current quiet stretch (days since last check-in), 3+ days only.
+    let gap = null;
+    const todayMid = Utils.parseKey(Utils.todayKey());
+    for (const h of habits) {
+      const comps = completionsFor(h.id);
+      let last = null;
+      for (const k in comps) if (!last || k > last) last = k;
+      if (!last) continue;
+      const days = Math.round((todayMid - Utils.parseKey(last)) / 86400000);
+      if (days >= 3 && (!gap || days > gap.days)) gap = { days, name: h.name, emoji: h.emoji };
+    }
+
+    return { bestDay, worstDay, mostConsistent, avgHealth, gap };
+  }
+
   /* ---------------- Backup: export / import ---------------- */
 
   function exportJSON() {
@@ -356,6 +539,7 @@ const Store = (() => {
     activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
     completionsFor, isDone, setCount, toggle, doneCount, dailySummary, countsByDay,
     streakFor, weekProgress, totalCompletions, statsOverview,
+    habitTrend, healthScore, weekdayRates, overallTrend, insights,
     exportJSON, importJSON, replaceWith, mergeWith, loadSample,
   };
 })();

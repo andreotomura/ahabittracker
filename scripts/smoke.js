@@ -120,6 +120,37 @@ assert(Store.activeHabits().length === 1 && Store.getHabit('zz1').name === 'Impo
 console.log('— rendering —');
 Store.loadSample();
 assert(Store.activeHabits().length > 0, 'sample data loads');
+
+console.log('— analytics —');
+// Deterministic: a fresh habit checked in for each of the last 10 days.
+const perf = Store.addHabit({ name: 'Perfect', emoji: '🎯', color: '#10b981', target: 7 });
+for (let i = 0; i < 10; i++) Store.setCount(perf.id, Utils.keyOf(Utils.addDays(new Date(), -i)), 1);
+const pTrend = Store.habitTrend(perf.id, 30);
+assert(pTrend && pTrend.points.length >= 2 && pTrend.points.length <= 30, 'habitTrend returns a trimmed point series');
+assert(pTrend.rate === 1, `perfect habit 30-day rate is 1 (got ${pTrend.rate})`);
+assert(pTrend.direction !== 'down', 'perfect habit is not slipping');
+const pHealth = Store.healthScore(perf.id);
+assert(pHealth.score >= 90, `perfect habit health is high (got ${pHealth.score})`);
+assert(pHealth.streakDays >= 10 && pHealth.consistency === 100, 'healthScore exposes streak + consistency');
+assert(pHealth.hasTarget && typeof pHealth.target === 'number', 'healthScore explains target attainment');
+
+const trend = Store.habitTrend(Store.activeHabits()[0].id, 30);
+assert(trend && trend.points.length >= 2, 'habitTrend works on sample habits');
+assert(['up', 'down', 'flat'].includes(trend.direction), 'habitTrend direction is valid');
+const hs = Store.healthScore(Store.activeHabits()[0].id);
+assert(hs && hs.score >= 0 && hs.score <= 100, `healthScore in 0–100 (got ${hs && hs.score})`);
+assert(typeof hs.streak === 'number', 'healthScore has explainable parts');
+
+const wdr = Store.weekdayRates(12);
+assert(wdr.length === 7 && wdr.every((r) => r.rate >= 0 && r.rate <= 1), 'weekdayRates returns 7 fractions');
+assert(wdr.every((r) => r.scheduled === 0 || r.rate === r.done / r.scheduled), 'weekdayRates rates match counts');
+const overall = Store.overallTrend(30);
+assert(overall.length === 30 && overall.every((v) => v >= 0 && v <= 1), 'overallTrend returns 30 fractions');
+const ins = Store.insights();
+assert(ins && ins.avgHealth >= 0 && ins.avgHealth <= 100, `insights avgHealth in range (got ${ins && ins.avgHealth})`);
+assert(!ins.bestDay || !ins.worstDay || ins.bestDay.rate >= ins.worstDay.rate, 'best weekday ≥ worst weekday');
+assert(ins.mostConsistent && ins.mostConsistent.rate >= 0, 'insights finds a most-consistent habit');
+
 Render.renderToday();
 Render.renderCalendar(0);
 Render.renderStats();

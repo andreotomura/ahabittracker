@@ -161,10 +161,78 @@ const Render = (() => {
     `;
   }
 
+  /* ---- analytics widgets ---- */
+
+  const trendArrow = (dir) => {
+    if (dir === 'up') return '<span class="trend up" title="Improving">▲</span>';
+    if (dir === 'down') return '<span class="trend down" title="Slipping">▼</span>';
+    return '<span class="trend flat" title="Steady">→</span>';
+  };
+
+  /** Inline SVG sparkline from an array of 0–1 values; color via CSS var `--c`. */
+  function sparkline(points, color, w = 160, h = 40) {
+    const n = points.length;
+    if (n < 2) return '';
+    const pad = 3;
+    const stepX = (w - pad * 2) / (n - 1);
+    const y = (v) => (h - pad) - (h - pad * 2) * Utils.clamp(v, 0, 1);
+    const pts = points.map((v, i) => [pad + i * stepX, y(v)]);
+    const line = pts.map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${yy.toFixed(1)}`).join(' ');
+    const area = `${line} L${pts[n - 1][0].toFixed(1)} ${h - pad} L${pts[0][0].toFixed(1)} ${h - pad} Z`;
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="--c:${Utils.esc(color)}" aria-hidden="true">
+      <path class="spark-area" d="${area}"></path>
+      <path class="spark-line" d="${line}"></path>
+    </svg>`;
+  }
+
+  /** Conic-gradient health ring (0–100). */
+  const scoreRing = (score) => {
+    const ring = score >= 70 ? 'var(--ok)' : score >= 40 ? 'var(--warn)' : 'var(--err)';
+    return `<div class="score-ring" style="--p:${score};--ring:${ring}" title="Health score ${score}/100">
+      <div class="score-inner">${score}</div>
+    </div>`;
+  };
+
+  function healthCard(h) {
+    const trend = Store.habitTrend(h.id, 30) || { points: [], rate: 0, direction: 'flat' };
+    const health = Store.healthScore(h.id) || { score: 0 };
+    const wp = Store.weekProgress(h.id);
+    const meta = [`${Math.round(trend.rate * 100)}% · 30 days`];
+    if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
+    return `<div class="health-card card">
+      <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
+      <div class="health-main">
+        <div class="health-top">
+          <span class="h-name">${Utils.esc(h.name)}</span>
+          ${trendArrow(trend.direction)}
+        </div>
+        ${sparkline(trend.points, h.color, 260, 40)}
+        <div class="health-meta">${meta.join(' · ')}</div>
+      </div>
+      ${scoreRing(health.score)}
+    </div>`;
+  }
+
+  function weekdayBars(rates) {
+    const cols = rates.map((r) => {
+      const label = Utils.WD[r.weekday % 7];
+      const pct = Math.round(r.rate * 100);
+      return `<div class="wd-col" title="${label} · ${pct}% (${r.done}/${r.scheduled})">
+        <div class="wd-track"><div class="wd-fill" style="height:${pct}%"></div></div>
+        <span class="wd-label">${label[0]}</span>
+      </div>`;
+    }).join('');
+    return `<div class="weekday-bars">${cols}</div>`;
+  }
+
   /* ================= Stats ================= */
 
   function renderStats() {
     const stats = Store.statsOverview();
+    const actives = Store.activeHabits();
+    const ins = Store.insights();
+    const wdRates = Store.weekdayRates(12);
+    const overall = Store.overallTrend(30);
 
     // 53 weeks ending this week (anchored Monday) — GitHub-style heatmap.
     const end = Utils.weekEnding(new Date())[6];
@@ -201,11 +269,47 @@ const Render = (() => {
       })
       .join('');
 
+    // Momentum summary (trailing 7-day rate now vs a week ago).
+    const now7 = overall.length ? overall[overall.length - 1] : 0;
+    const was7 = overall.length > 7 ? overall[overall.length - 8] : (overall[0] || 0);
+    const momDir = now7 - was7 > 0.03 ? 'up' : now7 - was7 < -0.03 ? 'down' : 'flat';
+    const momLabel = momDir === 'up' ? 'trending up' : momDir === 'down' ? 'trending down' : 'holding steady';
+
+    const dayName = (s) => (s ? Utils.WD[s.weekday % 7] : null);
+    let rhythmNote = 'Track a few weeks to reveal your weekly rhythm.';
+    if (ins.bestDay && ins.worstDay && ins.bestDay.weekday !== ins.worstDay.weekday) {
+      rhythmNote = `Strongest on <strong>${dayName(ins.bestDay)}</strong> · toughest on <strong>${dayName(ins.worstDay)}</strong>.`;
+    }
+
+    const healthList = actives.length
+      ? `<h3 class="section-sub">Habit health</h3>
+         <div class="health-list">${actives.map(healthCard).join('')}</div>`
+      : `<div class="empty">
+           <div class="empty-emoji">📊</div>
+           <div class="empty-title">Nothing to analyse yet</div>
+           <div class="empty-sub">Add a habit and check in for a few days — trends and health scores will appear here.</div>
+           <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div>
+         </div>`;
+
+    const insightItems = [];
+    if (ins.mostConsistent) {
+      insightItems.push(`<li><span class="ins-ico">🏆</span> Most consistent: <strong>${ins.mostConsistent.emoji} ${Utils.esc(ins.mostConsistent.name)}</strong> — ${Math.round(ins.mostConsistent.rate * 100)}% over 30 days</li>`);
+    }
+    if (ins.bestDay) {
+      insightItems.push(`<li><span class="ins-ico">📅</span> Strongest day: <strong>${dayName(ins.bestDay)}</strong> (${Math.round(ins.bestDay.rate * 100)}%)</li>`);
+    }
+    if (ins.gap) {
+      insightItems.push(`<li><span class="ins-ico">💤</span> Longest quiet stretch: <strong>${ins.gap.emoji} ${Utils.esc(ins.gap.name)}</strong> — ${Utils.plural(ins.gap.days, 'day')}</li>`);
+    }
+    if (!insightItems.length) {
+      insightItems.push('<li><span class="ins-ico">🌱</span> Keep checking in — insights unlock as history builds up.</li>');
+    }
+
     const view = UI.q('#view-stats');
     view.innerHTML = `
       <div class="stats-head">
         <h2>Your stats</h2>
-        <p>Activity across all habits — check-ins per day.</p>
+        <p>Patterns, momentum, and per-habit health across all your check-ins.</p>
       </div>
 
       <div class="grid-stats">
@@ -225,6 +329,38 @@ const Render = (() => {
           <div class="stat-num">${stats.rate7}%</div>
           <div class="stat-label">Completion rate · 7 days</div>
         </div>
+        <div class="stat-card card">
+          <div class="stat-num">${actives.length ? ins.avgHealth : '—'}</div>
+          <div class="stat-label">Average health score</div>
+        </div>
+      </div>
+
+      <div class="card trend-card">
+        <div class="section-head">
+          <h3>Momentum</h3>
+          <span>Last 30 days · 7-day average</span>
+        </div>
+        ${overall.length >= 2 ? sparkline(overall, 'var(--accent)', 620, 96) : '<p class="section-note">Not enough history yet — keep checking in.</p>'}
+        <div class="trend-foot">
+          <div><strong>${Math.round(now7 * 100)}%</strong><span> completion · last 7 days</span></div>
+          <div class="trend-dir">${trendArrow(momDir)} ${momLabel}</div>
+        </div>
+      </div>
+
+      ${healthList}
+
+      <div class="card weekday-card">
+        <div class="section-head">
+          <h3>Weekday rhythm</h3>
+          <span>Last 12 weeks</span>
+        </div>
+        ${weekdayBars(wdRates)}
+        <p class="section-note">${rhythmNote}</p>
+      </div>
+
+      <div class="card insights-card">
+        <div class="section-head"><h3>Insights</h3></div>
+        <ul class="insight-list">${insightItems.join('')}</ul>
       </div>
 
       <div class="card heat-card">
@@ -236,6 +372,8 @@ const Render = (() => {
         <div class="heat-grid">${cellHtml}</div>
         <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
       </div>
+
+      <p class="section-note analytics-note">Health score = 40% consistency + 30% weekly-target attainment + 30% current streak (habits with no weekly goal use 70% consistency + 30% streak).</p>
     `;
   }
 
