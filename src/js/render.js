@@ -312,7 +312,12 @@ const Render = (() => {
   /* ================= Stats ================= */
 
   /** 53-week activity heatmap card (colors by habits done per day). */
-  function heatmapCard() {
+  /**
+   * Build the 53-week GitHub-style grid. Without `habitId` it counts habits
+   * done per day (shared ramp); with one it uses that habit's raw counts and a
+   * flat ramp in the habit's own colour (no shared gradient).
+   */
+  function heatmapGrid(habitId) {
     const end = Utils.weekEnding(new Date())[6];
     const start = Utils.addDays(end, -(53 * 7 - 1));
     let cursor = start;
@@ -325,7 +330,9 @@ const Render = (() => {
       }
       weeks.push(col);
     }
-    const counts = Store.countsByDay(Utils.keyOf(start), Utils.keyOf(end));
+    const counts = habitId
+      ? Store.habitCountsByDay(habitId, Utils.keyOf(start), Utils.keyOf(end))
+      : Store.countsByDay(Utils.keyOf(start), Utils.keyOf(end));
 
     // Month labels along the top.
     let prevMonth = -1;
@@ -336,25 +343,50 @@ const Render = (() => {
       return `<span class="heat-month${label ? ' has-label' : ''}" style="grid-column:${i + 1}">${label}</span>`;
     }).join('');
 
+    const today = Utils.todayKey();
     const cellHtml = weeks
       .flat()
       .map((d) => {
         const key = Utils.keyOf(d);
-        if (key > Utils.todayKey()) return `<span class="heat-cell h0"></span>`;
+        if (key > today) return `<span class="heat-cell h0"></span>`;
         const n = counts[key] || 0;
         const level = Math.min(4, n);
         return `<span class="heat-cell h${level}" title="${Utils.fmtDayTitle(key)} · ${Utils.plural(n, 'check-in')}"></span>`;
       })
       .join('');
 
+    return { monthCells, cellHtml, done: Object.values(counts).filter((n) => n > 0).length };
+  }
+
+  /** 53-week activity heatmap card (colors by habits done per day). */
+  function heatmapCard() {
+    const { monthCells, cellHtml } = heatmapGrid();
     return `
       <div class="card heat-card">
         <div class="heat-head">
           <h3>Activity heatmap</h3>
-          <span>last 12 months</span>
+          <span>all habits · last 12 months</span>
         </div>
         <div class="heat-months">${monthCells}</div>
         <div class="heat-grid">${cellHtml}</div>
+        <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
+      </div>`;
+  }
+
+  /** One habit's own contribution graph, ramped in its colour (no shared gradient). */
+  function habitHeatmapCard(h) {
+    const { monthCells, cellHtml, done } = heatmapGrid(h.id);
+    return `
+      <div class="card hheat-card" style="--c:${h.color}">
+        <div class="hheat-head">
+          <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
+          <span class="hheat-name">${Utils.esc(h.name)}</span>
+          <span class="hheat-meta">${done} ${done === 1 ? 'day' : 'days'} · 12 mo</span>
+        </div>
+        <div class="hheat-scroll">
+          <div class="heat-months">${monthCells}</div>
+          <div class="heat-grid">${cellHtml}</div>
+        </div>
         <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
       </div>`;
   }
@@ -399,6 +431,9 @@ const Render = (() => {
 
     const healthList = `<h3 class="section-sub">Habit health</h3>
       <div class="health-list">${actives.map((h, i) => healthCard(h, i)).join('')}</div>`;
+
+    const habitHistory = `<h3 class="section-sub">Habit history</h3>
+      <div class="hheat-list">${actives.map(habitHeatmapCard).join('')}</div>`;
 
     const insightItems = [];
     if (ins.mostConsistent) {
@@ -475,6 +510,8 @@ const Render = (() => {
       </div>
 
       ${heatmapCard()}
+
+      ${habitHistory}
 
       <p class="section-note analytics-note">Health score = 40% consistency + 30% weekly-target attainment + 30% current streak (habits with no weekly goal use 70% consistency + 30% streak).</p>
     `;

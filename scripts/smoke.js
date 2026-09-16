@@ -182,6 +182,8 @@ assert(Store.activeHabits().length > 0, 'sample data loads');
 const water = Store.activeHabits().find((x) => x.name === 'Drink water');
 assert(Store.getNote(water.id, Utils.todayKey()) === '2L so far 💪', 'sample data includes a note for today');
 assert(Store.countFor(water.id, Utils.todayKey()) === 3, 'sample data demos a multi-check-in day');
+const hcbd = Store.habitCountsByDay(water.id, Utils.keyOf(Utils.addDays(new Date(), -90)), Utils.todayKey());
+assert(Object.keys(hcbd).length > 0 && Object.values(hcbd).every((n) => n > 0), 'habitCountsByDay returns positive per-habit counts');
 
 console.log('— analytics —');
 // Deterministic: a fresh habit checked in for each of the last 10 days.
@@ -227,6 +229,7 @@ assert(document.querySelector('#view-today').innerHTML.includes('step-btn') && d
 Render.renderCalendar(0);
 Render.renderStats();
 assert(document.querySelector('#view-stats').innerHTML.includes('Time of day'), 'Stats renders the time-of-day card');
+assert(document.querySelector('#view-stats').innerHTML.includes('Habit history') && document.querySelector('#view-stats').innerHTML.includes('hheat-card'), 'Stats renders per-habit heatmaps with the habit-colour ramp');
 Render.renderHabits();
 App.openEditor();
 App.openEditor(Store.activeHabits()[0].id);

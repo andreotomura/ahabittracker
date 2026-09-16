@@ -235,6 +235,16 @@ const Store = (() => {
     return counts;
   }
 
+  /** Per-habit counts for a range — raw check-in counts (feeds per-habit heatmaps). */
+  function habitCountsByDay(id, startKey, endKey) {
+    const counts = {};
+    const c = completionsFor(id);
+    for (const k in c) {
+      if (k >= startKey && k <= endKey && c[k] > 0) counts[k] = c[k];
+    }
+    return counts;
+  }
+
   /* ---------------- Derived stats ---------------- */
 
   /** Current + best streak (consecutive days with ≥1 check-in). */
@@ -747,7 +757,7 @@ const Store = (() => {
     activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
     completionsFor, isDone, countFor, setCount, toggle, inc, dec,
     timesFor, timesOn,
-    doneCount, dailySummary, countsByDay,
+    doneCount, dailySummary, countsByDay, habitCountsByDay,
     getNote, setNote,
     streakFor, weekProgress, totalCompletions, statsOverview,
     habitTrend, healthScore, weekdayRates, overallTrend, insights,

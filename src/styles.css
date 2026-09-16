@@ -925,6 +925,19 @@ p { margin: 0; }
 
 .heat-legend { display: flex; align-items: center; gap: 5px; margin-top: 12px; font-size: 11px; color: var(--text-3); justify-content: flex-end; }
 
+/* Per-habit heatmaps — flat ramp in the habit's own colour (no shared gradient) */
+.hheat-list { display: flex; flex-direction: column; gap: 12px; }
+.hheat-card { padding: 16px 18px 14px; }
+.hheat-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.hheat-head .h-emoji { width: 32px; height: 32px; font-size: 17px; border-radius: var(--radius-sm); }
+.hheat-name { font-weight: 700; font-size: 14.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hheat-meta { color: var(--text-3); font-size: 12px; flex: none; }
+.hheat-scroll { overflow-x: auto; padding-bottom: 2px; }
+.hheat-card .heat-cell.h1 { background: color-mix(in srgb, var(--c) 35%, var(--card)); border-color: transparent; }
+.hheat-card .heat-cell.h2 { background: color-mix(in srgb, var(--c) 58%, var(--card)); border-color: transparent; }
+.hheat-card .heat-cell.h3 { background: color-mix(in srgb, var(--c) 80%, var(--card)); border-color: transparent; }
+.hheat-card .heat-cell.h4 { background: var(--c); border-color: transparent; }
+
 /* ---------------- Analytics ---------------- */
 
 .section-head {
