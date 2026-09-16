@@ -26,6 +26,7 @@ database fully owned by the user as JSON.
 | **Analytics & graphs (v0.2)** | ✅ | Trends, health scores, weekday rhythm, insights, SVG charts (DECISIONS §9–§11) |
 | **Per-check-in notes (v0.3)** | ✅ | Additive `notes` map — inline on Today + day modal (DECISIONS §12) |
 | **Multiple check-ins/day UI (v0.4)** | ✅ | Count steppers on Today + day modal; check = undo-all (DECISIONS §13) |
+| **Polish: modals, empty states, onboarding (v0.5)** | ✅ | Welcome card, modal enter motion, empty-state consolidation (DECISIONS §14) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
@@ -92,6 +93,21 @@ dependency, still one self-contained HTML file.
 5. **Totals** — "Total check-ins" now genuinely reflects multi counts.
 6. **Tests** — inc/dec edge cases, count-as-done, toggle full-undo, steppers
    present in rendered Today HTML.
+
+## Shipped milestone: Polish pass (v0.5)
+
+1. **Onboarding** — dismissible welcome card on Today (check-in / notes / Stats
+   tips), persisted as UI-only state outside the DB (DECISIONS §14); appears
+   once there's at least one habit.
+2. **Empty states** — Stats with no active habits collapses to a single
+   friendly state (history heatmap still shows if there is archived data); the
+   day modal gets a proper empty state with an "Add habit" CTA; the calendar
+   explains an empty month.
+3. **Modal motion** — one-shot enter animation on modal bodies, applied only
+   on `openModal` (never on picker refreshes, which would flicker).
+4. **Micro-polish** — hover lift on stat/health cards, staggered health-card
+   entrance (via `--i`), welcome-card responsiveness.
+5. **Version** — bumped to 0.5.0.
 
 ## Open questions
 

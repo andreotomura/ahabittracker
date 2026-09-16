@@ -252,6 +252,29 @@ that's a separate tweak. Version bumped 0.3 → 0.4 (About dialog).
 
 ---
 
+## 14. Onboarding dismissal is UI-only state (not in the exported DB)
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** The polish pass adds a first-run welcome card on Today. Whether it
+has been dismissed is presentation state, not user data.
+
+**Decision:** Store the dismissal flag in `localStorage['ahabit.welcome.v1']`
+(alongside the theme key), managed by `App.showWelcome()/dismissWelcome()`.
+It is deliberately **not** part of the `ahabit.db.v1` document, so it never
+appears in export/import and a restored backup doesn't change it. The card
+only appears when there's at least one active habit (the Today empty state
+already covers "no habits"). `Render.renderToday(showWelcome)` receives the
+flag from App — Render stays pure and never reads localStorage.
+
+**Consequences:** UI preferences and user data stay separate. A user importing
+a backup on a fresh browser may briefly see the welcome card again (the flag
+is per-browser) — acceptable. Empty/zero-data views now collapse to a single
+friendly empty state (e.g. Stats with no habits) rather than a dashboard of
+zeros, while archived history remains visible via the heatmap.
+
+---
+
 See also the companion decision on the summary score: the "one global AHA
 score" open question resolved to **per-habit scores + a simple average** on the
 Stats view (no score on Today), logged as part of §10.

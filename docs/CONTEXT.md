@@ -17,9 +17,10 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.4 shipped and working** — analytics & graphs (v0.2),
-per-check-in notes (v0.3), and multiple check-ins/day. What's next: a polish
-pass and/or PWA packaging.
+Current milestone: **v0.5 shipped and working** — analytics & graphs (v0.2),
+per-check-in notes (v0.3), multi check-ins/day (v0.4), and the polish pass
+(v0.5: onboarding, empty states, modal motion). What's next: PWA packaging
+and/or deferred time-of-day analytics.
 
 ## Quick facts
 
@@ -105,13 +106,14 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.4):** Today check-ins w/ streaks + weekly goals + **inline notes**
-+ **count steppers** · calendar w/ backfill via day modal (per-habit notes +
-steppers) · stats & analytics (totals, streaks, 7-day rate, heatmap, momentum
-trend, per-habit health scores, weekday rhythm, insights — all inline SVG/CSS)
-· habit CRUD (emoji/color pickers, target, allowed days, archive) · light/dark
-theme · JSON export/import (replace or merge, incl. notes) · sample data loader
-· dev server · smoke tests.
+**Working (v0.5):** Today check-ins w/ streaks + weekly goals + inline notes +
+count steppers + **dismissible first-run welcome card** · calendar w/ backfill
+via day modal (notes + steppers + empty states) · stats & analytics (totals,
+streaks, 7-day rate, heatmap, momentum trend, per-habit health scores,
+weekday rhythm, insights — all inline SVG/CSS, animated entrance) · habit CRUD
+(emoji/color pickers, target, allowed days, archive) · light/dark theme ·
+JSON export/import (replace or merge, incl. notes) · sample data loader · dev
+server · smoke tests.
 
 **Known limitations:**
 - No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
@@ -122,10 +124,10 @@ theme · JSON export/import (replace or merge, incl. notes) · sample data loade
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics, v0.3 notes, v0.4 multi check-ins all shipped ✅.
-2. Polish pass: modal animations, empty states, onboarding hints.
-3. PWA packaging for hosted deployments.
-4. Time-of-day insights still deferred (DECISIONS §9).
+1. v0.2 analytics, v0.3 notes, v0.4 multi check-ins, v0.5 polish all shipped ✅.
+2. PWA packaging for hosted deployments.
+3. Time-of-day insights still deferred (DECISIONS §9).
+4. Optional future tweaks: heatmap-by-raw-count, richer month views.
 
 ## Conventions (must follow)
 
@@ -144,6 +146,7 @@ theme · JSON export/import (replace or merge, incl. notes) · sample data loade
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Polish: onboarding, empty states, modal motion (v0.5) | `docs/sessions/2026-09-16-polish.md` |
 | 2026-09-16 | Multiple check-ins/day (v0.4) | `docs/sessions/2026-09-16-multi-checkin.md` |
 | 2026-09-16 | Per-check-in notes (v0.3) | `docs/sessions/2026-09-16-notes.md` |
 | 2026-09-16 | Analytics & graphs (v0.2) | `docs/sessions/2026-09-16-analytics.md` |

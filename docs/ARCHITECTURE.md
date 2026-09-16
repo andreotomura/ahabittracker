@@ -27,8 +27,8 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell` | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog` |
 | 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
-| 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday, renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` |
-| 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, bindEvents` |
+| 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, stepper, heatmapCard, welcomeCard`) |
+| 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
 
@@ -64,6 +64,13 @@ Menu → `#import-file` input → `FileReader` → `App.importFlow(text)` →
 `Store.importJSON(text)` (parse + sanitize) → `UI.choiceDialog` (Replace /
 Merge / Cancel) → `Store.replaceWith|mergeWith` → re-render + toast.
 
+### Onboarding
+`App.showWelcome()` (not dismissed + ≥ 1 active habit) →
+`Render.renderToday(true)` renders a dismissible welcome card;
+`[data-action="dismiss-welcome"]` → `App.dismissWelcome()` sets
+`localStorage['ahabit.welcome.v1']` (UI-only state, never exported —
+DECISIONS §14).
+
 ## Data & performance notes
 
 - Completions map: `habitId → { "YYYY-MM-DD": count }`. Lookup is O(1);
@@ -87,6 +94,9 @@ Merge / Cancel) → `Store.replaceWith|mergeWith` → re-render + toast.
   must pass through `Utils.esc`.
 - Modal bodies are built with `UI.el(...)` nodes (not strings) so the modal
   shell (`UI.modalShell`) can own close-button/overlay behavior.
+- `UI.openModal` adds a one-shot `modal-enter` class for the entrance CSS
+  animation; `UI.updateModal` does **not**, so editor-picker refreshes don't
+  re-trigger animation.
 - The only inline `onclick` handlers are on static dialog buttons created via
   `UI.el` (`onclick: UI.closeModal`, etc.). Everything dynamic uses `data-action`.
 
