@@ -397,4 +397,25 @@ image). No new dependency and no new asset file — inline SVG plus ~40 lines in
 
 ---
 
+## 19. Per-habit heatmaps use a flat habit-colour ramp
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Requested: a GitHub-style contribution graph for *each* habit,
+where the colours don't need the shared gradient the all-habits heatmap uses.
+
+**Decision:** `Render.heatmapGrid(habitId)` builds the 53-week grid. With no id,
+the existing all-habits heatmap keeps the shared `--heat-*` ramp. With a habit
+id, counts come from `Store.habitCountsByDay` and levels 1–4 are flat tints of
+that habit's own colour (`color-mix(in srgb, var(--c) N%, var(--card))`; level 4
+is the solid colour). Level = `min(4, count)`, so multi-check-in days read
+darker. Per-habit cards live in a “Habit history” section under the global map.
+
+**Consequences:** Each map clearly belongs to its habit (colour identity),
+matching the requested non-gradient look, while the overview map still shows
+overall breadth. `color-mix` keeps the ramp readable on every theme. No schema
+or data changes.
+
+---
+
 *(New entries go below.)*

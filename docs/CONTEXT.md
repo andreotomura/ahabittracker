@@ -17,10 +17,10 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.9 shipped and working** — analytics (v0.2), notes
+Current milestone: **v0.10 shipped and working** — analytics (v0.2), notes
 (v0.3), multi check-ins (v0.4), polish (v0.5), PWA (v0.6), themes (v0.7),
-time-of-day (v0.8), custom cursor (v0.9). What's next: headless e2e tests and
-per-habit heatmaps (roadmap backlog).
+time-of-day (v0.8), custom cursor (v0.9), per-habit heatmaps (v0.10). What's
+next: headless e2e tests and reminders.
 
 ## Quick facts
 
@@ -115,14 +115,14 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.9):** Today check-ins w/ streaks + weekly goals + inline notes +
+**Working (v0.10):** Today check-ins w/ streaks + weekly goals + inline notes +
 count steppers + dismissible first-run welcome card · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
-streaks, 7-day rate, heatmap, momentum trend, per-habit health scores,
-weekday rhythm, time-of-day histogram, insights — all inline SVG/CSS,
-animated entrance) · habit CRUD (emoji/color pickers, target, allowed days,
-archive) · 5 selectable themes incl. new-brutalist · **themed custom cursor
-(CSS base + JS halo)** · JSON export/import (replace or merge, incl. notes +
+streaks, 7-day rate, global + **per-habit** heatmaps, momentum trend, per-habit
+health scores, weekday rhythm, time-of-day histogram, insights — all inline
+SVG/CSS, animated entrance) · habit CRUD (emoji/color pickers, target, allowed
+days, archive) · 5 selectable themes incl. new-brutalist · themed custom cursor
+(CSS base + JS halo) · JSON export/import (replace or merge, incl. notes +
 times) · sample data loader · single-file **and** installable PWA builds · dev
 server · smoke tests.
 
@@ -137,9 +137,9 @@ server · smoke tests.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor — all shipped ✅.
-2. Headless-browser e2e tests (would also verify SW install + theme rendering).
-3. Backlog: per-habit GitHub-style heatmaps (habit-colour, non-gradient ramp).
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps — all shipped ✅.
+2. Headless-browser e2e tests (would also verify SW install + theme/cursor rendering).
+3. Gentle reminders (while the app is open). The feature backlog is otherwise clear.
 
 ## Conventions (must follow)
 
@@ -162,6 +162,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Per-habit heatmaps (v0.10) | `docs/sessions/2026-09-16-per-habit-heatmaps.md` |
 | 2026-09-16 | Custom cursor (v0.9) | `docs/sessions/2026-09-16-cursor.md` |
 | 2026-09-16 | Time-of-day analytics (v0.8) | `docs/sessions/2026-09-16-time-of-day.md` |
 | 2026-09-16 | Theming system — 5 themes incl. new-brutalist (v0.7) | `docs/sessions/2026-09-16-themes.md` |

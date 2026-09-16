@@ -31,7 +31,7 @@ database fully owned by the user as JSON.
 | **Theming system: multiple themes (incl. new-brutalist) (v0.7)** | ✅ | Zen · Midnight · Paper · Brutalist · Brutalist Dark; picker in topbar (DECISIONS §16) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | **Time-of-day analytics (v0.8)** | ✅ | Live timestamps + hourly histogram & period peaks (DECISIONS §17) |
-| Per-habit heatmaps (contribution graph per habit) | 💡 | Backlog request — habit-colour (non-gradient) ramp (see Backlog) |
+| **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
 | **Custom cursor (v0.9)** | ✅ | CSS base + additive themed halo; a11y-gated (DECISIONS §18) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
 | In-app reminders (Notification API) | 💡 | While tab is open |
@@ -177,6 +177,17 @@ dependency, still one self-contained HTML file.
 4. **Tests** — halo added on a fine pointer, skipped otherwise.
 5. **Version** — bumped to 0.9.0.
 
+## Shipped milestone: Per-habit heatmaps (v0.10)
+
+1. **Shared grid** — the global 53-week heatmap was refactored into
+   `Render.heatmapGrid(habitId)`; the all-habits map keeps the shared ramp.
+2. **Per-habit maps** — one contribution graph per active habit in a new “Habit
+   history” section, coloured with that habit's own colour as a flat tint ramp
+   (no shared gradient), level = `min(4, count)` (DECISIONS §19).
+3. **Data** — `Store.habitCountsByDay(id, start, end)` for raw per-habit counts.
+4. **Tests** — per-habit counts and the rendered Habit-history cards.
+5. **Version** — bumped to 0.10.0.
+
 ## Open questions
 
 - ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
@@ -189,10 +200,8 @@ dependency, still one self-contained HTML file.
 
 ## Backlog / ideas
 
-- **Per-habit GitHub-style heatmaps** (requested): a contribution graph per habit
-  in Stats, alongside the global one. Unlike the global heatmap, these don't
-  need the shared purple gradient — use each habit's own colour as a flat /
-  opacity ramp so each map reads as *that* habit.
+- *(Nothing queued right now — see “Next up” in `docs/CONTEXT.md` and the status
+  table for what's planned.)*
 
 ## Non-goals (for now)
 

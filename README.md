@@ -77,7 +77,8 @@ worker caches the app shell, so it keeps working with no connection.
   streaks, weekly targets
 - 📅 **Calendar** — monthly overview with per-day dots; click any day to backfill
 - 📊 **Stats** — momentum trends, per-habit health scores, weekday rhythm,
-  time-of-day histogram, insights, GitHub-style heatmap
+  time-of-day histogram, insights, plus a global **and per-habit** GitHub-style
+  heatmap (per-habit maps use the habit's own colour)
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
 - 🎨 **Themes** — Zen, Midnight, Paper, Brutalist, and Brutalist Dark
   (switch from the palette button in the topbar)
@@ -165,12 +166,11 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
 polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
-including new-brutalist) · time-of-day analytics · custom cursor.
+including new-brutalist) · time-of-day analytics · custom cursor · per-habit
+heatmaps.
 
 Next up:
 
-- 🗺️ **Per-habit heatmaps** — a contribution graph for each habit, using the
-  habit's own colour (no shared gradient)
 - 🔔 Gentle reminders (while the app is open)
 - 🧪 Headless-browser e2e tests
 

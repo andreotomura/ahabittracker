@@ -26,8 +26,8 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell`, custom cursor | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, initCursor` |
-| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
-| 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, stepper, heatmapCard, welcomeCard`) |
+| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, habitCountsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
+| 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard`) |
 | 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
@@ -121,7 +121,9 @@ DECISIONS §14).
   updates the `#theme-color` meta and re-renders the picker popover.
   Selection arrives via `[data-action="set-theme"]` in the delegated click
   handler. No external fonts (DECISIONS §7).
-- Heatmap cells use `.h0..h4` levels driven by `var(--heat-*)` per theme.
+- Heatmap cells use `.h0..h4` levels. The all-habits map drives them from
+  `var(--heat-*)` per theme; per-habit maps (`.hheat-card`) override h1–h4 with a
+  flat ramp of the habit's own `--c` via `color-mix` (DECISIONS §19).
 - Habit color chip: `style="--c:#hex"` + `color-mix(in srgb, var(--c) 14%, …)`.
   (`--c`, `--d`, `--i`, `--ring`, `--p` are set inline by templates — not
   global theme tokens.)
