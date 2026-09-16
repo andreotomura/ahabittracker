@@ -7,9 +7,9 @@ const pwa = require('./pwa.js');
 
 function fakeEl() {
   return {
-    children: [], attrs: {}, style: {},
-    className: '', textContent: '', value: '',
-    classList: { toggle() {}, add() {}, remove() {} },
+    children: [], attrs: {}, style: {}, dataset: {},
+    className: '', textContent: '', value: '', innerHTML: '',
+    classList: { toggle() {}, add() {}, remove() {}, contains() { return true; } },
     setAttribute(k, v) { this.attrs[k] = v; if (k === 'class') this.className = v; },
     getAttribute() { return null; },
     addEventListener() {},
@@ -246,5 +246,23 @@ const sw = pwa.serviceWorker('abc123');
 assert(sw.includes("const CACHE = 'ahabit-abc123'"), 'service worker cache is content-versioned');
 assert(sw.includes("addEventListener('install'") && sw.includes("addEventListener('activate'") && sw.includes("addEventListener('fetch'"), 'service worker handles install/activate/fetch');
 assert(pwa.PWA_HEAD.includes('rel="manifest"') && pwa.PWA_HEAD.includes('serviceWorker.register'), 'PWA head snippet has manifest + registration');
+
+console.log('— themes —');
+assert(Render.THEMES.length >= 4, 'more than one theme is offered');
+assert(Render.THEMES.every((t) => t.id && t.name && t.emoji && t.scheme && t.color && Array.isArray(t.colors) && t.colors.length >= 3), 'theme registry entries are complete');
+assert(Render.THEMES.some((t) => t.id === 'brutalist') && Render.THEMES.some((t) => t.id === 'brutalist-dark'), 'brutalist light + dark themes are offered');
+assert(Render.THEMES.some((t) => t.scheme === 'light') && Render.THEMES.some((t) => t.scheme === 'dark'), 'themes cover both light and dark schemes');
+const picker = Render.themePickerHtml('brutalist');
+assert(Render.THEMES.every((t) => picker.includes(`data-theme="${t.id}"`)), 'picker lists every theme');
+assert(picker.includes('sel') && picker.includes('data-theme="brutalist"'), 'picker marks the active theme');
+assert(App.resolveTheme('dark') === 'midnight' && App.resolveTheme('light') === 'zen', 'old light/dark values migrate to themed names');
+assert(App.resolveTheme('brutalist') === 'brutalist', 'known theme ids pass through');
+assert(['zen', 'midnight'].includes(App.resolveTheme('nonsense')), 'unknown theme falls back to a real theme');
+App.setTheme('brutalist');
+assert(localStorage.getItem('ahabit.theme') === 'brutalist', 'setTheme persists the choice');
+assert(document.documentElement.dataset.theme === 'brutalist', 'setTheme applies data-theme to <html>');
+assert(document.querySelector('#theme-pop').innerHTML.includes('data-theme="brutalist"'), 'theme popover re-renders with the active theme');
+App.setTheme('zen');
+assert(document.documentElement.dataset.theme === 'zen', 'setTheme switches back');
 
 console.log('\n✅ All smoke tests passed');

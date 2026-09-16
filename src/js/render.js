@@ -19,6 +19,26 @@ const Render = (() => {
     '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#f43f5e', '#64748b',
   ];
 
+  // Theme registry — single source of truth shared by App (apply/persist) and
+  // the picker. `colors` are preview swatches; `color` is the browser/status-bar
+  // tint applied to <meta name="theme-color">. CSS token sets live in styles.css.
+  const THEMES = [
+    { id: 'zen', name: 'Zen', emoji: '🌸', scheme: 'light', color: '#f4f5fb', colors: ['#6d5df6', '#a855f7', '#ff5c8a', '#f4f5fb'] },
+    { id: 'midnight', name: 'Midnight', emoji: '🌙', scheme: 'dark', color: '#0e1017', colors: ['#0e1017', '#191c2b', '#8a7cf5', '#ff5c8a'] },
+    { id: 'paper', name: 'Paper', emoji: '📜', scheme: 'light', color: '#f4ecdd', colors: ['#fffaf1', '#a8560a', '#c98a3a', '#3b3226'] },
+    { id: 'brutalist', name: 'Brutalist', emoji: '⬛', scheme: 'light', color: '#f4f1e8', colors: ['#ffffff', '#0a0a0a', '#ff3b00', '#ffd400'] },
+    { id: 'brutalist-dark', name: 'Brutalist Dark', emoji: '🟨', scheme: 'dark', color: '#0a0a0a', colors: ['#0a0a0a', '#f5f5f5', '#ffe600', '#ff3b00'] },
+  ];
+
+  /** Pickable list of themes, with the active one marked. */
+  const themePickerHtml = (active) =>
+    THEMES.map((t) => `
+      <button class="theme-opt${t.id === active ? ' sel' : ''}" data-action="set-theme" data-theme="${t.id}" role="menuitem" aria-pressed="${t.id === active}">
+        <span class="theme-swatches">${t.colors.map((c) => `<i class="theme-swatch" style="background:${c}"></i>`).join('')}</span>
+        <span class="t-name">${t.emoji} ${t.name}</span>
+        ${t.id === active ? '<span class="t-check">✓</span>' : ''}
+      </button>`).join('');
+
   // [label, weekday(Mon=1)]
   const DAY_CHIPS = [['M', 1], ['T', 2], ['W', 3], ['T', 4], ['F', 5], ['S', 6], ['S', 7]];
 
@@ -589,5 +609,7 @@ const Render = (() => {
     renderHabits,
     dayModalHtml,
     habitEditorHtml,
+    themePickerHtml,
+    THEMES,
   };
 })();

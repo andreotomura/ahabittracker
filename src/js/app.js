@@ -59,24 +59,54 @@ const App = {
 
   /* ---------------- Theme ---------------- */
 
-  initTheme() {
-    const saved = localStorage.getItem('ahabit.theme');
+  /** Resolve a stored/system theme id to a known theme (migrates old light/dark). */
+  resolveTheme(id) {
+    const alias = { light: 'zen', dark: 'midnight' };
+    id = alias[id] || id;
+    if (Render.THEMES.some((t) => t.id === id)) return id;
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = saved || (prefersDark ? 'dark' : 'light');
-    document.documentElement.dataset.theme = theme;
-    this.syncThemeButton(theme);
+    return prefersDark ? 'midnight' : 'zen';
   },
 
-  syncThemeButton(theme) {
+  initTheme() {
+    this.setTheme(this.resolveTheme(localStorage.getItem('ahabit.theme')), false);
+  },
+
+  setTheme(id, persist = true) {
+    const theme = Render.THEMES.find((t) => t.id === id) || Render.THEMES[0];
+    document.documentElement.dataset.theme = theme.id;
+    if (persist) localStorage.setItem('ahabit.theme', theme.id);
     const btn = UI.q('#theme-btn');
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    if (btn) btn.textContent = theme.emoji;
+    const meta = UI.q('#theme-color');
+    if (meta) meta.setAttribute('content', theme.color);
+    this.syncThemePop();
   },
 
-  toggleTheme() {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('ahabit.theme', next);
-    this.syncThemeButton(next);
+  syncThemePop() {
+    const pop = UI.q('#theme-pop');
+    if (pop) pop.innerHTML = Render.themePickerHtml(document.documentElement.dataset.theme);
+  },
+
+  closeThemePop() {
+    const pop = UI.q('#theme-pop');
+    const btn = UI.q('#theme-btn');
+    if (pop) pop.classList.add('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  },
+
+  toggleThemePop() {
+    const pop = UI.q('#theme-pop');
+    const willOpen = pop.classList.contains('hidden');
+    if (willOpen) this.syncThemePop();
+    pop.classList.toggle('hidden', !willOpen);
+    UI.q('#theme-btn').setAttribute('aria-expanded', String(willOpen));
+    // opening the theme picker closes the main menu
+    const menu = UI.q('#menu');
+    if (menu) {
+      menu.classList.add('hidden');
+      UI.q('#menu-btn').setAttribute('aria-expanded', 'false');
+    }
   },
 
   /* ---------------- Habit editor ---------------- */
@@ -151,8 +181,13 @@ const App = {
     // Tabs
     UI.qa('.tab').forEach((t) => t.addEventListener('click', () => this.switchTab(t.dataset.tab)));
 
-    // Theme
-    UI.q('#theme-btn').addEventListener('click', () => this.toggleTheme());
+    // Theme picker
+    const themeBtn = UI.q('#theme-btn');
+    const themePop = UI.q('#theme-pop');
+    themeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleThemePop();
+    });
 
     // Menu
     const menuBtn = UI.q('#menu-btn');
@@ -161,11 +196,15 @@ const App = {
       e.stopPropagation();
       const open = menu.classList.toggle('hidden') === false;
       menuBtn.setAttribute('aria-expanded', open);
+      if (open) this.closeThemePop();
     });
     document.addEventListener('click', (e) => {
       if (!menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== menuBtn) {
         menu.classList.add('hidden');
         menuBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (!themePop.classList.contains('hidden') && !themePop.contains(e.target) && e.target !== themeBtn) {
+        this.closeThemePop();
       }
     });
 
@@ -189,6 +228,8 @@ const App = {
           m.classList.add('hidden');
           UI.q('#menu-btn').setAttribute('aria-expanded', 'false');
         }
+        const tp = UI.q('#theme-pop');
+        if (tp && !tp.classList.contains('hidden')) this.closeThemePop();
       }
     });
 
@@ -272,6 +313,10 @@ const App = {
         }
         case 'export': Store.exportJSON(); UI.toast('Backup downloaded ⬇️'); break;
         case 'dismiss-welcome': this.dismissWelcome(); break;
+        case 'set-theme':
+          this.setTheme(btn.dataset.theme);
+          this.closeThemePop();
+          break;
         case 'import': UI.q('#import-file').click(); break;
         case 'load-sample':
           Store.loadSample();
@@ -310,7 +355,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.6.0 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.7.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },

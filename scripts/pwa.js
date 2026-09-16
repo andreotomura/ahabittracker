@@ -11,7 +11,6 @@ const NAME = 'AHA(bit) tracker';
 const SHORT_NAME = 'AHA(bit)';
 const THEME = '#6d5df6';
 const BG_LIGHT = '#f4f5fb';
-const BG_DARK = '#0e1017';
 
 /** App-shell files the service worker precaches (must be real, same-origin). */
 const ASSETS = [
@@ -113,8 +112,6 @@ self.addEventListener('fetch', (event) => {
 
 /** Injected where `<!--PWA-->` sits in src/index.html (head). */
 const PWA_HEAD = `  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="${BG_LIGHT}">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="${BG_DARK}">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="${SHORT_NAME}">
