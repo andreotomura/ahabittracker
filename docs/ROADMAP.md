@@ -28,7 +28,7 @@ database fully owned by the user as JSON.
 | **Multiple check-ins/day UI (v0.4)** | ✅ | Count steppers on Today + day modal; check = undo-all (DECISIONS §13) |
 | **Polish: modals, empty states, onboarding (v0.5)** | ✅ | Welcome card, modal enter motion, empty-state consolidation (DECISIONS §14) |
 | **PWA packaging (v0.6)** | ✅ | Additive `build:pwa` target: manifest, offline SW, generated icons (DECISIONS §15) |
-| **Theming system: multiple themes (incl. new-brutalist)** | 💡 | Requested — revisit colors/fonts and offer >1 selectable theme (see backlog) |
+| **Theming system: multiple themes (incl. new-brutalist) (v0.7)** | ✅ | Zen · Midnight · Paper · Brutalist · Brutalist Dark; picker in topbar (DECISIONS §16) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
@@ -128,22 +128,22 @@ dependency, still one self-contained HTML file.
    head snippet.
 6. **Version** — bumped to 0.6.0.
 
-## Backlog idea: theming system (multi-theme) — requested
+## Shipped milestone: Theming system (v0.7)
 
-> Explicit ask: come back to **theming (colors, fonts)** later. Try a
-> **new-brutalist** direction, and offer **more than one selectable theme**
-> (not just light/dark).
-
-- Promote the CSS custom properties into named **theme token sets**; add a
-  theme picker (menu or a small Settings surface) persisted like `ahabit.theme`.
-- Candidate themes: current soft gradient (default) · **new-brutalist** (hard
-  edges, thick black borders, offset block shadows, flat bold color, chunky /
-  mono type) · high-contrast · maybe sepia/“paper”.
-- Constraint: DECISIONS §7 (no external assets) — typography must come from
-  system stacks (`ui-rounded`, `ui-monospace`, `Impact`-ish fallbacks) unless
-  we consciously relax §7 to bundle a font.
-- Update the PWA `theme-color` / `background_color` (and maybe the generated
-  icon) to follow the active theme when we get there.
+1. **Named themes** — `zen` (default light), `midnight` (dark), `paper` (warm
+   light), `brutalist`, and **`brutalist-dark`**, applied via `data-theme` and
+   defined as token sets in `src/styles.css`.
+2. **Theme picker** — a palette button in the topbar opens a popover listing
+   every theme with color swatches; the choice persists (`ahabit.theme`). Old
+   `light`/`dark` values migrate automatically (DECISIONS §16).
+3. **Structural tokens** — radius, border width, pill radius, shadows/glows,
+   display font, uppercase/tracking and on-accent ink are all themeable, so
+   brutalist is genuinely different (square, 3px borders, hard offset shadows,
+   mono uppercase) rather than a recolor.
+4. **`<meta name="theme-color">`** follows the active theme.
+5. **Tests** — registry completeness, picker markup, theme resolution /
+   migration, apply + persist.
+6. **Version** — bumped to 0.7.0.
 
 ## Open questions
 

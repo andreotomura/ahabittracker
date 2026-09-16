@@ -100,11 +100,26 @@ DECISIONS §14).
 - The only inline `onclick` handlers are on static dialog buttons created via
   `UI.el` (`onclick: UI.closeModal`, etc.). Everything dynamic uses `data-action`.
 
-## Styling
+## Theming
 
-- `src/styles.css`: CSS variables per theme; `[data-theme="dark"]` overrides.
+- Themes are named token sets applied via `data-theme="<id>"` on `<html>`.
+  Registry: `Render.THEMES` (`{id, name, emoji, scheme, color, colors}`) — the
+  single source of truth for the picker; the CSS sets live in `src/styles.css`.
+- Base `:root` = `zen`; each theme overrides only what differs. Shared
+  **structural tokens** (`--radius`, `--border-w`, `--check-w`, `--pill`,
+  `--shadow*`, `--glow*`, `--on-accent`, `--font`, `--font-display`,
+  `--display-tracking`, `--display-transform`) let a theme change shape and
+  type, not just colors. `[data-theme^="brutalist"]` holds the few non-token
+  overrides (uppercase UI chrome, hard component corners).
+- Flow: `App.initTheme()` → `App.resolveTheme(saved)` (migrates old
+  `light`/`dark`) → `setTheme()` writes `data-theme`, persists `ahabit.theme`,
+  updates the `#theme-color` meta and re-renders the picker popover.
+  Selection arrives via `[data-action="set-theme"]` in the delegated click
+  handler. No external fonts (DECISIONS §7).
 - Heatmap cells use `.h0..h4` levels driven by `var(--heat-*)` per theme.
 - Habit color chip: `style="--c:#hex"` + `color-mix(in srgb, var(--c) 14%, …)`.
+  (`--c`, `--d`, `--i`, `--ring`, `--p` are set inline by templates — not
+  global theme tokens.)
 - `body.modal-open` locks scroll while a modal is open.
 
 ## Build (`build.js`)

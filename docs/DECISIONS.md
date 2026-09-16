@@ -308,4 +308,36 @@ now takes a directory so the PWA output can be previewed locally.
 
 ---
 
+## 16. Themes are flat, named token sets — no separate light/dark toggle
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Requested theming work: revisit colors/fonts, try a **new-brutalist**
+direction, and offer **more than one** selectable theme. The app previously had
+a binary light/dark toggle (`data-theme="dark"`).
+
+**Decision:** Model themes as a flat list of **named** token sets applied via
+`data-theme="<id>"` on `<html>`. The registry lives in `Render.THEMES`
+(`{ id, name, emoji, scheme, color, colors }`) as the single source of truth for
+the picker; the CSS token sets live in `src/styles.css`. Shipped themes:
+`zen` (default light), `midnight` (dark), `paper` (warm light), `brutalist` and
+`brutalist-dark`. The binary toggle is replaced by a **theme picker popover**
+(palette button in the topbar). Old stored values migrate on load
+(`light → zen`, `dark → midnight`); the choice persists in
+`localStorage['ahabit.theme']`, and `color-scheme` is set per theme family.
+
+**Consequences:** A theme can change far more than colors. Shared structural
+tokens — `--radius`, `--border-w`, `--check-w`, `--pill`, `--shadow*`,
+`--glow*`, `--font`, `--font-display`, `--display-tracking`,
+`--display-transform`, `--on-accent` — let `brutalist` be genuinely different
+(square corners, 3px black borders, hard offset shadows, mono uppercase
+headings) while `zen`/`paper` stay soft. Adding a theme = one registry entry +
+one CSS block. A small `[data-theme^="brutalist"]` override block handles what
+tokens can't express (uppercase UI chrome, hard corners on component radii).
+No external fonts (§7): brutalist uses system mono stacks, paper uses Georgia.
+The `<meta name="theme-color">` is updated by JS to the active theme's
+background.
+
+---
+
 *(New entries go below.)*

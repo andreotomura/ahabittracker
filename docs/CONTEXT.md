@@ -17,10 +17,10 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.6 shipped and working** — analytics (v0.2), notes
-(v0.3), multi check-ins (v0.4), polish (v0.5), PWA packaging (v0.6). What's
-next: a multi-theme system (incl. new-brutalist) and/or deferred time-of-day
-analytics.
+Current milestone: **v0.7 shipped and working** — analytics (v0.2), notes
+(v0.3), multi check-ins (v0.4), polish (v0.5), PWA packaging (v0.6), and the
+theming system (v0.7: Zen · Midnight · Paper · Brutalist · Brutalist Dark).
+What's next: deferred time-of-day analytics and/or headless e2e tests.
 
 ## Quick facts
 
@@ -33,6 +33,7 @@ analytics.
 | Tests | `npm test` → `scripts/smoke.js` (Node DOM-stub smoke tests) |
 | Storage | `localStorage["ahabit.db.v1"]` — one versioned JSON document |
 | Output | `dist/index.html` (single file, git-ignored) · `dist/pwa/` (installable) |
+| Themes | `zen` · `midnight` · `paper` · `brutalist` · `brutalist-dark` — registry `Render.THEMES`, tokens in `styles.css` |
 | Commit style | Conventional prefixes: `feat:` `fix:` `docs:` `chore:` `refactor:` `test:` |
 
 **Commands to remember:** `npm run dev` · `npm run build` · `npm run build:pwa` ·
@@ -109,14 +110,15 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.6):** Today check-ins w/ streaks + weekly goals + inline notes +
+**Working (v0.7):** Today check-ins w/ streaks + weekly goals + inline notes +
 count steppers + dismissible first-run welcome card · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
 streaks, 7-day rate, heatmap, momentum trend, per-habit health scores,
 weekday rhythm, insights — all inline SVG/CSS, animated entrance) · habit CRUD
-(emoji/color pickers, target, allowed days, archive) · light/dark theme ·
-JSON export/import (replace or merge, incl. notes) · sample data loader ·
-single-file **and** installable PWA builds · dev server · smoke tests.
+(emoji/color pickers, target, allowed days, archive) · **5 selectable themes
+incl. new-brutalist** · JSON export/import (replace or merge, incl. notes) ·
+sample data loader · single-file **and** installable PWA builds · dev server ·
+smoke tests.
 
 **Known limitations:**
 - No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
@@ -127,9 +129,9 @@ single-file **and** installable PWA builds · dev server · smoke tests.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA — all shipped ✅.
-2. Theming system — multiple selectable themes incl. a new-brutalist option (roadmap backlog).
-3. Time-of-day insights still deferred (DECISIONS §9).
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes — all shipped ✅.
+2. Time-of-day insights still deferred (DECISIONS §9).
+3. Headless-browser e2e tests; optional heatmap-by-raw-count tweak.
 
 ## Conventions (must follow)
 
@@ -139,6 +141,10 @@ single-file **and** installable PWA builds · dev server · smoke tests.
 - Escape ALL user content with `Utils.esc()` in HTML strings.
 - New UI controls: use `data-action` delegation, not scattered listeners.
 - `Render.*` = pure; keep it that way (App wires events, Store mutates).
+- **Theming**: define a theme as a token set in `src/styles.css`
+  (`[data-theme="<id>"]`) and register it in `Render.THEMES`; prefer the shared
+  structural tokens over hardcoded px so a theme can change shape/type, not just
+  color. No external fonts (DECISIONS §7).
 - Run `npm test` before finishing; `npm run build` when HTML/CSS/JS output
   changes. Update `docs/CONTEXT.md` if behavior or commands change.
 - UX tone: fast, friendly, beautiful — emoji are fine, no clutter.
@@ -148,6 +154,7 @@ single-file **and** installable PWA builds · dev server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Theming system — 5 themes incl. new-brutalist (v0.7) | `docs/sessions/2026-09-16-themes.md` |
 | 2026-09-16 | PWA packaging (v0.6) | `docs/sessions/2026-09-16-pwa.md` |
 | 2026-09-16 | Polish: onboarding, empty states, modal motion (v0.5) | `docs/sessions/2026-09-16-polish.md` |
 | 2026-09-16 | Multiple check-ins/day (v0.4) | `docs/sessions/2026-09-16-multi-checkin.md` |

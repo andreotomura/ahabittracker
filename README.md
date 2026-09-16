@@ -79,7 +79,8 @@ worker caches the app shell, so it keeps working with no connection.
 - 📊 **Stats** — momentum trends, per-habit health scores, weekday rhythm,
   insights, GitHub-style heatmap
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
-- 🌙 **Light / dark** theme (follows system, toggleable)
+- 🎨 **Themes** — Zen, Midnight, Paper, Brutalist, and Brutalist Dark
+  (switch from the palette button in the topbar)
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
 - 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
@@ -158,12 +159,11 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 ## Roadmap
 
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
-polish (onboarding, empty states, motion) · PWA packaging.
+polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
+including new-brutalist).
 
 Next up:
 
-- 🎨 **Theming system** — multiple selectable themes, including a
-  **new-brutalist** look (hard edges, bold blocks, chunky type)
 - ⏰ Time-of-day insights (needs a timestamp schema change)
 - 🔔 Gentle reminders (while the app is open)
 - 🧪 Headless-browser e2e tests
