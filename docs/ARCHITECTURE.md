@@ -128,10 +128,14 @@ DECISIONS §14).
   (`--c`, `--d`, `--i`, `--ring`, `--p` are set inline by templates — not
   global theme tokens.)
 - `body.modal-open` locks scroll while a modal is open.
-- **Custom cursor**: base pointer is CSS (`.cursor` in `@media (pointer: fine)`,
-  inline SVG data URI, `auto` fallback); `UI.initCursor()` adds an additive
-  themed halo (`--accent`) gated on fine pointer + no reduced-motion. Never
-  hides the native cursor (DECISIONS §18).
+- **Custom cursor**: the pointer image is `--cursor` (inline SVG data URI,
+  `auto` fallback) and is applied to every interactive element from a block
+  **last** in `styles.css` so it beats component `cursor: pointer`; text fields
+  keep `cursor: text`. `UI.initCursor()` adds an additive themed halo
+  (`--accent`) gated on fine pointer + no reduced-motion. Never hides the
+  native cursor (DECISIONS §18, §20).
+- **Readability floor**: every theme's `--text` / `--text-2` / `--text-3` must be
+  ≥ 4.5:1 against its `--card` (DECISIONS §20).
 
 ## Build (`build.js`)
 

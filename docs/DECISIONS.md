@@ -418,4 +418,31 @@ or data changes.
 
 ---
 
+## 20. Readability floor + cursor applied to all interactive elements
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Review surfaced two consistency problems: tertiary text was hard to
+read (as low as **2.7:1** on cards) and varied a lot between themes; and the
+custom cursor reverted to the default hand over buttons because component
+`cursor: pointer` rules outranked the base cursor rule.
+
+**Decision:**
+- **Contrast floor:** `--text`, `--text-2` and `--text-3` must each be **≥ 4.5:1**
+  against their theme's `--card`. The failing tertiary tokens were adjusted in
+  place (`zen #6b7280`, `midnight #8b91ab`, `paper #776951`,
+  `brutalist-dark #8a8a8a`; brutalist already passed). New themes must meet it.
+- **Cursor scope:** the pointer image moved into a `--cursor` variable and is
+  applied to **every interactive element** (`button`, `a`, `select`,
+  `[role=button]`, `[data-action]`, and the component classes incl.
+  `.check-label`) from a block placed **last** in `styles.css`, so it overrides
+  the components' `cursor: pointer`. Text fields keep `cursor: text` (an I-beam
+  is the correct affordance for typing/selection).
+
+**Consequences:** Text is legible and consistent across all themes, and the
+themed dot shows everywhere including buttons — no default hand. This refines
+§18, which only described `body`.
+
+---
+
 *(New entries go below.)*

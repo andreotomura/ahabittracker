@@ -17,10 +17,11 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.10 shipped and working** — analytics (v0.2), notes
+Current milestone: **v0.10.1 shipped and working** — analytics (v0.2), notes
 (v0.3), multi check-ins (v0.4), polish (v0.5), PWA (v0.6), themes (v0.7),
-time-of-day (v0.8), custom cursor (v0.9), per-habit heatmaps (v0.10). What's
-next: headless e2e tests and reminders.
+time-of-day (v0.8), custom cursor (v0.9), per-habit heatmaps (v0.10), plus a
+readability + cursor-consistency fix (v0.10.1). What's next: headless e2e tests
+and reminders.
 
 ## Quick facts
 
@@ -152,7 +153,8 @@ server · smoke tests.
 - **Theming**: define a theme as a token set in `src/styles.css`
   (`[data-theme="<id>"]`) and register it in `Render.THEMES`; prefer the shared
   structural tokens over hardcoded px so a theme can change shape/type, not just
-  color. No external fonts (DECISIONS §7).
+  color. Keep `--text`/`--text-2`/`--text-3` at **≥ 4.5:1** on `--card`
+  (DECISIONS §20). No external fonts (DECISIONS §7).
 - Run `npm test` before finishing; `npm run build` when HTML/CSS/JS output
   changes. Update `docs/CONTEXT.md` if behavior or commands change.
 - UX tone: fast, friendly, beautiful — emoji are fine, no clutter.
@@ -162,6 +164,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Readability + cursor consistency (v0.10.1) | `docs/sessions/2026-09-16-readability-cursor.md` |
 | 2026-09-16 | Per-habit heatmaps (v0.10) | `docs/sessions/2026-09-16-per-habit-heatmaps.md` |
 | 2026-09-16 | Custom cursor (v0.9) | `docs/sessions/2026-09-16-cursor.md` |
 | 2026-09-16 | Time-of-day analytics (v0.8) | `docs/sessions/2026-09-16-time-of-day.md` |
