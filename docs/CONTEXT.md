@@ -17,8 +17,9 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.1 shipped and working** (features below). Next major
-push: **analytics & graphs**.
+Current milestone: **v0.2 shipped and working** — analytics & graphs (trends,
+health scores, weekday rhythm, insights). What's next: per-check-in notes and a
+multi-check-in/day UI.
 
 ## Quick facts
 
@@ -75,8 +76,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 - Completions are **count-per-day** (schema allows >1 check-in/day for future
   analytics; today's UI only toggles 0↔1).
-- ⚠️ No timestamps stored per check-in — time-of-day analytics would need a
-  schema addition (open question, see `docs/ROADMAP.md`).
+- ⚠️ No timestamps stored per check-in — time-of-day analytics was explicitly
+  **deferred** (see `docs/DECISIONS.md` §9); the schema stays `{version:1}`
+  and additive. Don't silently change what a completion value means.
 - Backups wrap the DB as `{ app, exportedAt, db }` — export/import round-trips.
 
 ## How the app works (60-second version)
@@ -95,14 +97,15 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.1):** Today check-ins w/ streaks + weekly goals · calendar w/
-backfill via day modal · stats (totals, best streak, 7-day rate, heatmap) ·
-habit CRUD (emoji/color pickers, target, allowed days, archive) · light/dark
-theme · JSON export/import (replace or merge) · sample data loader · dev
-server · smoke tests.
+**Working (v0.2):** Today check-ins w/ streaks + weekly goals · calendar w/
+backfill via day modal · stats & analytics (totals, streaks, 7-day rate,
+heatmap, **momentum trend, per-habit health scores, weekday rhythm,
+insights — all inline SVG/CSS**) · habit CRUD (emoji/color pickers, target,
+allowed days, archive) · light/dark theme · JSON export/import (replace or
+merge) · sample data loader · dev server · smoke tests.
 
 **Known limitations:**
-- No analytics beyond the heatmap (the whole next milestone).
+- No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
 - No per-check-in notes; no >1 check-in/day UI.
 - localStorage is per-browser/per-machine — no sync (by design; JSON backups).
 - No PWA installability (Service Worker can't run from `file://`).
@@ -110,7 +113,7 @@ server · smoke tests.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. **Analytics & graphs** — trend lines, per-habit health scores, insights.
+1. Analytics shipped in v0.2 ✅ — time-of-day insights deferred (DECISIONS §9).
 2. Per-habit notes on check-ins.
 3. Multiple check-ins/day (schema already supports it).
 4. PWA packaging for hosted deployments.
@@ -133,6 +136,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Analytics & graphs (v0.2) | `docs/sessions/2026-09-16-analytics.md` |
 | 2026-09-15 | Initial setup + docs workflow | `docs/sessions/2026-09-15-initial-setup.md` |
 
 → When you finish a session, add the newest entry at the top of this table and

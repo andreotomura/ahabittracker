@@ -25,7 +25,7 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell` | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog` |
-| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, isDone, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
+| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, isDone, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
 | 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday, renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` |
 | 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, bindEvents` |
 
@@ -107,10 +107,17 @@ Merge / Cancel) → `Store.replaceWith|mergeWith` → re-render + toast.
 - Not covered (yet): end-to-end click simulation, calendar month boundaries,
   real-browser visual checks. A headless browser test would be a good TBD.
 
-## Extension points (for upcoming analytics milestone)
+## Extension points / analytics notes
 
-- `Store.countsByDay()` — already the raw material for trend lines.
-- `Store.streakFor()/weekProgress()/statsOverview()` — analytics building blocks.
+- Analytics helpers live in `Store` (pure data math, fully unit-tested):
+  `habitTrend(id)` → 30-day point series of trailing-7-day rates + direction;
+  `healthScore(id)` → explainable 0–100 composite (DECISIONS §10);
+  `weekdayRates(12)` → per-weekday slots; `overallTrend(30)`; `insights()`.
+- All rates respect a habit's **allowed weekdays** and its **tracking start**
+  (earlier of creation date and earliest completion — so backfills/sample data
+  don't zero out young habits).
+- Charts are inline SVG (`Render.sparkline`/`scoreRing`/`weekdayBars`) — no
+  dependencies, per DECISIONS §7.
 - Count-per-day schema — ready for multi-check-in UI.
-- **Gap:** no timestamps per check-in → time-of-day analytics needs a schema
-  decision (see `docs/ROADMAP.md` and `docs/DECISIONS.md`).
+- Time-of-day analytics remains blocked on a timestamp schema decision —
+  deliberately deferred (DECISIONS §9).

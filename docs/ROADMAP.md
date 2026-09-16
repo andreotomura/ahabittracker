@@ -23,50 +23,58 @@ database fully owned by the user as JSON.
 | JSON export/import (replace/merge) | ✅ | Round-trips cleanly |
 | Sample data for first-run exploration | ✅ | |
 | Smoke tests (data layer + render) | ✅ | `npm test` |
+| **Analytics & graphs (v0.2)** | ✅ | Trends, health scores, weekday rhythm, insights, SVG charts (DECISIONS §9–§11) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
-| **Analytics & graphs** | ⏳ | The next major milestone — see below |
 | Per-check-in notes | ⏳ | After analytics (schema change likely) |
+| Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
 | Multiple check-ins/day UI | ⏳ | Schema already supports it (DECISIONS §4) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
 | In-app reminders (Notification API) | 💡 | While tab is open |
 | Headless-browser e2e tests | 💡 | Playwright etc. would be a dev-only dep |
 
-## Next milestone: Analytics & graphs (v0.2)
+## Shipped milestone: Analytics & graphs (v0.2)
 
-Goal: create value from the inputs — not just show numbers, but *insight*.
+Goal was to turn raw check-ins into *insight* — done without adding a single
+dependency, still one self-contained HTML file.
 
-### Proposed scope
+### Shipped
 
-1. **Per-habit trend lines** — 7/30-day rolling completion rate, direction arrow
-   (improving / slipping / flat).
-2. **Habit health score** — a 0–100 composite (streak, consistency, weekly
-   target attainment). Needs a simple, explainable formula.
-3. **Time-of-day insights** — *requires a schema decision*: today completions
-   store only a count with no timestamp. Options:
-   - (a) add `times: [epochMs]` to each date entry (back-compatible: keep count),
-   - (b) add a separate `checkins` log collection (cleaner for analytics but a
-     second source of truth),
-   - (c) skip time analytics (lowest effort).
-   → This should be a logged decision in `docs/DECISIONS.md` before building.
-4. **Worst/best days & consistency** — weekday heat, longest gap, most
-   consistent habit.
-5. **Better visuals** — trend charts as inline SVG (no dependencies, keep the
-   single-file promise).
+1. **Per-habit trend lines** — trailing 7-day completion rate sampled daily over
+   30 days (inline SVG sparkline), direction arrow (improving / slipping /
+   flat), 7/30-day rate.
+2. **Habit health score (0–100)** — explainable composite, formula in
+   `docs/DECISIONS.md` §10; conic-gradient rings per habit + average health
+   stat card.
+3. **Weekday rhythm & consistency** — per-weekday completion bars over the last
+   12 weeks, strongest/toughest day sentence.
+4. **Insights** — most consistent habit, longest current quiet stretch, best/
+   worst weekday.
+5. **Momentum chart** — overall trailing-7-day rate over 30 days with a
+   trending up/down/steady verdict.
+6. **Better visuals** — all charts are inline SVG / CSS (no dependencies).
 
-### Suggested order (for the next session)
+### Deferred (logged, not forgotten)
 
-1. Re-read `docs/CONTEXT.md` + newest session file.
-2. Decide the timestamp question (DECISIONS entry) — it shapes everything.
-3. Add the data-support functions to `Store` + extend `scripts/smoke.js`.
-4. Build SVG sparklines/trend UI in the Stats tab; keep `Render` pure.
-5. Update docs: DECISIONS, ROADMAP statuses, session handoff.
+- **Time-of-day insights** — needs a timestamp schema decision; explicitly
+  deferred in `docs/DECISIONS.md` §9.
 
-### Open questions
+### Suggested order — completed
 
-- Should analytics cover archived habits? (Probably yes for history, no for
-  "today" surfaces — needs a decision.)
-- One global "AHA score" on Today, or per-habit only?
-- Export format v2: keep `{version:1}` + additive schema (recommended) vs bump.
+1. Re-read `docs/CONTEXT.md` + newest session file. ✅
+2. Decide the timestamp question (DECISIONS entry). ✅ → §9
+3. Add the data-support functions to `Store` + extend `scripts/smoke.js`. ✅
+4. Build SVG sparklines/trend UI in the Stats tab; keep `Render` pure. ✅
+5. Update docs. ✅ (this file + DECISIONS/ARCHITECTURE/CONTEXT)
+
+## Open questions
+
+- ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
+  dashboards = active only; historical aggregates include archived.
+- ~~One global "AHA score" on Today, or per-habit only?~~ **Decided**: per-habit
+  health scores + simple average on Stats; no score on Today.
+- **Export format**: keep `{version:1}` + additive schema (recommended) vs bump.
+  No bump happened in v0.2 (timestamps deferred), so this is still open for
+  the day timestamps arrive.
 
 ## Non-goals (for now)
 

@@ -138,4 +138,72 @@ this if anyone wants a "download and double-click" distribution through GitHub.
 
 ---
 
+## 9. Time-of-day analytics deferred — no timestamp schema change in v0.2
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Roadmap's timestamp question (options a/b/c). Today's UI only
+toggles 0↔1, and backfilled days can't know a time, so time-of-day data would
+be sparse and misleading. Capturing times would either make completion values
+objects (schema break) or add a second log collection (second source of truth).
+
+**Decision:** Do **not** record check-in times in v0.2. Keep the `{version:1}`
+count-per-day schema. Time-of-day insights ("you usually check in at night")
+are explicitly out of scope until a future schema bump.
+
+**Consequences:** All v0.2 analytics (trends, health scores, weekday rhythm)
+work without timestamps. When/if times are wanted later, prefer the additive
+path: keep the numeric count and add `times[]` (per-date epoch ms) either in a
+parallel structure or via a version-2 bump with a migration inside
+`Store.importJSON` — never silently change what a completion value means.
+
+---
+
+## 10. Health score is an explainable weighted composite (0–100)
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** "Habit health score" needs a simple, honest formula a user could
+recompute by hand — not a magic black box.
+
+**Decision:**
+- Habits **with a weekly goal**: 40% 30-day consistency + 30% weekly-target
+  attainment (average of the last 4 complete Mon–Sun weeks, capped at 100%)
+  + 30% current streak (capped at 14 days).
+- Habits **without a goal**: 70% 30-day consistency + 30% current streak.
+- Rates only count *scheduled* days (respecting the habit's allowed weekdays)
+  and only days since tracking began (the earlier of habit creation and its
+  earliest completion, so backfills/sample data don't zero out brand-new
+  habits). The formula is shown as a footnote in the Stats view.
+
+**Consequences:** Consistent, explainable scores across sessions. The 14-day
+streak cap prevents one metric from dominating. Summary "Average health" is
+shown as a stat card; per-habit rings are in the habit-health list
+(`Render.healthCard` / `Store.healthScore`).
+
+---
+
+## 11. Analytics dashboards cover active habits only
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Roadmap open question — should analytics cover archived habits?
+
+**Decision:** Per-habit analytics (`habitTrend`, `healthScore`, `weekdayRates`,
+`insights`, momentum) operate on **active** habits only. Aggregates that already
+included everything (totals, days tracked, heatmap) keep including archived
+history.
+
+**Consequences:** The analytics view stays an actionable picture of *current*
+routines, while archived history still counts toward totals/heatmap. Restoring
+an archived habit automatically brings it back into analytics.
+
+---
+
+See also the companion decision on the summary score: the "one global AHA
+score" open question resolved to **per-habit scores + a simple average** on the
+Stats view (no score on Today), logged as part of §10.
+
+---
+
 *(New entries go below.)*
