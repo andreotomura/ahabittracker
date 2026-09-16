@@ -225,6 +225,33 @@ and in the day modal; `app.js` wires a second delegated `input` listener
 
 ---
 
+## 13. Multi-check-in UI: steppers on Today + day modal; check = done/undo-all
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** The schema has supported count-per-day since §4, but the UI only
+toggled 0↔1, so counts > 1 were unreachable by users. Goal: record multiple
+check-ins a day (e.g. "Drink water" × 4).
+
+**Decision:**
+- Store: add `countFor(id, key)` plus `inc(id, key)` / `dec(id, key)`.
+- UI: a `− ×N ＋` stepper appears on Today rows and in the day modal whenever a
+  habit is done (count ≥ 1). The `−` button is disabled at 1, so the stepper
+  manages counts within [1, ∞) and never silently un-dones a habit.
+- The check button keeps its mental model: tap = done (0→1); tap again =
+  undo — at N ≥ 2 it undoes **all** check-ins (tooltip says "Undo all (×N)").
+- Sample data: "Drink water" today = 3 check-ins, so the feature is visible
+  on first run.
+
+**Consequences:** Streaks, week progress, and analytics are untouched because
+they only test count ≥ 1 (truthiness). "Total check-ins" now reflects real
+multi counts (it always summed raw counts — the UI just couldn't produce
+them). The heatmap still colors by *habits done per day* (breadth), not raw
+count — kept deliberately this session; if totals-per-day ever matter there,
+that's a separate tweak. Version bumped 0.3 → 0.4 (About dialog).
+
+---
+
 See also the companion decision on the summary score: the "one global AHA
 score" open question resolved to **per-habit scores + a simple average** on the
 Stats view (no score on Today), logged as part of §10.

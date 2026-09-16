@@ -26,7 +26,7 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell` | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog` |
-| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, isDone, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
+| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, dailySummary, countsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
 | 4 | `src/js/render.js` | `Render` | pure view builders | `renderToday, renderCalendar, renderStats, renderHabits, dayModalHtml, habitEditorHtml` |
 | 5 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, bindEvents` |
 
@@ -38,6 +38,12 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 `[data-action="toggle"]` → `Store.toggle(id, Utils.todayKey())` →
 `App.renderCurrent()` → `Render.renderToday()` re-renders the whole view
 (simple and fast enough; no vdom).
+
+### Multi-check-in steppers
+`[data-action="inc"|"dec"]` carry `data-id` + `data-date` → `Store.inc|dec` →
+refresh the open day modal (`App.refreshDayModal`) or `App.renderCurrent()`;
+`Render.stepper` is shared by Today rows and day-modal rows. The check button
+stays done/undo-all (DECISIONS §13).
 
 ### Backfill (Calendar → day modal)
 `[data-action="open-day"]` carries `data-date` → `App.openDay(dateKey)` →
@@ -63,6 +69,12 @@ Merge / Cancel) → `Store.replaceWith|mergeWith` → re-render + toast.
 - Completions map: `habitId → { "YYYY-MM-DD": count }`. Lookup is O(1);
   monthly/daily aggregations iterate only in-range keys
   (`dailySummary` uses a `YYYY-MM-` prefix scan of each habit's map).
+- Notes map mirrors completion keys: `notes[habitId][dateKey] = text` (≤ 240
+  chars). Notes are fully independent of counts — toggling/clearing check-ins
+  never touches them, and streaks/analytics ignore them (DECISIONS §12).
+- Counts > 1 are user-reachable via the steppers (`inc`/`dec`) since v0.4;
+  mark-done logic everywhere tests `count ≥ 1` (truthiness), so multi counts
+  don't change streaks/analytics (DECISIONS §13).
 - Streaks/heatmap are computed on the fly (fast enough up to years of data).
 - `countsByDay(startKey, endKey)` string-compares keys — safe because
   `YYYY-MM-DD` sorts lexicographically.

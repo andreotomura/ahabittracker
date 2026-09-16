@@ -17,8 +17,9 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.3 shipped and working** — analytics & graphs (v0.2)
-and per-check-in notes. What's next: a multi-check-in/day UI and a polish pass.
+Current milestone: **v0.4 shipped and working** — analytics & graphs (v0.2),
+per-check-in notes (v0.3), and multiple check-ins/day. What's next: a polish
+pass and/or PWA packaging.
 
 ## Quick facts
 
@@ -76,8 +77,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 }
 ```
 
-- Completions are **count-per-day** (schema allows >1 check-in/day for future
-  analytics; today's UI only toggles 0↔1).
+- Completions are **count-per-day**; the UI records 1+ via the `− ×N ＋`
+  steppers (v0.4), and count ≥ 1 means done. The check button = done /
+  undo-all (DECISIONS §4, §13).
 - Per-check-in **notes** are a separate top-level map (same date keys),
   independent of counts — clearing a check-in never deletes the note
   (DECISIONS §12).
@@ -103,28 +105,27 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.3):** Today check-ins w/ streaks + weekly goals + **inline notes**
-· calendar w/ backfill via day modal (+ per-habit notes) · stats & analytics
-(totals, streaks, 7-day rate, heatmap, momentum trend, per-habit health
-scores, weekday rhythm, insights — all inline SVG/CSS) · habit CRUD
-(emoji/color pickers, target, allowed days, archive) · light/dark theme ·
-JSON export/import (replace or merge, incl. notes) · sample data loader · dev
-server · smoke tests.
+**Working (v0.4):** Today check-ins w/ streaks + weekly goals + **inline notes**
++ **count steppers** · calendar w/ backfill via day modal (per-habit notes +
+steppers) · stats & analytics (totals, streaks, 7-day rate, heatmap, momentum
+trend, per-habit health scores, weekday rhythm, insights — all inline SVG/CSS)
+· habit CRUD (emoji/color pickers, target, allowed days, archive) · light/dark
+theme · JSON export/import (replace or merge, incl. notes) · sample data loader
+· dev server · smoke tests.
 
 **Known limitations:**
 - No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
-- No >1 check-in/day UI.
+- Heatmap colors by habits-done-per-day (breadth), not raw check-in count.
 - localStorage is per-browser/per-machine — no sync (by design; JSON backups).
 - No PWA installability (Service Worker can't run from `file://`).
 - Day modal + editor modal are functional but could use visual polish passes.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. Analytics (v0.2) + per-check-in notes (v0.3) shipped ✅.
-2. Multiple check-ins/day (schema already supports it).
-3. Polish: modal animations, empty states, onboarding.
-4. PWA packaging for hosted deployments.
-5. Time-of-day insights still deferred (DECISIONS §9).
+1. v0.2 analytics, v0.3 notes, v0.4 multi check-ins all shipped ✅.
+2. Polish pass: modal animations, empty states, onboarding hints.
+3. PWA packaging for hosted deployments.
+4. Time-of-day insights still deferred (DECISIONS §9).
 
 ## Conventions (must follow)
 
@@ -143,6 +144,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Multiple check-ins/day (v0.4) | `docs/sessions/2026-09-16-multi-checkin.md` |
 | 2026-09-16 | Per-check-in notes (v0.3) | `docs/sessions/2026-09-16-notes.md` |
 | 2026-09-16 | Analytics & graphs (v0.2) | `docs/sessions/2026-09-16-analytics.md` |
 | 2026-09-15 | Initial setup + docs workflow | `docs/sessions/2026-09-15-initial-setup.md` |

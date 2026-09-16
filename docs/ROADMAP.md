@@ -25,9 +25,9 @@ database fully owned by the user as JSON.
 | Smoke tests (data layer + render) | ✅ | `npm test` |
 | **Analytics & graphs (v0.2)** | ✅ | Trends, health scores, weekday rhythm, insights, SVG charts (DECISIONS §9–§11) |
 | **Per-check-in notes (v0.3)** | ✅ | Additive `notes` map — inline on Today + day modal (DECISIONS §12) |
+| **Multiple check-ins/day UI (v0.4)** | ✅ | Count steppers on Today + day modal; check = undo-all (DECISIONS §13) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
-| Multiple check-ins/day UI | ⏳ | Schema already supports it (DECISIONS §4) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
 | In-app reminders (Notification API) | 💡 | While tab is open |
 | Headless-browser e2e tests | 💡 | Playwright etc. would be a dev-only dep |
@@ -78,6 +78,20 @@ dependency, still one self-contained HTML file.
 4. **Sample data** — a few notes so the feature is discoverable.
 5. **Tests** — trim/cap/clear, import sanitization, merge/replace round-trips,
    rendered Today rows include note inputs.
+
+## Shipped milestone: Multiple check-ins/day UI (v0.4)
+
+1. **Store** — `countFor` / `inc` / `dec`; the check button keeps its
+   done/undo-all semantics (at N ≥ 2: "Undo all (×N)"), and the stepper
+   manages counts within [1, ∞) — `−` is disabled at 1.
+2. **UI** — `− ×N ＋` steppers on Today rows and in the day modal whenever a
+   habit is done.
+3. **Sample data** — "Drink water" today = 3 check-ins so the feature is
+   discoverable.
+4. **Version** — bumped to 0.4.0 (About dialog + `package.json`).
+5. **Totals** — "Total check-ins" now genuinely reflects multi counts.
+6. **Tests** — inc/dec edge cases, count-as-done, toggle full-undo, steppers
+   present in rendered Today HTML.
 
 ## Open questions
 
