@@ -383,6 +383,23 @@ p { margin: 0; }
   transition: width .4s cubic-bezier(.22, .8, .36, 1);
 }
 
+/* Note field (Today rows + day modal) */
+.note-field {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-2);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.note-field::placeholder { color: var(--text-3); }
+.note-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.day-row .note-field { margin-top: 5px; padding: 6px 10px; font-size: 12.5px; }
+
 /* ---------------- Empty state ---------------- */
 
 .empty {

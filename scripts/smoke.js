@@ -22,6 +22,7 @@ function fakeEl() {
 }
 
 global.window = global;
+const els = {}; // memoized querySelector targets so tests can inspect rendered innerHTML
 global.localStorage = {
   _s: {},
   setItem(k, v) { this._s[k] = v; },
@@ -32,7 +33,7 @@ global.document = {
   createElement: () => fakeEl(),
   createTextNode: (t) => ({ nodeType: 3, textContent: t }),
   createDocumentFragment: () => fakeEl(),
-  querySelector: () => fakeEl(),
+  querySelector: (sel) => (els[sel] = els[sel] || fakeEl()),
   querySelectorAll: () => [],
   addEventListener() {},
   body: fakeEl(),
@@ -66,6 +67,18 @@ assert(Store.isDone(h.id, Utils.todayKey()), 'toggle marks done');
 assert(Store.doneCount(Utils.todayKey()) === 1, 'doneCount reflects it');
 Store.toggle(h.id, Utils.todayKey());
 assert(!Store.isDone(h.id, Utils.todayKey()), 'toggle undoes');
+
+console.log('— notes —');
+assert(Store.getNote(h.id, Utils.todayKey()) === '', 'no note by default');
+Store.setNote(h.id, Utils.todayKey(), '  deep breaths 🧘 ');
+assert(Store.getNote(h.id, Utils.todayKey()) === 'deep breaths 🧘', 'setNote trims and stores');
+Store.setNote(h.id, Utils.todayKey(), 'x'.repeat(300));
+assert(Store.getNote(h.id, Utils.todayKey()).length === 240, 'notes capped at 240 chars');
+Store.setNote(h.id, Utils.todayKey(), '');
+assert(Store.getNote(h.id, Utils.todayKey()) === '', 'empty note clears the entry');
+Store.setNote(h.id, 'not-a-date', 'nope');
+assert(Store.getNote(h.id, 'not-a-date') === '', 'invalid date keys rejected');
+assert(Store.getNote('ghost-id', Utils.todayKey()) === '', 'getNote safe for unknown habits');
 
 console.log('— streaks —');
 const y = Utils.addDays(new Date(), -1).getFullYear() - 1;
@@ -102,6 +115,7 @@ const crafted = JSON.stringify({
   version: 1,
   habits: [{ id: 'zz1', name: 'Import me', emoji: '🚀', color: 'bad', target: 9, days: [0, 1, 8], createdAt: 1, archived: false, sort: 0 }],
   completions: { zz1: { '2025-01-02': 3, 'nope': 5 } },
+  notes: { zz1: { '2025-01-02': '  keep this note ', 'nope': 'bad' }, ghost: { '2025-01-02': 'drop me' } },
 });
 const parsed = Store.importJSON(crafted);
 assert(parsed.ok, 'importJSON accepts valid file');
@@ -109,17 +123,23 @@ assert(parsed.db.habits[0].color === '#6d5df6', 'bad color sanitized to default'
 assert(parsed.db.habits[0].target === 7, 'target clamped to 7');
 assert(parsed.db.habits[0].days.length === 1 && parsed.db.habits[0].days[0] === 1, 'invalid days filtered (0 and 8 dropped)');
 assert(parsed.db.completions.zz1['2025-01-02'] === 3 && !('nope' in parsed.db.completions.zz1), 'completions filtered');
+assert(parsed.db.notes.zz1['2025-01-02'] === 'keep this note', 'notes trimmed and kept for known habits');
+assert(!('nope' in parsed.db.notes.zz1) && !('ghost' in parsed.db.notes), 'notes filtered (bad keys, unknown habits)');
 const bad = Store.importJSON('not json');
 assert(!bad.ok, 'importJSON rejects garbage');
 const mergedBefore = Store.totalCompletions();
 Store.mergeWith(parsed.db);
 assert(Store.totalCompletions() === mergedBefore + 3, 'merge adds new completions');
+assert(Store.getNote('zz1', '2025-01-02') === 'keep this note', 'merge fills note gaps');
 Store.replaceWith(parsed.db);
 assert(Store.activeHabits().length === 1 && Store.getHabit('zz1').name === 'Import me', 'replace wipes + restores');
+assert(Store.getNote('zz1', '2025-01-02') === 'keep this note', 'replace restores notes');
 
 console.log('— rendering —');
 Store.loadSample();
 assert(Store.activeHabits().length > 0, 'sample data loads');
+const water = Store.activeHabits().find((x) => x.name === 'Drink water');
+assert(Store.getNote(water.id, Utils.todayKey()) === '2L so far 💪', 'sample data includes a note for today');
 
 console.log('— analytics —');
 // Deterministic: a fresh habit checked in for each of the last 10 days.
@@ -152,6 +172,7 @@ assert(!ins.bestDay || !ins.worstDay || ins.bestDay.rate >= ins.worstDay.rate, '
 assert(ins.mostConsistent && ins.mostConsistent.rate >= 0, 'insights finds a most-consistent habit');
 
 Render.renderToday();
+assert(document.querySelector('#view-today').innerHTML.includes('note-field'), 'Today rows render note inputs when done');
 Render.renderCalendar(0);
 Render.renderStats();
 Render.renderHabits();

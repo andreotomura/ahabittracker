@@ -22,7 +22,7 @@ const Store = (() => {
 
   let db = null;
 
-  const emptyDb = () => ({ version: 1, habits: [], completions: {} });
+  const emptyDb = () => ({ version: 1, habits: [], completions: {}, notes: {} });
 
   function load() {
     try {
@@ -30,6 +30,7 @@ const Store = (() => {
       if (raw) {
         db = JSON.parse(raw);
         if (!Array.isArray(db.habits) || typeof db.completions !== 'object') db = emptyDb();
+        else if (!db.notes || typeof db.notes !== 'object') db.notes = {}; // pre-notes backups
       } else {
         db = emptyDb();
       }
@@ -93,6 +94,7 @@ const Store = (() => {
   function deleteHabit(id) {
     db.habits = db.habits.filter((h) => h.id !== id);
     delete db.completions[id];
+    delete db.notes[id];
     save();
   }
 
@@ -116,6 +118,27 @@ const Store = (() => {
   /** Check-in / undo for a habit on a given day (0 ↔ 1 for now). */
   function toggle(id, key) {
     setCount(id, key, isDone(id, key) ? 0 : 1);
+  }
+
+  /* ---------------- Notes ---------------- */
+
+  const notesFor = (id) => db.notes[id] || {};
+
+  /** Note attached to a (habit, day) — optional plain text, max 240 chars. */
+  function getNote(id, key) {
+    return String(notesFor(id)[key] || '');
+  }
+
+  function setNote(id, key, text) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+    const t = String(text || '').trim().slice(0, 240);
+    const map = db.notes[id] || (db.notes[id] = {});
+    if (t) map[key] = t;
+    else {
+      delete map[key];
+      if (!Object.keys(map).length) delete db.notes[id];
+    }
+    save();
   }
 
   /** Number of habits completed on a date across *all* habits (incl. archived). */
@@ -479,7 +502,24 @@ const Store = (() => {
           if (Object.keys(out).length) completions[hid] = out;
         }
       }
-      return { ok: true, db: { version: 1, habits, completions } };
+      const notes = {};
+      if (data.notes && typeof data.notes === 'object') {
+        const known = new Set(habits.map((h) => h.id));
+        for (const hid in data.notes) {
+          if (!known.has(hid)) continue;
+          const nm = data.notes[hid];
+          if (!nm || typeof nm !== 'object') continue;
+          const out = {};
+          for (const k in nm) {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+              const v = String(nm[k]).trim().slice(0, 240);
+              if (v) out[k] = v;
+            }
+          }
+          if (Object.keys(out).length) notes[hid] = out;
+        }
+      }
+      return { ok: true, db: { version: 1, habits, completions, notes } };
     } catch (_e) {
       return { ok: false, error: 'Could not read the file — invalid JSON.' };
     }
@@ -503,6 +543,12 @@ const Store = (() => {
       const cur = db.completions[hid] || (db.completions[hid] = {});
       for (const k in db2.completions[hid]) {
         cur[k] = Math.max(cur[k] || 0, db2.completions[hid][k]);
+      }
+    }
+    for (const hid in db2.notes || {}) {
+      const cur = db.notes[hid] || (db.notes[hid] = {});
+      for (const k in db2.notes[hid]) {
+        if (!(k in cur)) cur[k] = db2.notes[hid][k]; // gap-fill only, never clobber
       }
     }
     save();
@@ -531,6 +577,10 @@ const Store = (() => {
     // A couple of nice visible streaks.
     for (let back = 0; back < 5; back++) setCount(added[1].id, Utils.keyOf(Utils.addDays(today, -back)), 1);
     for (let back = 0; back < 3; back++) setCount(added[0].id, Utils.keyOf(Utils.addDays(today, -back)), 1);
+    // A few sample notes so the notes feature is discoverable.
+    setNote(added[0].id, Utils.keyOf(today), '2L so far 💪');
+    setNote(added[1].id, Utils.keyOf(Utils.addDays(today, -1)), 'Chapter 3 — the plot thickens!');
+    setNote(added[2].id, Utils.keyOf(Utils.addDays(today, -2)), '5 km run 🏃♂️');
     save();
   }
 
@@ -538,6 +588,7 @@ const Store = (() => {
     load, save,
     activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
     completionsFor, isDone, setCount, toggle, doneCount, dailySummary, countsByDay,
+    getNote, setNote,
     streakFor, weekProgress, totalCompletions, statsOverview,
     habitTrend, healthScore, weekdayRates, overallTrend, insights,
     exportJSON, importJSON, replaceWith, mergeWith, loadSample,

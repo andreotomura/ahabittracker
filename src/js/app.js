@@ -270,6 +270,13 @@ const App = {
         case 'save-habit': this.saveEditor(); break;
       }
     });
+
+    // Delegated input listener for per-check-in note fields (saved live).
+    document.addEventListener('input', (e) => {
+      const t = e.target && e.target.closest && e.target.closest('[data-action="note"]');
+      if (!t) return;
+      Store.setNote(t.dataset.id, t.dataset.date, t.value);
+    });
   },
 
   openAbout() {

@@ -68,6 +68,7 @@ const Render = (() => {
     const rows = sorted
       .map((h) => {
         const isDone = Store.isDone(h.id, tKey);
+        const note = Store.getNote(h.id, tKey);
         const streak = Store.streakFor(h.id);
         const wp = Store.weekProgress(h.id);
         const meta = [];
@@ -83,6 +84,10 @@ const Render = (() => {
               <div class="h-name">${Utils.esc(h.name)}</div>
               <div class="h-meta">${meta.join(' · ') || 'New habit — go for it!'}</div>
               ${wp ? `<div class="weekbar"><div class="weekbar-fill" style="width:${Math.round((wp.done / wp.target) * 100)}%"></div></div>` : ''}
+              ${isDone || note
+                ? `<input class="note-field" data-action="note" data-id="${h.id}" data-date="${tKey}" maxlength="240"
+                    placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">`
+                : ''}
             </div>
           </div>`;
       })
@@ -426,12 +431,17 @@ const Render = (() => {
 
     const rows = all.map((h) => {
       const done = Store.isDone(h.id, dateKey);
+      const note = Store.getNote(h.id, dateKey);
       return `
         <div class="habit compact day-row${done ? ' done' : ''}">
           <button class="check${done ? ' done' : ''}" data-action="toggle-day" data-id="${h.id}" data-date="${dateKey}"
             aria-label="${done ? 'Mark as not done' : 'Mark as done'}" title="${done ? 'Undo' : 'Done'}">${checkSvg()}</button>
           <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
-          <div class="h-main"><div class="h-name">${Utils.esc(h.name)}</div></div>
+          <div class="h-main">
+            <div class="h-name">${Utils.esc(h.name)}</div>
+            <input class="note-field" data-action="note" data-id="${h.id}" data-date="${dateKey}" maxlength="240"
+              placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">
+          </div>
         </div>`;
     }).join('');
 
