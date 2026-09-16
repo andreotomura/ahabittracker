@@ -14,28 +14,27 @@ database fully owned by the user as JSON.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Single-file build (zero deps) | ✅ | `build.js`, dist ~68 KB |
+| Single-file build (zero deps) | ✅ | `build.js`, dist ~119 KB |
 | Today view: check-ins, progress, streaks, weekly goals | ✅ | Graceful streak (DECISIONS §5) |
 | Calendar view + day backfill modal | ✅ | Monday-start, color dots, +N overflow |
 | Habit management (emoji, color, weekly goal, allowed days, archive) | ✅ | |
 | Stats: totals, best streak, 7-day rate, heatmap | ✅ | Foundation for analytics |
-| Light/dark theme | ✅ | Follows system, toggleable |
-| JSON export/import (replace/merge) | ✅ | Round-trips cleanly |
+| JSON export/import (replace/merge) | ✅ | Round-trips cleanly (incl. notes + times) |
 | Sample data for first-run exploration | ✅ | |
-| Smoke tests (data layer + render) | ✅ | `npm test` |
+| Smoke tests (data layer + render + PWA assets) | ✅ | `npm test` |
+| Session docs workflow | ✅ | `docs/`, handoff ritual |
 | **Analytics & graphs (v0.2)** | ✅ | Trends, health scores, weekday rhythm, insights, SVG charts (DECISIONS §9–§11) |
 | **Per-check-in notes (v0.3)** | ✅ | Additive `notes` map — inline on Today + day modal (DECISIONS §12) |
 | **Multiple check-ins/day UI (v0.4)** | ✅ | Count steppers on Today + day modal; check = undo-all (DECISIONS §13) |
 | **Polish: modals, empty states, onboarding (v0.5)** | ✅ | Welcome card, modal enter motion, empty-state consolidation (DECISIONS §14) |
 | **PWA packaging (v0.6)** | ✅ | Additive `build:pwa` target: manifest, offline SW, generated icons (DECISIONS §15) |
-| **Theming system: multiple themes (incl. new-brutalist) (v0.7)** | ✅ | Zen · Midnight · Paper · Brutalist · Brutalist Dark; picker in topbar (DECISIONS §16) |
-| Session docs workflow | ✅ | `docs/`, handoff ritual |
+| **Theming: 5 selectable themes (v0.7)** | ✅ | Zen · Midnight · Paper · Brutalist · Brutalist Dark; picker in topbar (DECISIONS §16) |
 | **Time-of-day analytics (v0.8)** | ✅ | Live timestamps + hourly histogram & period peaks (DECISIONS §17) |
-| **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
 | **Custom cursor (v0.9)** | ✅ | CSS base + additive themed halo; a11y-gated (DECISIONS §18) |
-| PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
-| In-app reminders (Notification API) | 💡 | While tab is open |
-| Headless-browser e2e tests | 💡 | Playwright etc. would be a dev-only dep |
+| **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
+| Readability + cursor consistency (v0.10.1) | ✅ | Text tokens ≥ 4.5:1; themed dot on every element (DECISIONS §20) |
+| In-app reminders (Notification API) | 💡 | While the tab is open |
+| Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 
 ## Shipped milestone: Analytics & graphs (v0.2)
 
