@@ -45,6 +45,23 @@ no bundling step in between. Use a different port if 8000 is taken:
 PORT=9000 npm run dev
 ```
 
+### Making it an installable PWA
+
+The default build is one self-contained HTML file. For a hosted deployment that
+can be **installed** and works **offline**, build the PWA variant:
+
+```bash
+npm run build:pwa     # → dist/pwa/ (index.html + manifest + sw.js + icons)
+npm run preview:pwa   # build, then serve dist/pwa at http://localhost:8000
+```
+
+Then open `http://localhost:8000` — your browser offers “Install”. A service
+worker caches the app shell, so it keeps working with no connection.
+
+> Why two builds? A service worker can't run from `file://`, and installability
+> needs a manifest + icons. The PWA build is additive — `dist/index.html`
+> (single file) stays the default, portable artifact.
+
 ### First-run sanity checklist
 
 1. The Today view shows the empty state (with a “Load sample data” button).
@@ -54,15 +71,18 @@ PORT=9000 npm run dev
 5. Menu (⋯) → **Export data (JSON)** downloads `ahabit-backup-YYYY-MM-DD.json`.
 6. Menu (⋯) → **Import data (JSON)** lets you re-load that file (replace or merge).
 
-## Features (v1)
+## Features
 
-- ☀️ **Today** — one-tap check-ins, daily progress bar, streaks, weekly targets
+- ☀️ **Today** — one-tap check-ins, per-day notes, multi-check-in steppers,
+  streaks, weekly targets
 - 📅 **Calendar** — monthly overview with per-day dots; click any day to backfill
-- 📊 **Stats** — totals, streaks, 7-day completion rate, GitHub-style heatmap
+- 📊 **Stats** — momentum trends, per-habit health scores, weekday rhythm,
+  insights, GitHub-style heatmap
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
 - 🌙 **Light / dark** theme (follows system, toggleable)
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
+- 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
 - 👀 **Sample data** — load it from the empty state to explore
 
 ## Data model
@@ -86,7 +106,10 @@ Everything is stored in `localStorage` under one versioned key (`ahabit.db.v1`):
     }
   ],
   "completions": {
-    "a1b2c3d4": { "2025-09-15": 1 }   // count per habit per day
+    "a1b2c3d4": { "2025-09-15": 2 }   // count per habit per day (1+ = done)
+  },
+  "notes": {
+    "a1b2c3d4": { "2025-09-15": "finished chapter 3" }  // optional, ≤ 240 chars
   }
 }
 ```
@@ -98,9 +121,11 @@ Backups wrap this in `{ "app": "AHA(bit) tracker", "exportedAt": …, "db": … 
 
 | Command            | What it does                                  |
 | ------------------ | --------------------------------------------- |
-| `npm run build`    | inlines `styles.css` + `js/*.js` into `dist/index.html` |
+| `npm run build`    | inlines `styles.css` + `js/*.js` into `dist/index.html` (single file) |
+| `npm run build:pwa`| builds `dist/pwa/` — installable + offline (manifest, SW, icons) |
+| `npm run preview:pwa` | builds the PWA and serves it on `:8000` for install testing |
 | `npm run dev`      | static file server on `src/` (live without a bundler) |
-| `npm test`         | smoke tests for the data layer + all views    |
+| `npm test`         | smoke tests for the data layer, views, and PWA assets |
 
 Source maps: none needed — keep code readable instead. Modules attach to global
 namespaces in dependency order: `Utils → UI → Store → Render → App`.
@@ -132,10 +157,16 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 
 ## Roadmap
 
-- 📈 Analytics & graphs (time-of-day insights, trend lines, habit health scores)
-- 📱 PWA packaging + installable single-file version
-- 📋 Multiple check-ins per day, notes per check-in
-- ⏰ Gentle reminders (while the app is open)
+**Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
+polish (onboarding, empty states, motion) · PWA packaging.
+
+Next up:
+
+- 🎨 **Theming system** — multiple selectable themes, including a
+  **new-brutalist** look (hard edges, bold blocks, chunky type)
+- ⏰ Time-of-day insights (needs a timestamp schema change)
+- 🔔 Gentle reminders (while the app is open)
+- 🧪 Headless-browser e2e tests
 
 ## License
 

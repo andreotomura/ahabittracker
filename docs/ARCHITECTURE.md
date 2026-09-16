@@ -109,14 +109,33 @@ DECISIONS §14).
 
 ## Build (`build.js`)
 
-- `node build.js dev` — static server for `src/` (MIME map, path-traversal
-  guard). Port via `PORT=9000`.
-- `node build.js build` — reads `src/index.html`, replaces the dev `<link
-  href="styles.css">` + `<script src="js/*.js">` block with one inlined
-  `<style>`/`<script>`, writes `dist/index.html`.
-- The HTML comment markers `<!--STYLES-->` / `<!--SCRIPTS-->` anchor the swaps.
+Three modes, all zero-dependency:
+
+- `node build.js dev [dir]` — static server (defaults to `src/`; pass `dist/pwa`
+  to preview the PWA output). MIME map incl. `.webmanifest`; path-traversal
+  guard is rooted to the served dir. Port via `PORT=9000`.
+- `node build.js build` — inlines `styles.css` + `js/*.js` into
+  `dist/index.html` and strips the `<!--PWA-->` marker. This is the portable
+  single-file artifact (DECISIONS §1) and has **no external refs**.
+- `node build.js pwa` — same inlined HTML with the `<!--PWA-->` marker replaced
+  by the manifest/meta/registration snippet (`scripts/pwa.js`), then writes
+  `dist/pwa/`: `index.html`, `manifest.webmanifest`, `sw.js` (cache name = short
+  hash of the HTML), and PNG icons (`scripts/icons.js`). See DECISIONS §15.
+
+- The HTML comment markers `<!--STYLES-->` / `<!--SCRIPTS-->` anchor the
+  inlining; `<!--PWA-->` anchors the PWA head injection.
 - Output must stay **dependency-free and offline-capable** (no external fonts,
-  CDNs, or fetch calls).
+  CDNs, or fetch calls). Icons are encoded with Node's built-in `zlib` — no
+  image libraries.
+
+### PWA assets (`scripts/pwa.js`, `scripts/icons.js`)
+
+- `pwa.manifest()` — install metadata + 192/512/maskable icons.
+- `pwa.serviceWorker(version)` — app-shell precache; network-first navigations
+  with offline fallback; cache-first assets; content-hashed cache name.
+- `icons.buildPng(size, {maskable})` — pure PNG encoder (CRC32 + zlib) that
+  rasterizes the gradient+check brand mark; `writeIconFiles(dir)` writes the set.
+  Both are unit-tested in `scripts/smoke.js`.
 
 ## Testing (`npm test` → `scripts/smoke.js`)
 

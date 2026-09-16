@@ -281,4 +281,31 @@ Stats view (no score on Today), logged as part of §10.
 
 ---
 
+## 15. PWA is an additive build target — the single-file build stays default
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Roadmap's PWA item. A service worker can't run from `file://`, and
+installability needs a manifest, icons, and a same-origin SW script — so true
+PWA support requires sidecar files. But DECISIONS §1 promises one
+self-contained HTML file.
+
+**Decision:** Keep `npm run build` exactly as it was: one self-contained
+`dist/index.html` with no PWA hooks and zero external refs. Add
+`npm run build:pwa` → `dist/pwa/` containing the same inlined `index.html`
+plus `manifest.webmanifest`, `sw.js`, and PNG icons. The PWA `<head>` tags
+(manifest link, `theme-color`, apple-touch, SW registration) are injected at a
+`<!--PWA-->` marker that the plain build strips out.
+
+**Consequences:** Portability is preserved — `dist/index.html` still runs from
+a USB stick; the PWA variant only matters when hosted over http(s), and SW
+registration is guarded by a protocol check so the file:// build attempts
+nothing. Icons are generated at build time by a hand-rolled PNG encoder
+(`scripts/icons.js` — zlib + CRC32), keeping §1's zero-dependency promise. The
+SW cache name is derived from the built-HTML hash, so any content change ships
+a new worker and refreshes the cache automatically. `node build.js dev <dir>`
+now takes a directory so the PWA output can be previewed locally.
+
+---
+
 *(New entries go below.)*

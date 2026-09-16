@@ -27,6 +27,8 @@ database fully owned by the user as JSON.
 | **Per-check-in notes (v0.3)** | ✅ | Additive `notes` map — inline on Today + day modal (DECISIONS §12) |
 | **Multiple check-ins/day UI (v0.4)** | ✅ | Count steppers on Today + day modal; check = undo-all (DECISIONS §13) |
 | **Polish: modals, empty states, onboarding (v0.5)** | ✅ | Welcome card, modal enter motion, empty-state consolidation (DECISIONS §14) |
+| **PWA packaging (v0.6)** | ✅ | Additive `build:pwa` target: manifest, offline SW, generated icons (DECISIONS §15) |
+| **Theming system: multiple themes (incl. new-brutalist)** | 💡 | Requested — revisit colors/fonts and offer >1 selectable theme (see backlog) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
 | Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
@@ -108,6 +110,40 @@ dependency, still one self-contained HTML file.
 4. **Micro-polish** — hover lift on stat/health cards, staggered health-card
    entrance (via `--i`), welcome-card responsiveness.
 5. **Version** — bumped to 0.5.0.
+
+## Shipped milestone: PWA packaging (v0.6)
+
+1. **Additive build target** — `npm run build:pwa` → `dist/pwa/` with the
+   inlined `index.html` + `manifest.webmanifest` + `sw.js` + 3 PNG icons. The
+   plain `npm run build` is unchanged (single file, no PWA hooks) — DECISIONS §15.
+2. **Offline service worker** — app-shell precache, network-first navigations
+   with offline fallback, cache-first assets; cache name is content-hashed so
+   updates propagate automatically.
+3. **Icons** — generated at build time by a zero-dep PNG encoder
+   (`scripts/icons.js`, zlib + CRC32): gradient rounded square + white check,
+   plus a full-bleed maskable 512.
+4. **Dev loop** — `npm run preview:pwa` builds and serves `dist/pwa/`;
+   `node build.js dev <dir>` now accepts a directory.
+5. **Tests** — PNG signature/IHDR, manifest install fields, SW handlers, PWA
+   head snippet.
+6. **Version** — bumped to 0.6.0.
+
+## Backlog idea: theming system (multi-theme) — requested
+
+> Explicit ask: come back to **theming (colors, fonts)** later. Try a
+> **new-brutalist** direction, and offer **more than one selectable theme**
+> (not just light/dark).
+
+- Promote the CSS custom properties into named **theme token sets**; add a
+  theme picker (menu or a small Settings surface) persisted like `ahabit.theme`.
+- Candidate themes: current soft gradient (default) · **new-brutalist** (hard
+  edges, thick black borders, offset block shadows, flat bold color, chunky /
+  mono type) · high-contrast · maybe sepia/“paper”.
+- Constraint: DECISIONS §7 (no external assets) — typography must come from
+  system stacks (`ui-rounded`, `ui-monospace`, `Impact`-ish fallbacks) unless
+  we consciously relax §7 to bundle a font.
+- Update the PWA `theme-color` / `background_color` (and maybe the generated
+  icon) to follow the active theme when we get there.
 
 ## Open questions
 

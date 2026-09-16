@@ -17,10 +17,10 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.5 shipped and working** — analytics & graphs (v0.2),
-per-check-in notes (v0.3), multi check-ins/day (v0.4), and the polish pass
-(v0.5: onboarding, empty states, modal motion). What's next: PWA packaging
-and/or deferred time-of-day analytics.
+Current milestone: **v0.6 shipped and working** — analytics (v0.2), notes
+(v0.3), multi check-ins (v0.4), polish (v0.5), PWA packaging (v0.6). What's
+next: a multi-theme system (incl. new-brutalist) and/or deferred time-of-day
+analytics.
 
 ## Quick facts
 
@@ -28,14 +28,15 @@ and/or deferred time-of-day analytics.
 | --- | --- |
 | Runtime | Browser only (ES2020+; modern evergreen browsers) |
 | Build | Node ≥ 14, **zero npm dependencies** (`npm run build`) |
-| Dev server | `npm run dev` → `http://localhost:8000` (serves `src/` raw) |
+| PWA build | `npm run build:pwa` → `dist/pwa/` (manifest + SW + icons; serve over http(s)) |
+| Dev server | `npm run dev` → `http://localhost:8000` (serves `src/` raw; `node build.js dev dist/pwa` to preview PWA) |
 | Tests | `npm test` → `scripts/smoke.js` (Node DOM-stub smoke tests) |
 | Storage | `localStorage["ahabit.db.v1"]` — one versioned JSON document |
-| Output | `dist/index.html` (git-ignored build artifact, ~68 KB) |
+| Output | `dist/index.html` (single file, git-ignored) · `dist/pwa/` (installable) |
 | Commit style | Conventional prefixes: `feat:` `fix:` `docs:` `chore:` `refactor:` `test:` |
 
-**Commands to remember:** `npm run dev` · `npm run build` · `npm test` ·
-`npm run session -- "short topic"` (creates a session handoff file).
+**Commands to remember:** `npm run dev` · `npm run build` · `npm run build:pwa` ·
+`npm run preview:pwa` · `npm test` · `npm run session -- "short topic"`.
 
 ## Repo map (where everything lives)
 
@@ -47,9 +48,11 @@ and/or deferred time-of-day analytics.
 | `src/js/ui.js` | DOM helpers (`q/qa/el`), toasts, modal system, confirm/choice dialogs |
 | `src/js/store.js` | Data layer: habits + completions, streaks, weekly progress, import/export |
 | `src/js/render.js` | Pure view layer — state → HTML strings/nodes, no mutation |
-| `src/js/app.js` | Controller: tabs, theme, menu, import flow, one delegated click handler |
-| `build.js` | Zero-dep build tool: `dev` server / `build` (inlines CSS + JS in order) |
+| `src/js/app.js` | Controller: tabs, theme, menu, import flow, delegated click + note-input handlers |
+| `build.js` | Zero-dep build tool: `dev [dir]` server / `build` (single file) / `pwa` (installable dir) |
 | `scripts/smoke.js` | Node smoke tests (DON'T need a browser — stubs a minimal DOM) |
+| `scripts/pwa.js` | PWA text assets: manifest, service worker, injected `<head>` snippet |
+| `scripts/icons.js` | Zero-dep PNG icon generator (CRC32 + zlib; pure, unit-tested) |
 | `scripts/new-session.js` | Creates `docs/sessions/<date>-<slug>.md` from the template |
 | `docs/` | The workflow memory — see sections below |
 
@@ -106,14 +109,14 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.5):** Today check-ins w/ streaks + weekly goals + inline notes +
-count steppers + **dismissible first-run welcome card** · calendar w/ backfill
+**Working (v0.6):** Today check-ins w/ streaks + weekly goals + inline notes +
+count steppers + dismissible first-run welcome card · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
 streaks, 7-day rate, heatmap, momentum trend, per-habit health scores,
 weekday rhythm, insights — all inline SVG/CSS, animated entrance) · habit CRUD
 (emoji/color pickers, target, allowed days, archive) · light/dark theme ·
-JSON export/import (replace or merge, incl. notes) · sample data loader · dev
-server · smoke tests.
+JSON export/import (replace or merge, incl. notes) · sample data loader ·
+single-file **and** installable PWA builds · dev server · smoke tests.
 
 **Known limitations:**
 - No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
@@ -124,10 +127,9 @@ server · smoke tests.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics, v0.3 notes, v0.4 multi check-ins, v0.5 polish all shipped ✅.
-2. PWA packaging for hosted deployments.
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA — all shipped ✅.
+2. Theming system — multiple selectable themes incl. a new-brutalist option (roadmap backlog).
 3. Time-of-day insights still deferred (DECISIONS §9).
-4. Optional future tweaks: heatmap-by-raw-count, richer month views.
 
 ## Conventions (must follow)
 
@@ -146,6 +148,7 @@ server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | PWA packaging (v0.6) | `docs/sessions/2026-09-16-pwa.md` |
 | 2026-09-16 | Polish: onboarding, empty states, modal motion (v0.5) | `docs/sessions/2026-09-16-polish.md` |
 | 2026-09-16 | Multiple check-ins/day (v0.4) | `docs/sessions/2026-09-16-multi-checkin.md` |
 | 2026-09-16 | Per-check-in notes (v0.3) | `docs/sessions/2026-09-16-notes.md` |
