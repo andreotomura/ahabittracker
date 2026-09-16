@@ -13,7 +13,7 @@
   --card-2: #f7f8fd;
   --text: #1a1d2b;
   --text-2: #5a6074;
-  --text-3: #969db4;
+  --text-3: #6b7280;
   --border: #e4e6f2;
   --border-strong: #cbd0e4;
 
@@ -48,6 +48,7 @@
   --check-w: 2px;
   --pill: 999px;
   --on-accent: #fff;
+  --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='6.5' fill='white' stroke='%230a0a0a' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='11' r='2.3' fill='%230a0a0a'/%3E%3C/svg%3E") 11 11;
   --font: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font);
   --display-tracking: -.02em;
@@ -62,7 +63,7 @@
   --card-2: #1f2334;
   --text: #edeffb;
   --text-2: #a4aac4;
-  --text-3: #6d7390;
+  --text-3: #8b91ab;
   --border: #262b41;
   --border-strong: #343a58;
 
@@ -85,7 +86,7 @@
   --card-2: #f6efe1;
   --text: #3b3226;
   --text-2: #6f6350;
-  --text-3: #9c8f78;
+  --text-3: #776951;
   --border: #e3d6bf;
   --border-strong: #cbb996;
 
@@ -161,7 +162,7 @@
   --card-2: #1c1c1c;
   --text: #f5f5f5;
   --text-2: #b5b5b5;
-  --text-3: #7a7a7a;
+  --text-3: #8a8a8a;
   --border: #f5f5f5;
   --border-strong: #f5f5f5;
 
@@ -247,14 +248,10 @@ button:focus-visible, input:focus-visible {
 
 /* ---------------- Custom cursor ---------------- */
 
-/* Base: a neutral custom pointer (white disc + dark ring) on precise pointers.
-   Browsers that ignore the image fall back to `auto`; touch devices are excluded. */
-@media (pointer: fine) {
-  body {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='6.5' fill='white' stroke='%230a0a0a' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='11' r='2.3' fill='%230a0a0a'/%3E%3C/svg%3E") 11 11, auto;
-  }
-  input, textarea, [contenteditable="true"] { cursor: text; }
-}
+/* The pointer image lives in `--cursor` (:root) and is applied to every
+   interactive element at the END of this file, so it also wins over the
+   component `cursor: pointer` rules (no default hand anywhere). Text fields
+   keep the I-beam for usability. See DECISIONS §18. */
 
 /* Flair: an additive, lagging halo (JS-enabled, fine pointer, no reduced-motion).
    Decorative only — it never hides the native/custom cursor. */
@@ -832,7 +829,7 @@ p { margin: 0; }
 
 .cal-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); border-color: var(--border-strong); }
 .cal-cell:active { transform: scale(.97); }
-.cal-cell.out { opacity: .38; background: var(--card-2); }
+.cal-cell.out { opacity: .5; background: var(--card-2); }
 .cal-cell.today { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
 
 .cal-day {
@@ -1316,4 +1313,19 @@ p { margin: 0; }
   .cal-cell { min-height: 52px; padding: 5px; }
   .h-emoji { width: 36px; height: 36px; font-size: 18px; border-radius: 11px; }
   .check { width: 33px; height: 33px; }
+}
+
+/* ---------------- Custom cursor application ----------------
+   Last in the file on purpose: equal-specificity selectors here win over the
+   earlier `cursor: pointer` component rules, so the themed dot shows on every
+   element (buttons included). Text fields keep the I-beam. DECISIONS §18. */
+@media (pointer: fine) {
+  body,
+  a, button, select, [role="button"],
+  [data-action]:not(input):not(textarea),
+  .btn, .tab, .icon-btn, .check, .cal-cell, .chip, .step-btn,
+  .swatch, .emoji-btn, .theme-opt, .fab, .menu button, .check-label {
+    cursor: var(--cursor), auto;
+  }
+  input, textarea, [contenteditable="true"] { cursor: text; }
 }
