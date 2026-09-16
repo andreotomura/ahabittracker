@@ -345,4 +345,16 @@ Prefs.clearFonts();
 Prefs.clearHidden();
 assert(!Prefs.hasCustomColors() && !Prefs.hasCustomFonts() && !Prefs.isHidden('stats.momentum'), 'reset helpers clear state');
 
+console.log('— font options —');
+assert(Prefs.FONT_OPTIONS.length >= 12, `plenty of font choices (${Prefs.FONT_OPTIONS.length})`);
+assert(Prefs.FONT_OPTIONS.filter((o) => o.body).length >= 10, 'body picker offers 10+ readable stacks');
+assert(Prefs.FONT_OPTIONS.some((o) => !o.body), 'display-only faces are marked');
+const generic = /(sans-serif|serif|monospace|cursive|fantasy)\s*$/;
+const noFallback = Object.keys(Prefs.FONTS).filter((id) => id !== 'theme' && !generic.test(Prefs.FONTS[id]));
+assert(noFallback.length === 0, `every font stack ends in a generic family (${noFallback.join(', ') || 'all ok'})`);
+Prefs.setFont('body', 'geometric');
+assert(Prefs.get().font === 'geometric', 'new font stacks are selectable');
+Prefs.setFont('body', 'theme');
+assert(Prefs.get().font === 'theme', 'font reset to theme default');
+
 console.log('\n✅ All smoke tests passed');

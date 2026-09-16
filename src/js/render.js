@@ -642,7 +642,8 @@ const Render = (() => {
         </div>`)
       .join('');
 
-    const fontOptions = (selected) => Prefs.FONT_OPTIONS
+    const fontOptions = (selected, bodyOnly) => Prefs.FONT_OPTIONS
+      .filter((o) => !bodyOnly || o.body)
       .map((o) => `<option value="${o.id}"${selected === o.id ? ' selected' : ''}>${o.label}</option>`)
       .join('');
 
@@ -672,11 +673,11 @@ const Render = (() => {
         <div class="section-head"><h3>Fonts</h3><span>system stacks only</span></div>
         <div class="set-field">
           <label for="set-font-body">Body</label>
-          <select id="set-font-body" data-action="set-font" data-which="body">${fontOptions(p.font)}</select>
+          <select id="set-font-body" data-action="set-font" data-which="body">${fontOptions(p.font, true)}</select>
         </div>
         <div class="set-field">
           <label for="set-font-display">Headings &amp; numbers</label>
-          <select id="set-font-display" data-action="set-font" data-which="display">${fontOptions(p.displayFont)}</select>
+          <select id="set-font-display" data-action="set-font" data-which="display">${fontOptions(p.displayFont, false)}</select>
         </div>
         <div class="btn-row"><button class="btn ghost" data-action="reset-fonts">Reset fonts</button></div>
       </div>
