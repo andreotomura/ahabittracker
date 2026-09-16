@@ -11,6 +11,7 @@ User clicks / types
    │
    ▼
 App.bindEvents()  ──  one delegated 'click' listener routes by data-action
+   │                + one delegated 'input' listener for note fields
    │                + tab/theme/menu/file/Escape listeners born in bindEvents
    ▼
 Store.* mutation  (e.g. Store.toggle(id, key))  → save() → localStorage

@@ -24,8 +24,8 @@ database fully owned by the user as JSON.
 | Sample data for first-run exploration | ✅ | |
 | Smoke tests (data layer + render) | ✅ | `npm test` |
 | **Analytics & graphs (v0.2)** | ✅ | Trends, health scores, weekday rhythm, insights, SVG charts (DECISIONS §9–§11) |
+| **Per-check-in notes (v0.3)** | ✅ | Additive `notes` map — inline on Today + day modal (DECISIONS §12) |
 | Session docs workflow | ✅ | `docs/`, handoff ritual |
-| Per-check-in notes | ⏳ | After analytics (schema change likely) |
 | Time-of-day analytics | 💡 | Needs timestamps — deferred decision (DECISIONS §9) |
 | Multiple check-ins/day UI | ⏳ | Schema already supports it (DECISIONS §4) |
 | PWA packaging for hosted deployments | 💡 | SW can't run on `file://`; needs hosting story |
@@ -65,6 +65,19 @@ dependency, still one self-contained HTML file.
 3. Add the data-support functions to `Store` + extend `scripts/smoke.js`. ✅
 4. Build SVG sparklines/trend UI in the Stats tab; keep `Render` pure. ✅
 5. Update docs. ✅ (this file + DECISIONS/ARCHITECTURE/CONTEXT)
+
+## Shipped milestone: Per-check-in notes (v0.3)
+
+1. **Schema** — top-level `notes: { habitId: { 'YYYY-MM-DD': text } }`,
+   additive per DECISIONS §12; old backups import fine.
+2. **Store API** — `getNote` / `setNote` (trim, 240-char cap), notes cleaned up
+   on habit delete, sanitized on import, merge = gap-fill only.
+3. **UI** — inline note field on Today rows (revealed when done or has a note)
+   and in the day modal for every habit; live-saved via one delegated `input`
+   listener (`data-action="note"`).
+4. **Sample data** — a few notes so the feature is discoverable.
+5. **Tests** — trim/cap/clear, import sanitization, merge/replace round-trips,
+   rendered Today rows include note inputs.
 
 ## Open questions
 

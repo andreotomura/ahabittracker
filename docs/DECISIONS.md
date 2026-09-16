@@ -200,6 +200,31 @@ an archived habit automatically brings it back into analytics.
 
 ---
 
+## 12. Check-in notes are additive plain text, independent of completions
+
+**Date:** 2026-09-16 · **Status:** accepted
+
+**Context:** Roadmap's "per-check-in notes" item. Completions are numeric counts
+(DECISIONS §4) and §9 forbids silently changing what a value means — so notes
+must not mutate the completion value into an object.
+
+**Decision:** Add a top-level `notes: { habitId: { 'YYYY-MM-DD': text } }` map
+with the same key convention as completions. Notes are optional plain text,
+capped at 240 chars, validated on write (`Store.setNote`) and on import.
+Notes are **independent of check-ins**: toggling a check-in or "Clear day"
+never deletes notes. A note is removed only when the field is cleared, its
+habit is deleted, or an import **replace** wipes the db. Import **merge**
+fill-gaps only (imported notes never overwrite existing ones).
+
+**Consequences:** Round-trips through export/import (sanitized like the rest);
+backups from before notes import fine (`notes` defaults to `{}` on load).
+Streaks, totals, and all analytics ignore notes entirely. UI: notes are edited
+inline on Today rows (revealed when the habit is done or already has a note)
+and in the day modal; `app.js` wires a second delegated `input` listener
+(`data-action="note"`) next to the click listener — no per-field listeners.
+
+---
+
 See also the companion decision on the summary score: the "one global AHA
 score" open question resolved to **per-habit scores + a simple average** on the
 Stats view (no score on Today), logged as part of §10.

@@ -17,9 +17,8 @@ No account, no network, no dependencies. Data lives in the browser
 (localStorage) and can be exported/imported as one JSON file. Inspired by apps
 like HabitKit.
 
-Current milestone: **v0.2 shipped and working** — analytics & graphs (trends,
-health scores, weekday rhythm, insights). What's next: per-check-in notes and a
-multi-check-in/day UI.
+Current milestone: **v0.3 shipped and working** — analytics & graphs (v0.2)
+and per-check-in notes. What's next: a multi-check-in/day UI and a polish pass.
 
 ## Quick facts
 
@@ -70,12 +69,18 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
   ],
   "completions": {
     "habitId": { "YYYY-MM-DD": count }   // count > 0 = done that day
+  },
+  "notes": {
+    "habitId": { "YYYY-MM-DD": "optional free-text note" }  // ≤ 240 chars
   }
 }
 ```
 
 - Completions are **count-per-day** (schema allows >1 check-in/day for future
   analytics; today's UI only toggles 0↔1).
+- Per-check-in **notes** are a separate top-level map (same date keys),
+  independent of counts — clearing a check-in never deletes the note
+  (DECISIONS §12).
 - ⚠️ No timestamps stored per check-in — time-of-day analytics was explicitly
   **deferred** (see `docs/DECISIONS.md` §9); the schema stays `{version:1}`
   and additive. Don't silently change what a completion value means.
@@ -87,8 +92,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 2. All dynamic UI is rendered by `Render.*` functions setting `innerHTML` of the
    four view sections (`#view-today`, `-calendar`, `-stats`, `-habits`).
 3. One **delegated click listener** in `app.js` routes everything via
-   `data-action` attributes (e.g. `data-action="toggle" data-id="…"`). Inline
-   `onclick` only for static dialog buttons built by `UI.el`.
+   `data-action` attributes (e.g. `data-action="toggle" data-id="…"`); note
+   fields (`data-action="note"`) are live-saved by one delegated `input`
+   listener. Inline `onclick` only for static dialog buttons built by `UI.el`.
 4. User interaction → `Store.*` mutation → `save()` to localStorage → re-render.
 5. `Render` never mutates state; `Store` never knows about the DOM (except
    `exportJSON`'s download anchor).
@@ -97,27 +103,28 @@ attaches to a global: `Utils`, `UI`, `Store`, `Render`, `App`. No bundler —
 
 ## Current state
 
-**Working (v0.2):** Today check-ins w/ streaks + weekly goals · calendar w/
-backfill via day modal · stats & analytics (totals, streaks, 7-day rate,
-heatmap, **momentum trend, per-habit health scores, weekday rhythm,
-insights — all inline SVG/CSS**) · habit CRUD (emoji/color pickers, target,
-allowed days, archive) · light/dark theme · JSON export/import (replace or
-merge) · sample data loader · dev server · smoke tests.
+**Working (v0.3):** Today check-ins w/ streaks + weekly goals + **inline notes**
+· calendar w/ backfill via day modal (+ per-habit notes) · stats & analytics
+(totals, streaks, 7-day rate, heatmap, momentum trend, per-habit health
+scores, weekday rhythm, insights — all inline SVG/CSS) · habit CRUD
+(emoji/color pickers, target, allowed days, archive) · light/dark theme ·
+JSON export/import (replace or merge, incl. notes) · sample data loader · dev
+server · smoke tests.
 
 **Known limitations:**
 - No time-of-day analytics (deferred by design, `DECISIONS.md` §9).
-- No per-check-in notes; no >1 check-in/day UI.
+- No >1 check-in/day UI.
 - localStorage is per-browser/per-machine — no sync (by design; JSON backups).
 - No PWA installability (Service Worker can't run from `file://`).
 - Day modal + editor modal are functional but could use visual polish passes.
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. Analytics shipped in v0.2 ✅ — time-of-day insights deferred (DECISIONS §9).
-2. Per-habit notes on check-ins.
-3. Multiple check-ins/day (schema already supports it).
+1. Analytics (v0.2) + per-check-in notes (v0.3) shipped ✅.
+2. Multiple check-ins/day (schema already supports it).
+3. Polish: modal animations, empty states, onboarding.
 4. PWA packaging for hosted deployments.
-5. Polish: modal animations, empty states, onboarding.
+5. Time-of-day insights still deferred (DECISIONS §9).
 
 ## Conventions (must follow)
 
@@ -136,6 +143,7 @@ merge) · sample data loader · dev server · smoke tests.
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-09-16 | Per-check-in notes (v0.3) | `docs/sessions/2026-09-16-notes.md` |
 | 2026-09-16 | Analytics & graphs (v0.2) | `docs/sessions/2026-09-16-analytics.md` |
 | 2026-09-15 | Initial setup + docs workflow | `docs/sessions/2026-09-15-initial-setup.md` |
 
