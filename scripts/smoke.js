@@ -19,7 +19,7 @@ function fakeEl() {
     closest() { return null; },
     querySelector() { return null; },
     querySelectorAll() { return []; },
-    click() {}, remove() {}, focus() {},
+    click() {}, remove() {}, focus() {}, replaceWith() {},
   };
 }
 
@@ -330,6 +330,19 @@ App.openFolderEditor();
 App.openEditor(Store.activeHabits()[0].id);
 UI.closeModal();
 assert(true, 'folder + habit editors render without throwing');
+
+console.log('— editor input preservation —');
+// A picker click re-renders the form; live typing must survive it.
+const editTarget = Store.activeHabits()[0];
+App.openEditor(editTarget.id);
+document.querySelector('#h-name').value = 'Renamed while editing';
+App.refreshEditor();
+assert(App.editorDraft.name === 'Renamed while editing', 'habit editor keeps a typed name across picker refreshes');
+App.openFolderEditor(Store.folders()[0].id);
+document.querySelector('#f-name').value = 'Renamed folder while editing';
+App.refreshFolderEditor();
+assert(App.folderDraft.name === 'Renamed folder while editing', 'folder editor keeps a typed name across picker refreshes');
+UI.closeModal();
 
 console.log('— folder backup —');
 const craftedF = JSON.stringify({

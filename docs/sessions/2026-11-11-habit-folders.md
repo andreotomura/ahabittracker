@@ -76,6 +76,21 @@ folder per habit, UI-only collapse/sort state, no filtering yet.
    theme/cursor/folder rendering for real.
 3. Or gentle reminders.
 
+## Follow-up (same day): editor input preservation
+
+**Bug:** typing a habit name, then clicking an icon/colour/target/day picker,
+erased the name (and the folder editor did the same). Pre-existing in the habit
+editor; reproduced in the new folder editor.
+
+**Cause:** pickers call `App.refreshEditor`/`refreshFolderEditor`, which rebuild
+the form from the draft — but the name was only read from the DOM at *save*
+time, so the re-render used a stale empty `draft.name`.
+
+**Fix:** both `refresh*Editor` helpers now read the live `#h-name` (and archive
+checkbox) / `#f-name` back into the draft before re-rendering. Added a smoke
+test (`— editor input preservation —`) that stubs a typed value and asserts it
+survives a refresh.
+
 ## Context dump
 
 - Collapse key for the loose group is the literal `'__ungrouped'` (not a real

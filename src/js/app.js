@@ -128,6 +128,12 @@ const App = {
   },
 
   refreshEditor() {
+    // Picking an icon/colour/etc. rebuilds the form, so fold any live typing
+    // back into the draft first — otherwise the field would reset.
+    const nameEl = UI.q('#h-name');
+    if (nameEl) this.editorDraft.name = nameEl.value;
+    const archEl = UI.q('#h-arch');
+    if (archEl) this.editorDraft.archived = archEl.checked;
     UI.updateModal(Render.habitEditorHtml(this.editorDraft));
   },
 
@@ -161,6 +167,8 @@ const App = {
   },
 
   refreshFolderEditor() {
+    const nameEl = UI.q('#f-name');
+    if (nameEl) this.folderDraft.name = nameEl.value;
     UI.updateModal(Render.folderEditorHtml(this.folderDraft));
   },
 
