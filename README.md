@@ -84,12 +84,12 @@ worker caches the app shell, so it keeps working with no connection.
   heatmap (per-habit maps use the habit's own colour)
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
 - 🎨 **Themes** — 11 presets: Zen, Midnight, Paper, Brutalist, Brutalist Dark,
-  Graphite, Frost, Gruvbox, Matcha, Synthwave, and Mono (palette button in the
-  topbar, or the gallery in the Customize tab)
+  Graphite, Frost, Gruvbox, Matcha, Synthwave, and Mono — pick from the gallery
+  in the Customize tab
 - 🎛️ **Customize** — a dedicated tab to **build and save your own themes**
-  (colors, fonts, corner radius, borders, shadows), and to **show or hide
-  individual elements** per tab — no code, with Minimal / Balanced / Everything
-  presets
+  (colors, fonts, corner radius, borders, shadows), to **show or hide individual
+  elements** per tab (Minimal / Balanced / Everything presets), and to drop the
+  little icons from tabs &amp; menu for a more minimal look
 - 🔤 **Bundled fonts** — 13 open-source type families (Inter, Nunito, Poppins,
   JetBrains Mono, Source Serif, …) are baked into the file, so your chosen font
   looks the same on every machine with nothing to install

@@ -155,9 +155,10 @@ DECISIONS §14).
 - Flow: `App.initTheme()` → `App.resolveTheme(saved)` (migrates old
   `light`/`dark`, recognises `ct_*` custom ids) → `setTheme()` writes
   `data-theme`, applies the snapshot or clears overrides, persists
-  `ahabit.theme`, updates `#theme-color`, the topbar emoji and the picker
-  popover. Selection arrives via `[data-action="set-theme"]` in the delegated
-  click handler. No external fonts (DECISIONS §7).
+  `ahabit.theme` and updates `#theme-color`. Selection arrives via
+  `[data-action="set-theme"]` in the delegated click handler (the Customize
+  gallery cards) — there is no separate topbar theme button. Fonts are bundled
+  (DECISIONS §24).
 - Heatmap cells use `.h0..h4` levels. The all-habits map drives them from
   `var(--heat-*)` per theme; per-habit maps (`.hheat-card`) override h1–h4 with a
   flat ramp of the habit's own `--c` via `color-mix` (DECISIONS §19).
@@ -191,7 +192,8 @@ DECISIONS §14).
   (`App.setTheme` when persisting).
 - **Element-level visibility:** `Render.SECTIONS` (~28 entries) is the registry;
   each render function guards with `Prefs.isHidden(id)`, and static chrome
-  (brand, theme button) is toggled via `body` classes in `Prefs.applyChrome()`.
+  (brand) and the **button-icons** preference are toggled via `body` classes in
+  `Prefs.applyChrome()` (`hide-brand` / `no-btn-icons`).
   `Render.LAYOUT_PRESETS` drives **Minimal / Balanced / Everything**
   (`Prefs.setHiddenMap`).
 - The Customize surface is a first-class top nav tab (`#view-settings`, route

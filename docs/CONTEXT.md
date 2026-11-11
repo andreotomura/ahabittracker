@@ -123,8 +123,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 
 ## Current state
 
-**Working (v0.13):** Today check-ins w/ streaks + weekly goals + inline notes +
-count steppers + dismissible first-run welcome card · **"AHA" logo** (a
+**Working (v0.14):** Today check-ins w/ streaks + weekly goals + inline notes +
+count steppers + dismissible first-run welcome card · optional **text-only header**
+(`Prefs.btnIcons` hides tab & menu glyphs) · **"AHA" logo** (a
 font-independent stroke mark shared by topbar, favicon and PWA icons) ·
 **bundled fonts** (13
 OFL/Apache families embedded in the single file, so no fonts need to be
@@ -177,7 +178,10 @@ folder delete ungroups, never deletes (DECISIONS §22).
   lead with the embedded family and end in a generic tail; never fetch at runtime.
 - **UI preferences** (theme, welcome, `Prefs`) live in their own localStorage
   keys — never in `ahabit.db.v1` (DECISIONS §14, §21). Add new hideable sections
-  to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`; add new presets as a
+  to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`. Header glyphs that
+  should be hideable with the text-only option are wrapped in
+  `<span class="ui-ico">` and gated by `Prefs.btnIcons()` (`body.no-btn-icons`).
+  Add new presets as a
   `styles.css` token set + a `Render.THEMES` entry (semantic `colors`
   `[bg, surface, accent, accent2]`, text ≥ 4.5:1 on `--card`).
 - Run `npm test` before finishing; `npm run build` when HTML/CSS/JS output
@@ -189,6 +193,7 @@ folder delete ungroups, never deletes (DECISIONS §22).
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-11-11 | Header cleanup + optional button icons | `docs/sessions/2026-11-11-header-icons.md` |
 | 2026-11-11 | Logo becomes an "AHA" mark (+ variant gallery) | `docs/sessions/2026-11-11-logo-aha.md` |
 | 2026-11-11 | Bundled embedded fonts (no preinstall needed) | `docs/sessions/2026-11-11-embedded-fonts.md` |
 | 2026-11-11 | Theme studio — presets, custom themes, element toggles (v0.13) | `docs/sessions/2026-11-11-theme-studio.md` |

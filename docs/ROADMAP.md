@@ -141,6 +141,8 @@ dependency, still one self-contained HTML file.
 2. **Theme picker** — a palette button in the topbar opens a popover listing
    every theme with color swatches; the choice persists (`ahabit.theme`). Old
    `light`/`dark` values migrate automatically (DECISIONS §16).
+   *(Later superseded: the topbar button/popover was removed in favour of the
+   Customize gallery — DECISIONS §26.)*
 3. **Structural tokens** — radius, border width, pill radius, shadows/glows,
    display font, uppercase/tracking and on-accent ink are all themeable, so
    brutalist is genuinely different (square, 3px borders, hard offset shadows,

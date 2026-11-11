@@ -614,3 +614,29 @@ through 512 px PWA) with no font dependency. Editing the mark means touching
 and commented to stay in sync.
 
 ---
+
+## 26. Header: drop the icon-only theme button; button icons become optional
+
+**Date:** 2026-11-11 · **Status:** accepted
+
+**Context:** The topbar had an icon-only theme button opening a popover, which
+duplicated the Customize tab. Separately, a more minimal header was requested —
+buttons should be able to show text without their emoji glyphs.
+
+**Decision:**
+- **Remove the topbar theme button + popover** (`#theme-btn`, `#theme-pop`,
+  `Render.themePickerHtml`, the popover CSS and `App` handlers). Theme switching
+  now happens only in the Customize tab's gallery (`themeGalleryHtml`); the
+  `#theme-color` meta still follows the active theme. `Render.SECTIONS` lost the
+  `global.theme-btn` entry.
+- **Optional button icons.** New UI-only pref `Prefs.btnIcons` (default **true**).
+  When off, `body.no-btn-icons` hides the `.ui-ico` glyphs in the tab bar and the
+  ⋯ menu, leaving text-only buttons. On mobile, where tab labels are normally
+  hidden, an explicit rule keeps `.tab-label` visible so tabs are never blank.
+  Exposed in **Customize → Layout** (`toggle-btn-icons`).
+
+**Consequences:** One canonical place to change themes, and an optional
+minimalist header. All of this stays UI-only (not in the exported DB), consistent
+with §14/§21/§23.
+
+---
