@@ -49,7 +49,7 @@
   --pill: 999px;
   --on-accent: #fff;
   --cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='6.5' fill='white' stroke='%230a0a0a' stroke-width='1.5'/%3E%3Ccircle cx='11' cy='11' r='2.3' fill='%230a0a0a'/%3E%3C/svg%3E") 11 11;
-  --font: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font: "Nunito", ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font);
   --display-tracking: -.02em;
   --display-transform: none;
@@ -109,7 +109,7 @@
 
   --radius: 12px;
   --radius-sm: 10px;
-  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  --font-display: "Source Serif 4", Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
 }
 
 /* ---- brutalist (light) ---- */
@@ -148,8 +148,8 @@
   --pill: 0px;
   --border-w: 3px;
   --check-w: 3px;
-  --font: "Helvetica Neue", Arial, "Segoe UI", system-ui, sans-serif;
-  --font-display: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font: "Inter", "Helvetica Neue", Arial, "Segoe UI", system-ui, sans-serif;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display-tracking: .01em;
   --display-transform: uppercase;
 }
@@ -190,8 +190,8 @@
   --pill: 0px;
   --border-w: 3px;
   --check-w: 3px;
-  --font: "Helvetica Neue", Arial, "Segoe UI", system-ui, sans-serif;
-  --font-display: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font: "Inter", "Helvetica Neue", Arial, "Segoe UI", system-ui, sans-serif;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display-tracking: .01em;
   --display-transform: uppercase;
 }
@@ -294,7 +294,7 @@
 
   --radius: 8px;
   --radius-sm: 6px;
-  --font-display: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
   --display-tracking: 0;
 }
 

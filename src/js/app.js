@@ -532,7 +532,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.13.0 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.14.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },

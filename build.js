@@ -26,9 +26,19 @@ const DIST = path.join(ROOT, 'dist');
 // Load order matters — each file attaches to a global namespace (Utils, UI, Store, Render, App).
 const JS_ORDER = ['utils.js', 'ui.js', 'store.js', 'prefs.js', 'render.js', 'app.js'];
 
-/** Inline styles.css + all JS into the src/index.html shell. */
+/** Replace `url(fonts/x.woff2)` references with inline base64 data URIs. */
+function inlineFonts(css) {
+  return css.replace(/url\((["']?)fonts\/([\w.-]+)\1\)/g, (_m, _q, name) => {
+    const file = path.join(SRC, 'fonts', name);
+    if (!fs.existsSync(file)) throw new Error(`Missing bundled font: src/fonts/${name}`);
+    return `url(data:font/woff2;base64,${fs.readFileSync(file).toString('base64')})`;
+  });
+}
+
+/** Inline fonts.css + styles.css + all JS into the src/index.html shell. */
 function inlineHtml() {
   const html = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
+  const fontCss = inlineFonts(fs.readFileSync(path.join(SRC, 'fonts.css'), 'utf8'));
   const css = fs.readFileSync(path.join(SRC, 'styles.css'), 'utf8');
   const js = JS_ORDER
     .map((f) => {
@@ -38,8 +48,8 @@ function inlineHtml() {
     .join('\n');
 
   return html
-    // inline the stylesheet (also removes the dev <link>)
-    .replace(/<link rel="stylesheet" href="styles\.css">\s*<!--STYLES-->/, () => `<style>\n${css}\n</style>`)
+    // inline the embedded fonts + stylesheet (also removes the dev <link> tags)
+    .replace(/<link rel="stylesheet" href="fonts\.css">\s*<link rel="stylesheet" href="styles\.css">\s*<!--STYLES-->/, () => `<style>\n${fontCss}\n${css}\n</style>`)
     // inline the scripts (also removes the dev <script> tags)
     .replace(/(?:\s*<script src="js\/[^"]+\.js"><\/script>)*\s*<!--SCRIPTS-->/, () => `<script>\n${js}\n</script>`);
 }
@@ -87,6 +97,7 @@ function devServer(port, rootArg) {
     '.js': 'text/javascript; charset=utf-8',
     '.json': 'application/json; charset=utf-8',
     '.webmanifest': 'application/manifest+json; charset=utf-8',
+    '.woff2': 'font/woff2',
     '.svg': 'image/svg+xml',
     '.png': 'image/png',
     '.ico': 'image/x-icon',

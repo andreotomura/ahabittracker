@@ -605,4 +605,27 @@ assert(typeof Render.customThemeHtml === 'function', 'custom theme modal builder
 App.openSaveTheme();
 App.switchTab('today');
 
+console.log('— embedded fonts —');
+const rootDir = path.join(__dirname, '..');
+const fontsCss = fs.readFileSync(path.join(rootDir, 'src', 'fonts.css'), 'utf8');
+const bundledFamilies = ['Inter', 'Nunito', 'Poppins', 'Source Sans 3', 'Roboto Condensed', 'Source Serif 4', 'Literata', 'EB Garamond', 'Roboto Slab', 'JetBrains Mono', 'Courier Prime', 'Archivo Black', 'Comic Neue'];
+bundledFamilies.forEach((fam) => {
+  assert(fontsCss.includes(`font-family: '${fam}'`), `@font-face declared for ${fam}`);
+});
+const fontDir = path.join(rootDir, 'src', 'fonts');
+const woff2 = fs.readdirSync(fontDir).filter((f) => f.endsWith('.woff2'));
+assert(woff2.length >= 13, `bundled woff2 files present (${woff2.length})`);
+const wOF2 = Buffer.from([0x77, 0x4f, 0x46, 0x32]);
+assert(woff2.every((f) => fs.readFileSync(path.join(fontDir, f)).slice(0, 4).equals(wOF2)), 'every bundled font has a WOFF2 signature');
+assert(fs.existsSync(path.join(fontDir, 'LICENSES.md')), 'bundled fonts ship with a licence file');
+const embeddedFirst = {
+  rounded: 'Nunito', sans: 'Inter', humanist: 'Source Sans 3', geometric: 'Poppins',
+  condensed: 'Roboto Condensed', serif: 'Source Serif 4', reading: 'Literata',
+  oldstyle: 'EB Garamond', slab: 'Roboto Slab', mono: 'JetBrains Mono',
+  typewriter: 'Courier Prime', display: 'Archivo Black', playful: 'Comic Neue',
+};
+Object.entries(embeddedFirst).forEach(([id, fam]) => {
+  assert(Prefs.FONTS[id].trim().startsWith(`"${fam}"`), `${id} leads with embedded ${fam}`);
+});
+
 console.log('\n✅ All smoke tests passed');

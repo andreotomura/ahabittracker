@@ -37,25 +37,26 @@ const Prefs = (() => {
   ];
   const TOKENS = COLORS.map((c) => c.token);
 
-  // Font choices are **system stacks only** (no external fonts — DECISIONS §7),
-  // and every stack ends in a generic family so it always resolves on any OS.
+  // Font choices. Each stack starts with an **embedded** open-source family
+  // (src/fonts.css) so the choice renders even with no fonts preinstalled, then
+  // falls back to OS faces and ends in a generic family (so it always resolves).
   // `body: false` marks display-only faces, kept out of the body picker.
   const FONT_LIST = [
     { id: 'theme', label: 'Theme default', stack: null },
     { id: 'system', label: 'System UI', stack: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' },
-    { id: 'rounded', label: 'Rounded', stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Segoe UI Variable Display", system-ui, sans-serif' },
-    { id: 'sans', label: 'Neutral', stack: '"Helvetica Neue", Helvetica, Arial, "Liberation Sans", "Nimbus Sans", sans-serif' },
-    { id: 'humanist', label: 'Humanist', stack: '"Segoe UI", Optima, Candara, "Trebuchet MS", "Noto Sans", system-ui, sans-serif' },
-    { id: 'geometric', label: 'Geometric', stack: 'Futura, "Century Gothic", "Avenir Next", Avenir, "URW Gothic", "Noto Sans", system-ui, sans-serif' },
-    { id: 'condensed', label: 'Condensed', stack: '"Arial Narrow", "Helvetica Neue Condensed", "Roboto Condensed", "Liberation Sans Narrow", "Noto Sans", system-ui, sans-serif' },
-    { id: 'serif', label: 'Serif', stack: 'Georgia, "Times New Roman", "Liberation Serif", "Nimbus Roman", Times, serif' },
-    { id: 'reading', label: 'Reading serif', stack: 'ui-serif, "New York", "Iowan Old Style", Charter, "Bitstream Charter", Georgia, serif' },
-    { id: 'oldstyle', label: 'Old-style', stack: '"Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, serif' },
-    { id: 'slab', label: 'Slab serif', stack: 'Rockwell, "Roboto Slab", "Courier New", Georgia, serif' },
-    { id: 'mono', label: 'Monospace', stack: 'ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace' },
-    { id: 'typewriter', label: 'Typewriter', stack: '"Courier New", Courier, "Nimbus Mono PS", "Liberation Mono", monospace' },
-    { id: 'display', label: 'Display', stack: 'Impact, Haettenschweiler, "Arial Black", "Franklin Gothic Bold", system-ui, sans-serif', body: false },
-    { id: 'playful', label: 'Playful', stack: '"Comic Sans MS", "Chalkboard SE", "Comic Sans", cursive', body: false },
+    { id: 'rounded', label: 'Rounded', stack: '"Nunito", ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif' },
+    { id: 'sans', label: 'Neutral', stack: '"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' },
+    { id: 'humanist', label: 'Humanist', stack: '"Source Sans 3", "Segoe UI", Optima, Candara, "Trebuchet MS", system-ui, sans-serif' },
+    { id: 'geometric', label: 'Geometric', stack: '"Poppins", Futura, "Century Gothic", "Avenir Next", Avenir, system-ui, sans-serif' },
+    { id: 'condensed', label: 'Condensed', stack: '"Roboto Condensed", "Arial Narrow", "Helvetica Neue Condensed", "Liberation Sans Narrow", system-ui, sans-serif' },
+    { id: 'serif', label: 'Serif', stack: '"Source Serif 4", Georgia, "Times New Roman", "Liberation Serif", Times, serif' },
+    { id: 'reading', label: 'Reading serif', stack: '"Literata", ui-serif, "New York", "Iowan Old Style", Charter, Georgia, serif' },
+    { id: 'oldstyle', label: 'Old-style', stack: '"EB Garamond", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif' },
+    { id: 'slab', label: 'Slab serif', stack: '"Roboto Slab", Rockwell, "Courier New", Georgia, serif' },
+    { id: 'mono', label: 'Monospace', stack: '"JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace' },
+    { id: 'typewriter', label: 'Typewriter', stack: '"Courier Prime", "Courier New", Courier, "Nimbus Mono PS", monospace' },
+    { id: 'display', label: 'Display', stack: '"Archivo Black", Impact, Haettenschweiler, "Arial Black", system-ui, sans-serif', body: false },
+    { id: 'playful', label: 'Playful', stack: '"Comic Neue", "Comic Sans MS", "Chalkboard SE", cursive', body: false },
   ];
   const FONTS = {};
   FONT_LIST.forEach((f) => (FONTS[f.id] = f.stack));
