@@ -124,7 +124,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 ## Current state
 
 **Working (v0.13):** Today check-ins w/ streaks + weekly goals + inline notes +
-count steppers + dismissible first-run welcome card · **bundled fonts** (13
+count steppers + dismissible first-run welcome card · **"AHA" logo** (a
+font-independent stroke mark shared by topbar, favicon and PWA icons) ·
+**bundled fonts** (13
 OFL/Apache families embedded in the single file, so no fonts need to be
 preinstalled) · **habit folders** (flat
 single-membership groups on Today + Habits, collapse/expand, per-folder
@@ -187,6 +189,7 @@ folder delete ungroups, never deletes (DECISIONS §22).
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-11-11 | Logo becomes an "AHA" mark (+ variant gallery) | `docs/sessions/2026-11-11-logo-aha.md` |
 | 2026-11-11 | Bundled embedded fonts (no preinstall needed) | `docs/sessions/2026-11-11-embedded-fonts.md` |
 | 2026-11-11 | Theme studio — presets, custom themes, element toggles (v0.13) | `docs/sessions/2026-11-11-theme-studio.md` |
 | 2026-11-11 | Habit folders — grouping, collapse, sort (v0.12) | `docs/sessions/2026-11-11-habit-folders.md` |

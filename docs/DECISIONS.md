@@ -586,3 +586,31 @@ from a CDN and no network calls. That intent is preserved — the fonts are now
 unchanged; its "no external fonts" wording is superseded by this entry.
 
 ---
+
+## 25. The brand mark is a font-independent "AHA" (shared across topbar, favicon, PWA)
+
+**Date:** 2026-11-11 · **Status:** accepted
+
+**Context:** The mark was a single letter "A" in the topbar/favicon while the PWA
+icon was a check — inconsistent, and the "A" was rendered with whatever font was
+available. Requested: make the logo read "AHA", with variants to choose from.
+
+**Decision:**
+- **One geometry, three renderers.** "AHA" is drawn as **stroke segments** in
+  0–1 space (`AHA_SEGMENTS` in `scripts/icons.js`). The same 0–100 path is
+  inlined in `src/index.html` for the topbar `<svg>` and the favicon data URI.
+  It is **not text**, so it renders identically with no fonts involved.
+- **Theme-aware.** The topbar tile keeps `background: var(--grad)` and the
+  strokes use `currentColor` / `--on-accent`, so every theme (and custom theme)
+  recolours the logo automatically; the favicon/PWA use the fixed brand gradient.
+- **The PWA icon changed from a check to "AHA"**, matching the topbar/favicon.
+- **Variants gallery** at `docs/logo-variants.html` (Classic, Accent H, Bold,
+  Mono; compact vs wide lockup; size strip) — a design aid, not shipped UI. The
+  wired-in default is **Classic**.
+
+**Consequences:** The logo is crisp and consistent at every size (16 px favicon
+through 512 px PWA) with no font dependency. Editing the mark means touching
+`AHA_SEGMENTS` and the two copies of the path in `index.html` — they're small
+and commented to stay in sync.
+
+---
