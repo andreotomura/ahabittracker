@@ -46,6 +46,8 @@ colors, fonts, per-tab layout). What's next: headless e2e tests and reminders.
 | --- | --- |
 | `src/index.html` | App shell: header, tabs, menu, view containers, FAB, modal/toast roots; dev-mode script tags |
 | `src/styles.css` | All styling; light/dark themes via `[data-theme]` CSS variables |
+| `src/fonts.css` | `@font-face` sheet for the bundled fonts (inlined at build) |
+| `src/fonts/` | Bundled Latin WOFF2 subsets + `LICENSES.md` (OFL/Apache) |
 | `src/js/utils.js` | Pure helpers: dates (`YYYY-MM-DD` keys), uid, escaping, month matrix |
 | `src/js/ui.js` | DOM helpers (`q/qa/el`), toasts, modal system, confirm/choice dialogs |
 | `src/js/store.js` | Data layer: folders + habits + completions, streaks, weekly progress, import/export |
@@ -122,7 +124,9 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 ## Current state
 
 **Working (v0.13):** Today check-ins w/ streaks + weekly goals + inline notes +
-count steppers + dismissible first-run welcome card · **habit folders** (flat
+count steppers + dismissible first-run welcome card · **bundled fonts** (13
+OFL/Apache families embedded in the single file, so no fonts need to be
+preinstalled) · **habit folders** (flat
 single-membership groups on Today + Habits, collapse/expand, per-folder
 progress, sort modes manual/name/streak/health/newest, ↑/↓ manual reorder) ·
 **theme studio** (11 presets, saved custom themes, shape controls, accent-derived
@@ -167,7 +171,8 @@ folder delete ungroups, never deletes (DECISIONS §22).
   (`[data-theme="<id>"]`) and register it in `Render.THEMES`; prefer the shared
   structural tokens over hardcoded px so a theme can change shape/type, not just
   color. Keep `--text`/`--text-2`/`--text-3` at **≥ 4.5:1** on `--card`
-  (DECISIONS §20). No external fonts (DECISIONS §7).
+  (DECISIONS §20). Fonts are **bundled** WOFF2 (DECISIONS §24) — picker stacks
+  lead with the embedded family and end in a generic tail; never fetch at runtime.
 - **UI preferences** (theme, welcome, `Prefs`) live in their own localStorage
   keys — never in `ahabit.db.v1` (DECISIONS §14, §21). Add new hideable sections
   to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`; add new presets as a
@@ -182,6 +187,7 @@ folder delete ungroups, never deletes (DECISIONS §22).
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-11-11 | Bundled embedded fonts (no preinstall needed) | `docs/sessions/2026-11-11-embedded-fonts.md` |
 | 2026-11-11 | Theme studio — presets, custom themes, element toggles (v0.13) | `docs/sessions/2026-11-11-theme-studio.md` |
 | 2026-11-11 | Habit folders — grouping, collapse, sort (v0.12) | `docs/sessions/2026-11-11-habit-folders.md` |
 | 2026-09-16 | More cross-platform font options (v0.11.1) | `docs/sessions/2026-09-16-font-options.md` |

@@ -90,6 +90,9 @@ worker caches the app shell, so it keeps working with no connection.
   (colors, fonts, corner radius, borders, shadows), and to **show or hide
   individual elements** per tab — no code, with Minimal / Balanced / Everything
   presets
+- 🔤 **Bundled fonts** — 13 open-source type families (Inter, Nunito, Poppins,
+  JetBrains Mono, Source Serif, …) are baked into the file, so your chosen font
+  looks the same on every machine with nothing to install
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
 - 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
@@ -181,7 +184,7 @@ polish (onboarding, empty states, motion) · PWA packaging · theming ·
 time-of-day analytics · custom cursor · per-habit heatmaps · customization tool
 (colors, fonts, layout) · habit folders (groups, collapse/expand, sorting) ·
 theme studio (11 presets, saved custom themes, shape controls, element-level
-show/hide).
+show/hide) · bundled open-source fonts (no preinstall needed).
 
 Next up:
 

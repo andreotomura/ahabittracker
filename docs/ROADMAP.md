@@ -36,6 +36,7 @@ database fully owned by the user as JSON.
 | **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides (15 font stacks) + per-tab section visibility (DECISIONS §21) |
 | **Habit folders (v0.12)** | ✅ | Flat single-membership groups on Today + Habits; collapse/expand, per-folder progress, sort modes (manual/name/streak/health/newest) (DECISIONS §22) |
 | **Theme studio + element toggles (v0.13)** | ✅ | 11 presets, saved custom themes, shape controls, accent-derived heatmap, element-level show/hide + Minimal/Balanced/Everything; Customize is a tab (DECISIONS §23) |
+| **Bundled embedded fonts** | ✅ | 13 OFL/Apache Latin WOFF2 inlined at build; picker stacks lead with embedded families, no preinstall (DECISIONS §24) |
 | In-app reminders (Notification API) | 💡 | While the tab is open |
 | Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 
@@ -239,6 +240,20 @@ dependency, still one self-contained HTML file.
 6. **Tests** — preset presence + CSS token sets, gallery/picker with custom
    themes, structure vars, snapshot round-trip, element hiding, presets, chrome.
 7. **Version** — bumped to 0.13.0.
+
+## Shipped milestone: Bundled embedded fonts
+
+1. **Fonts** — 13 open-source families (Inter, Nunito, Poppins, Source Sans 3,
+   Roboto Condensed, Source Serif 4, Literata, EB Garamond, Roboto Slab,
+   JetBrains Mono, Courier Prime, Archivo Black, Comic Neue) as Latin WOFF2 in
+   `src/fonts/`; licences in `src/fonts/LICENSES.md` (DECISIONS §24).
+2. **Build** — `build.js` rewrites `url(fonts/*.woff2)` to base64 `data:` URIs, so
+   the single file and PWA stay offline/self-contained (no CDN, no preinstall).
+3. **Picker** — every stack leads with the embedded family, then OS faces, then a
+   generic tail; theme `--font` defaults switched to embedded families.
+4. **Tests** — `@font-face` coverage, WOFF2 signatures, licence file, and
+   embedded-first stacks.
+5. **Note** — single-file size grows to ~809 KB (≈623 KB fonts).
 
 ## Open questions
 

@@ -5,6 +5,8 @@
 A no-framework single-page app. Source is kept as separate files for
 readability; `build.js` concatenates them into **one self-contained
 `dist/index.html`** (CSS inlined in `<style>`, JS inlined in one `<script>`).
+`src/fonts.css`'s `@font-face` rules are inlined too, with each `url(fonts/*.woff2)`
+rewritten to a base64 `data:` URI (DECISIONS §24).
 
 ```
 User clicks / types
@@ -32,6 +34,10 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | 6 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, setTheme, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
+
+Non-JS assets: `src/fonts.css` (the `@font-face` sheet) + `src/fonts/*.woff2`
+(the bundled Latin subsets) and `src/fonts/LICENSES.md`. `styles.css` is the
+component/theme sheet.
 
 ## Key flows
 
@@ -139,7 +145,10 @@ DECISIONS §14).
   `--shadow*`, `--glow*`, `--on-accent`, `--font`, `--font-display`,
   `--display-tracking`, `--display-transform`) let a theme change shape and
   type, not just colors. `[data-theme^="brutalist"]` holds the few non-token
-  overrides (uppercase UI chrome, hard component corners).
+  overrides (uppercase UI chrome, hard component corners). Theme `--font` /
+  `--font-display` defaults lead with **embedded** families (Nunito / Inter /
+  Source Serif 4 / JetBrains Mono) so they render without local fonts
+  (DECISIONS §24).
 - **Shape** overrides (`Prefs.structure`: radius/border/shadow) are inline CSS
   vars; an accent change **derives** `--grad`, `--grad-soft`, `--heat-1..4` and
   `--on-accent` unless those tokens are set explicitly (DECISIONS §23).
@@ -200,9 +209,10 @@ Three modes, all zero-dependency:
 - `node build.js dev [dir]` — static server (defaults to `src/`; pass `dist/pwa`
   to preview the PWA output). MIME map incl. `.webmanifest`; path-traversal
   guard is rooted to the served dir. Port via `PORT=9000`.
-- `node build.js build` — inlines `styles.css` + `js/*.js` into
-  `dist/index.html` and strips the `<!--PWA-->` marker. This is the portable
-  single-file artifact (DECISIONS §1) and has **no external refs**.
+- `node build.js build` — inlines `fonts.css` (WOFF2 → base64), `styles.css`
+  and `js/*.js` into `dist/index.html` and strips the `<!--PWA-->` marker. This
+  is the portable single-file artifact (DECISIONS §1) and has **no external
+  refs** (font bytes are embedded; DECISIONS §24).
 - `node build.js pwa` — same inlined HTML with the `<!--PWA-->` marker replaced
   by the manifest/meta/registration snippet (`scripts/pwa.js`), then writes
   `dist/pwa/`: `index.html`, `manifest.webmanifest`, `sw.js` (cache name = short

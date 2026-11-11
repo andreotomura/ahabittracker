@@ -550,3 +550,39 @@ User overrides may deliberately exceed the §20 contrast floor (their call), but
 every built-in preset passes it.
 
 ---
+
+## 24. Fonts are bundled (embedded WOFF2), not fetched or assumed preinstalled
+
+**Date:** 2026-11-11 · **Status:** accepted
+
+**Context:** The font picker offered system stacks only (§7), so a chosen face
+rendered correctly only if the OS had it — otherwise it silently fell back to a
+generic family. Requested: the fonts must render everywhere without being
+preinstalled.
+
+**Decision:**
+- **Bundle open-source fonts.** `src/fonts/` holds the **Latin WOFF2 subset** of
+  13 OFL/Apache families (Inter, Nunito, Poppins, Source Sans 3, Source Serif 4,
+  Literata, EB Garamond, Roboto Condensed, Roboto Slab, JetBrains Mono, Courier
+  Prime, Archivo Black, Comic Neue). Licences live in `src/fonts/LICENSES.md`.
+- **`src/fonts.css`** declares the `@font-face` rules; `src/index.html` links it
+  before `styles.css`. In dev the browser fetches the `.woff2` files normally.
+- **The build inlines them.** `build.js` rewrites every `url(fonts/x.woff2)` to a
+  `data:font/woff2;base64,…` URI, so both `dist/index.html` and the PWA build
+  stay single-file/offline with **zero external references**. The dev server
+  gained a `font/woff2` MIME type.
+- **Picker stacks lead with the embedded family**, then OS faces, then a generic
+  tail (unchanged rule: every stack ends in a generic family). Theme
+  `--font` / `--font-display` defaults were switched to embedded families
+  (Nunito, Inter, Source Serif 4, JetBrains Mono) so themes are self-sufficient.
+
+**Consequences:** Typography is identical on every machine, online or off. The
+cost is size: the single file grew from ~183 KB to **~809 KB** (≈623 KB of base64
+fonts). Still zero dependencies, zero network calls, and fully portable.
+
+**Relationship to §7:** §7 said "no external fonts" meaning no webfonts fetched
+from a CDN and no network calls. That intent is preserved — the fonts are now
+*part of the artifact*, not requested from anywhere. §7's "no network" rule is
+unchanged; its "no external fonts" wording is superseded by this entry.
+
+---
