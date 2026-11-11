@@ -693,13 +693,15 @@ const Render = (() => {
     });
     const loose = active.filter((h) => !used.has(h.id));
     const anyGrouped = groups.some((g) => g.items.length);
+    // Always label the loose list so it reads as separate from the Folders block.
+    const looseHeading = anyGrouped ? '📄 Ungrouped' : 'All habits';
 
     const activeHtml = active.length
       ? groups.filter((g) => g.items.length).map((g) => `
           <h3 class="section-sub folder-sub">${g.folder.emoji} ${Utils.esc(g.folder.name)}</h3>
           <div class="manage-list">${g.items.map(row).join('')}</div>`).join('')
         + (loose.length ? `
-          ${anyGrouped ? '<h3 class="section-sub folder-sub">📄 Ungrouped</h3>' : ''}
+          <h3 class="section-sub folder-sub">${looseHeading}</h3>
           <div class="manage-list">${loose.map(row).join('')}</div>` : '')
       : `<div class="empty"><div class="empty-emoji">🌱</div><div class="empty-title">Nothing here yet</div>
              <div class="empty-sub">Create your first habit — the tiny steps are the big ones.</div>

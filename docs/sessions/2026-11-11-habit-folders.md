@@ -91,6 +91,18 @@ checkbox) / `#f-name` back into the draft before re-rendering. Added a smoke
 test (`— editor input preservation —`) that stubs a typed value and asserts it
 survives a refresh.
 
+## Follow-up (same day): Habits-tab list separation
+
+**Bug:** with folders present but no habit assigned to any, the Habits tab
+listed the habits with **no heading**, so they visually merged with the Folders
+block above.
+
+**Cause:** `renderHabits` only emitted an “Ungrouped” heading when some *other*
+folder had members (`anyGrouped`).
+
+**Fix:** the loose list is now always labelled — `📄 Ungrouped` once a folder
+has members, otherwise `All habits`. Added smoke asserts for both cases.
+
 ## Context dump
 
 - Collapse key for the loose group is the literal `'__ungrouped'` (not a real

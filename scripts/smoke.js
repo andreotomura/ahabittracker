@@ -331,6 +331,27 @@ App.openEditor(Store.activeHabits()[0].id);
 UI.closeModal();
 assert(true, 'folder + habit editors render without throwing');
 
+// Separation: the loose list is labelled even when no folder has members.
+Store.replaceWith({
+  version: 1,
+  folders: [{ id: 'fz', name: 'Empty folder', emoji: '📁', sort: 0 }],
+  habits: [
+    { id: 'hz1', name: 'Alpha', emoji: '⭐', color: '#6d5df6', target: 0, days: [], folderId: null, createdAt: 1, archived: false, sort: 0 },
+    { id: 'hz2', name: 'Beta', emoji: '⭐', color: '#6d5df6', target: 0, days: [], folderId: null, createdAt: 2, archived: false, sort: 1 },
+  ],
+  completions: {},
+});
+Render.renderHabits();
+let sepHtml = document.querySelector('#view-habits').innerHTML;
+assert(sepHtml.includes('All habits'), 'Habits view labels ungrouped habits when no folder has members');
+assert(sepHtml.includes('Empty folder'), 'empty folder is still listed in management');
+Store.updateHabit('hz1', { folderId: 'fz' });
+Render.renderHabits();
+sepHtml = document.querySelector('#view-habits').innerHTML;
+assert(sepHtml.includes('📄 Ungrouped'), 'Habits view labels the loose list Ungrouped once a folder has members');
+Store.replaceWith({ version: 1, habits: [], completions: {} });
+Store.loadSample();
+
 console.log('— editor input preservation —');
 // A picker click re-renders the form; live typing must survive it.
 const editTarget = Store.activeHabits()[0];
