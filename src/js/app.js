@@ -13,6 +13,8 @@ const App = {
   monthOffset: 0,
   editorDraft: null,
   folderDraft: null,
+  themeDraft: null,
+  themeId: 'zen',
 
   WELCOME_KEY: 'ahabit.welcome.v1',
 
@@ -39,13 +41,13 @@ const App = {
     else if (this.tab === 'calendar') Render.renderCalendar(this.monthOffset);
     else if (this.tab === 'stats') Render.renderStats();
     else if (this.tab === 'habits') Render.renderHabits();
-    else if (this.tab === 'settings') Render.renderSettings();
+    else if (this.tab === 'settings') Render.renderSettings(this.themeId);
     this.syncFab();
   },
 
   syncFab() {
     const fab = UI.q('#fab');
-    fab.classList.toggle('hidden', this.tab !== 'today' || !Store.activeHabits().length);
+    fab.classList.toggle('hidden', this.tab !== 'today' || !Store.activeHabits().length || Prefs.isHidden('global.fab'));
   },
 
   switchTab(tab) {
@@ -67,6 +69,7 @@ const App = {
     const alias = { light: 'zen', dark: 'midnight' };
     id = alias[id] || id;
     if (Render.THEMES.some((t) => t.id === id)) return id;
+    if (Prefs.getCustomTheme(id)) return id;
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'midnight' : 'zen';
   },
@@ -76,16 +79,22 @@ const App = {
   },
 
   setTheme(id, persist = true) {
-    const theme = Render.THEMES.find((t) => t.id === id) || Render.THEMES[0];
+    const custom = Prefs.getCustomTheme(id);
+    const theme = Render.THEMES.find((t) => t.id === (custom ? custom.base : id)) || Render.THEMES[0];
     document.documentElement.dataset.theme = theme.id;
     // Choosing a preset is a fresh start for custom appearance (but not layout).
     if (persist) {
-      Prefs.clearColors();
-      Prefs.clearFonts();
+      if (custom) Prefs.applyThemeSnapshot(custom);
+      else {
+        Prefs.clearColors();
+        Prefs.clearFonts();
+        Prefs.clearStructure();
+      }
+      localStorage.setItem('ahabit.theme', custom ? custom.id : theme.id);
     }
-    if (persist) localStorage.setItem('ahabit.theme', theme.id);
+    this.themeId = custom ? custom.id : theme.id;
     const btn = UI.q('#theme-btn');
-    if (btn) btn.textContent = theme.emoji;
+    if (btn) btn.textContent = custom ? '🎨' : theme.emoji;
     const meta = UI.q('#theme-color');
     if (meta) meta.setAttribute('content', theme.color);
     this.syncThemePop();
@@ -93,7 +102,7 @@ const App = {
 
   syncThemePop() {
     const pop = UI.q('#theme-pop');
-    if (pop) pop.innerHTML = Render.themePickerHtml(document.documentElement.dataset.theme);
+    if (pop) pop.innerHTML = Render.themePickerHtml(this.themeId, Prefs.customThemes());
   },
 
   closeThemePop() {
@@ -154,6 +163,46 @@ const App = {
     this.editorDraft = null;
     this.renderCurrent();
     UI.toast(d.id ? 'Habit updated ✓' : 'Habit created ✓');
+  },
+
+  /* ---------------- Custom themes ---------------- */
+
+  openSaveTheme(themeId) {
+    const t = themeId ? Prefs.getCustomTheme(themeId) : null;
+    this.themeDraft = t ? { id: t.id, name: t.name } : { id: null, name: '' };
+    UI.openModal(Render.customThemeHtml(this.themeDraft));
+  },
+
+  saveCustomTheme() {
+    const d = this.themeDraft;
+    const name = (UI.q('#ct-name')?.value || '').trim();
+    if (!name) {
+      UI.toast('Give your theme a name first 🙂', 'warn');
+      UI.q('#ct-name')?.focus();
+      return;
+    }
+    if (d.id) {
+      Prefs.updateCustomTheme(d.id, { name });
+      UI.closeModal();
+      this.renderCurrent();
+      UI.toast('Theme renamed ✓');
+      return;
+    }
+    const p = Prefs.get();
+    const t = Prefs.addCustomTheme({
+      name,
+      base: document.documentElement.dataset.theme,
+      colors: { ...p.colors },
+      font: p.font,
+      displayFont: p.displayFont,
+      structure: { ...p.structure },
+    });
+    UI.closeModal();
+    if (t) {
+      this.setTheme(t.id);
+      this.renderCurrent();
+      UI.toast('Theme saved ✓');
+    }
   },
 
   /* ---------------- Folder editor ---------------- */
@@ -382,6 +431,34 @@ const App = {
         case 'dismiss-welcome': this.dismissWelcome(); break;
         case 'open-settings': this.prevTab = this.tab; this.switchTab('settings'); break;
         case 'close-settings': this.switchTab(this.prevTab || 'today'); break;
+        case 'save-theme': this.openSaveTheme(); break;
+        case 'edit-custom-theme': this.openSaveTheme(id); break;
+        case 'save-custom-theme': this.saveCustomTheme(); break;
+        case 'del-custom-theme': {
+          const t = Prefs.getCustomTheme(id);
+          UI.confirmDialog({
+            title: 'Delete theme?',
+            message: `“${t ? t.name : 'This theme'}” will be removed.`,
+            confirmText: 'Delete',
+            danger: true,
+          }).then((ok) => {
+            if (!ok) return;
+            const wasActive = this.themeId === id;
+            Prefs.deleteCustomTheme(id);
+            if (wasActive) this.setTheme((t && t.base) || 'zen');
+            else this.renderCurrent();
+            UI.toast('Theme deleted');
+          });
+          break;
+        }
+        case 'reset-structure': Prefs.clearStructure(); this.renderCurrent(); break;
+        case 'layout-preset': {
+          const ids = Render.LAYOUT_PRESETS[btn.dataset.preset] || [];
+          Prefs.setHiddenMap(Object.fromEntries(ids.map((k) => [k, true])));
+          this.renderCurrent();
+          UI.toast('Layout applied ✓');
+          break;
+        }
         case 'reset-colors': Prefs.clearColors(); this.renderCurrent(); break;
         case 'reset-fonts': Prefs.clearFonts(); this.renderCurrent(); break;
         case 'reset-hidden': Prefs.clearHidden(); this.renderCurrent(); break;
@@ -438,6 +515,9 @@ const App = {
         this.renderCurrent();
       } else if (t.dataset.action === 'toggle-section') {
         Prefs.setHidden(t.dataset.section, !t.checked);
+      } else if (t.dataset.action === 'set-structure') {
+        Prefs.setStructure({ [t.dataset.key]: t.value });
+        this.renderCurrent();
       } else if (t.dataset.action === 'set-sort') {
         Prefs.setSortMode(t.value);
         this.renderCurrent();
@@ -452,7 +532,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.12.0 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.13.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },

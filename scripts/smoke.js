@@ -7,9 +7,16 @@ const pwa = require('./pwa.js');
 
 function fakeEl() {
   return {
-    children: [], attrs: {}, style: { setProperty() {}, removeProperty() {} }, dataset: {},
+    children: [], attrs: {}, dataset: {},
+    style: { _p: {}, setProperty(k, v) { this._p[k] = v; }, removeProperty(k) { delete this._p[k]; }, getPropertyValue(k) { return this._p[k] || ''; } },
     className: '', textContent: '', value: '', innerHTML: '',
-    classList: { toggle() {}, add() {}, remove() {}, contains() { return true; } },
+    classList: {
+      _s: new Set(),
+      toggle(c, force) { const on = force === undefined ? !this._s.has(c) : !!force; if (on) this._s.add(c); else this._s.delete(c); return on; },
+      add(c) { this._s.add(c); },
+      remove(c) { this._s.delete(c); },
+      contains(c) { return this._s.has(c); },
+    },
     setAttribute(k, v) { this.attrs[k] = v; if (k === 'class') this.className = v; },
     getAttribute() { return null; },
     addEventListener() {},
@@ -483,5 +490,119 @@ Prefs.setFont('body', 'geometric');
 assert(Prefs.get().font === 'geometric', 'new font stacks are selectable');
 Prefs.setFont('body', 'theme');
 assert(Prefs.get().font === 'theme', 'font reset to theme default');
+
+console.log('— new theme presets —');
+assert(Render.THEMES.length >= 11, `theme registry has 11+ presets (${Render.THEMES.length})`);
+['graphite', 'frost', 'gruvbox', 'matcha', 'synthwave', 'mono'].forEach((id) => {
+  assert(Render.THEMES.some((t) => t.id === id), `new preset present: ${id}`);
+});
+assert(Render.THEMES.filter((t) => t.scheme === 'dark').length >= 5, 'several dark presets');
+assert(Render.THEMES.filter((t) => t.scheme === 'light').length >= 4, 'several light presets');
+const cssText = fs.readFileSync(path.join(__dirname, '..', 'src', 'styles.css'), 'utf8');
+['graphite', 'frost', 'gruvbox', 'matcha', 'synthwave', 'mono'].forEach((id) => {
+  assert(cssText.includes(`[data-theme="${id}"]`), `styles define token set for ${id}`);
+});
+const gallery = Render.themeGalleryHtml('mono');
+assert(Render.THEMES.every((t) => gallery.includes(`data-theme="${t.id}"`)), 'gallery lists every preset');
+assert(gallery.includes('theme-preview') && gallery.includes('sel'), 'gallery renders previews + active state');
+
+console.log('— shape (structure) —');
+Prefs.load();
+Prefs.setStructure({ radius: '22', border: '2', shadow: 'hard' });
+assert(Prefs.structure().radius === '22' && Prefs.hasCustomStructure(), 'structure stores + flags custom');
+assert(document.documentElement.style._p['--radius'] === '22px', 'radius applied as a CSS var');
+assert(document.documentElement.style._p['--radius-sm'] === '18px', 'small radius derived from radius');
+assert(document.documentElement.style._p['--border-w'] === '2px', 'border width applied');
+assert(String(document.documentElement.style._p['--shadow']).includes('4px 4px'), 'hard shadow applied');
+Prefs.setStructure({ radius: 'bogus' });
+assert(Prefs.structure().radius === '22', 'invalid structure value is rejected');
+Prefs.clearStructure();
+assert(!Prefs.hasCustomStructure() && !document.documentElement.style._p['--radius'], 'clearStructure resets');
+
+console.log('— custom themes —');
+Prefs.setColor('--accent', '#ff0000');
+Prefs.setFont('body', 'serif');
+const savedTheme = Prefs.addCustomTheme({
+  name: '  My theme  ',
+  base: 'graphite',
+  colors: Prefs.get().colors,
+  font: 'serif',
+  displayFont: 'theme',
+  structure: { radius: '8', border: 'theme', shadow: 'theme' },
+});
+assert(savedTheme && savedTheme.id.startsWith('ct_') && savedTheme.name === 'My theme', 'addCustomTheme trims + ids');
+assert(Prefs.customThemes().length === 1, 'custom theme stored');
+Prefs.updateCustomTheme(savedTheme.id, { name: 'Renamed' });
+assert(Prefs.getCustomTheme(savedTheme.id).name === 'Renamed', 'updateCustomTheme renames');
+Prefs.applyThemeSnapshot(savedTheme);
+assert(Prefs.get().colors['--accent'] === '#ff0000' && Prefs.get().font === 'serif', 'snapshot applies colours + font');
+assert(Prefs.structure().radius === '8', 'snapshot applies structure');
+Prefs.save();
+Prefs.load();
+assert(Prefs.customThemes().length === 1 && Prefs.getCustomTheme(savedTheme.id).name === 'Renamed', 'custom themes round-trip through storage');
+const picker2 = Render.themePickerHtml(savedTheme.id, Prefs.customThemes());
+assert(picker2.includes(`data-theme="${savedTheme.id}"`) && picker2.includes('data-theme="mono"'), 'picker includes custom + presets');
+const gallery2 = Render.themeGalleryHtml(savedTheme.id, Prefs.customThemes());
+assert(gallery2.includes('custom') && gallery2.includes('edit-custom-theme') && gallery2.includes('del-custom-theme'), 'gallery shows custom theme actions');
+Prefs.deleteCustomTheme(savedTheme.id);
+assert(Prefs.customThemes().length === 0, 'deleteCustomTheme removes it');
+Prefs.clearColors();
+Prefs.clearFonts();
+Prefs.clearStructure();
+
+console.log('— element visibility —');
+Prefs.clearHidden();
+Store.replaceWith({ version: 1, habits: [], completions: {} });
+Store.loadSample();
+Render.renderToday(false);
+let visHtml = document.querySelector('#view-today').innerHTML;
+assert(visHtml.includes('h-meta') && visHtml.includes('note-field') && visHtml.includes('step-btn'), 'Today shows meta + notes + steppers by default');
+Prefs.setHidden('today.greeting', true);
+Prefs.setHidden('today.sort', true);
+Prefs.setHidden('today.streak', true);
+Prefs.setHidden('today.notes', true);
+Prefs.setHidden('today.steppers', true);
+Prefs.setHidden('today.folders', true);
+Render.renderToday(false);
+visHtml = document.querySelector('#view-today').innerHTML;
+assert(!visHtml.includes('today-greeting') && !visHtml.includes('data-action="set-sort"'), 'greeting + sort hidden');
+assert(!visHtml.includes('note-field') && !visHtml.includes('step-btn'), 'notes + steppers hidden');
+assert(!visHtml.includes('folder-head'), 'folder grouping hidden (flat list)');
+Prefs.setHidden('calendar.dots', true);
+Render.renderCalendar(0);
+assert(!document.querySelector('#view-calendar').innerHTML.includes('class="dots"'), 'calendar dots hidden');
+Prefs.clearHidden();
+Prefs.setHidden('stats.momentum', true);
+Prefs.setHidden('stats.health.spark', true);
+Prefs.setHidden('stats.health.rings', true);
+Prefs.setHidden('stats.heatmap.legend', true);
+Render.renderStats();
+const statsVis = document.querySelector('#view-stats').innerHTML;
+assert(!statsVis.includes('spark-line') && !statsVis.includes('score-ring') && !statsVis.includes('heat-legend'), 'stats sub-elements hidden');
+Prefs.clearHidden();
+
+console.log('— layout presets —');
+Prefs.setHiddenMap(Object.fromEntries(Render.LAYOUT_PRESETS.minimal.map((k) => [k, true])));
+assert(Prefs.isHidden('today.streak') && Prefs.isHidden('stats.insights'), 'minimal preset hides extras');
+assert(!Prefs.isHidden('today.progress'), 'minimal preset keeps core (progress)');
+Prefs.setHiddenMap({});
+assert(!Prefs.isHidden('today.streak'), 'full preset clears hidden');
+
+console.log('— global chrome toggles —');
+Prefs.setHidden('global.brand', true);
+Prefs.setHidden('global.theme-btn', true);
+assert(document.body.classList.contains('hide-brand') && document.body.classList.contains('hide-theme-btn'), 'brand + theme button hide classes applied');
+Prefs.clearHidden();
+assert(!document.body.classList.contains('hide-brand'), 'chrome classes cleared');
+
+console.log('— customize tab —');
+App.prevTab = 'today';
+App.switchTab('settings');
+const customHtml = document.querySelector('#view-settings').innerHTML;
+assert(customHtml.includes('theme-gallery') && customHtml.includes('set-structure') && customHtml.includes('layout-preset'), 'Customize renders gallery + shape + layout presets');
+assert(customHtml.includes('save-theme') && customHtml.includes('gallery'), 'Customize offers save-theme');
+assert(typeof Render.customThemeHtml === 'function', 'custom theme modal builder exposed');
+App.openSaveTheme();
+App.switchTab('today');
 
 console.log('\n✅ All smoke tests passed');

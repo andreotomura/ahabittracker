@@ -29,39 +29,116 @@ const Render = (() => {
   // the picker. `colors` are preview swatches; `color` is the browser/status-bar
   // tint applied to <meta name="theme-color">. CSS token sets live in styles.css.
   const THEMES = [
-    { id: 'zen', name: 'Zen', emoji: '🌸', scheme: 'light', color: '#f4f5fb', colors: ['#6d5df6', '#a855f7', '#ff5c8a', '#f4f5fb'] },
+    // `colors` = [background, surface, accent, accent 2] — used by swatches + gallery previews.
+    { id: 'zen', name: 'Zen', emoji: '🌸', scheme: 'light', color: '#f4f5fb', colors: ['#f4f5fb', '#ffffff', '#6d5df6', '#ff5c8a'] },
     { id: 'midnight', name: 'Midnight', emoji: '🌙', scheme: 'dark', color: '#0e1017', colors: ['#0e1017', '#191c2b', '#8a7cf5', '#ff5c8a'] },
-    { id: 'paper', name: 'Paper', emoji: '📜', scheme: 'light', color: '#f4ecdd', colors: ['#fffaf1', '#a8560a', '#c98a3a', '#3b3226'] },
-    { id: 'brutalist', name: 'Brutalist', emoji: '⬛', scheme: 'light', color: '#f4f1e8', colors: ['#ffffff', '#0a0a0a', '#ff3b00', '#ffd400'] },
-    { id: 'brutalist-dark', name: 'Brutalist Dark', emoji: '🟨', scheme: 'dark', color: '#0a0a0a', colors: ['#0a0a0a', '#f5f5f5', '#ffe600', '#ff3b00'] },
+    { id: 'paper', name: 'Paper', emoji: '📜', scheme: 'light', color: '#f4ecdd', colors: ['#f4ecdd', '#fffaf1', '#a8560a', '#2f6b4f'] },
+    { id: 'brutalist', name: 'Brutalist', emoji: '⬛', scheme: 'light', color: '#f4f1e8', colors: ['#f4f1e8', '#ffffff', '#ff3b00', '#0057ff'] },
+    { id: 'brutalist-dark', name: 'Brutalist Dark', emoji: '🟨', scheme: 'dark', color: '#0a0a0a', colors: ['#0a0a0a', '#121212', '#ffe600', '#00e0ff'] },
+    { id: 'graphite', name: 'Graphite', emoji: '⚫', scheme: 'dark', color: '#0f1115', colors: ['#0f1115', '#191d23', '#4c9aff', '#22c55e'] },
+    { id: 'frost', name: 'Frost', emoji: '❄️', scheme: 'light', color: '#eceff4', colors: ['#eceff4', '#ffffff', '#5e81ac', '#4c8a9c'] },
+    { id: 'gruvbox', name: 'Gruvbox', emoji: '🟠', scheme: 'dark', color: '#282828', colors: ['#282828', '#3c3836', '#d79921', '#b8bb26'] },
+    { id: 'matcha', name: 'Matcha', emoji: '🍵', scheme: 'light', color: '#eef3ea', colors: ['#eef3ea', '#ffffff', '#4f7a4a', '#7fa650'] },
+    { id: 'synthwave', name: 'Synthwave', emoji: '🌆', scheme: 'dark', color: '#150b2e', colors: ['#150b2e', '#241748', '#ff2fb9', '#00e5ff'] },
+    { id: 'mono', name: 'Mono', emoji: '⚪', scheme: 'light', color: '#ffffff', colors: ['#ffffff', '#f0f0f0', '#000000', '#555555'] },
   ];
 
+  /** Presets + saved custom themes, shaped for the picker/gallery. */
+  function allThemes(customThemes = []) {
+    const customs = (customThemes || []).map((t) => {
+      const base = THEMES.find((x) => x.id === t.base) || THEMES[0];
+      const c = t.colors || {};
+      return {
+        id: t.id,
+        name: t.name,
+        emoji: '🎨',
+        scheme: base.scheme,
+        color: c['--bg'] || base.color,
+        colors: [
+          c['--bg'] || base.colors[0],
+          c['--card'] || base.colors[1],
+          c['--accent'] || base.colors[2],
+          c['--accent-2'] || base.colors[3],
+        ],
+        custom: true,
+      };
+    });
+    return THEMES.concat(customs);
+  }
+
   /** Pickable list of themes, with the active one marked. */
-  const themePickerHtml = (active) =>
-    THEMES.map((t) => `
+  const themePickerHtml = (active, customThemes = []) =>
+    allThemes(customThemes).map((t) => `
       <button class="theme-opt${t.id === active ? ' sel' : ''}" data-action="set-theme" data-theme="${t.id}" role="menuitem" aria-pressed="${t.id === active}">
         <span class="theme-swatches">${t.colors.map((c) => `<i class="theme-swatch" style="background:${c}"></i>`).join('')}</span>
-        <span class="t-name">${t.emoji} ${t.name}</span>
+        <span class="t-name">${t.emoji} ${Utils.esc(t.name)}</span>
         ${t.id === active ? '<span class="t-check">✓</span>' : ''}
       </button>`).join('');
+
+  /** Larger gallery cards for the Customize tab (live mini-preview). */
+  function themeGalleryHtml(active, customThemes = []) {
+    return allThemes(customThemes).map((t) => `
+      <div class="theme-card${t.id === active ? ' sel' : ''}">
+        <button class="theme-card-main" data-action="set-theme" data-theme="${t.id}" aria-pressed="${t.id === active}">
+          <span class="theme-preview" style="--tp-bg:${t.colors[0]};--tp-card:${t.colors[1]};--tp-a:${t.colors[2]};--tp-b:${t.colors[3]}">
+            <i class="tp-bar"></i><i class="tp-dot"></i><i class="tp-line"></i><i class="tp-line short"></i>
+          </span>
+          <span class="theme-card-name">${t.emoji} ${Utils.esc(t.name)}</span>
+          <span class="theme-card-meta">${t.scheme}${t.custom ? ' · custom' : ''}</span>
+          ${t.id === active ? '<span class="theme-card-check">✓</span>' : ''}
+        </button>
+        ${t.custom ? `<div class="theme-card-actions">
+          <button class="icon-btn" data-action="edit-custom-theme" data-id="${t.id}" aria-label="Rename theme" title="Rename">✏️</button>
+          <button class="icon-btn danger" data-action="del-custom-theme" data-id="${t.id}" aria-label="Delete theme" title="Delete">🗑️</button>
+        </div>` : ''}
+      </div>`).join('');
+  }
 
   // Sections the user can show/hide per tab (Layout settings). Render guards
   // each with `Prefs.isHidden(id)`.
   const SECTIONS = [
+    { id: 'today.greeting', view: 'Today', label: 'Greeting & date' },
     { id: 'today.welcome', view: 'Today', label: 'Welcome card' },
     { id: 'today.progress', view: 'Today', label: 'Daily progress' },
+    { id: 'today.sort', view: 'Today', label: 'Sort controls' },
+    { id: 'today.folders', view: 'Today', label: 'Folder grouping' },
+    { id: 'today.streak', view: 'Today', label: 'Streak text' },
+    { id: 'today.weekgoal', view: 'Today', label: 'Weekly goal + bar' },
+    { id: 'today.notes', view: 'Today', label: 'Note fields' },
+    { id: 'today.steppers', view: 'Today', label: 'Count steppers' },
     { id: 'calendar.hint', view: 'Calendar', label: 'Backfill hint' },
+    { id: 'calendar.dots', view: 'Calendar', label: 'Day dots' },
     { id: 'stats.overview', view: 'Stats', label: 'Summary numbers' },
     { id: 'stats.momentum', view: 'Stats', label: 'Momentum' },
     { id: 'stats.health', view: 'Stats', label: 'Habit health' },
+    { id: 'stats.health.spark', view: 'Stats', label: 'Habit sparklines' },
+    { id: 'stats.health.rings', view: 'Stats', label: 'Health rings' },
     { id: 'stats.weekday', view: 'Stats', label: 'Weekday rhythm' },
     { id: 'stats.tod', view: 'Stats', label: 'Time of day' },
     { id: 'stats.insights', view: 'Stats', label: 'Insights' },
     { id: 'stats.heatmap', view: 'Stats', label: 'Activity heatmap' },
+    { id: 'stats.heatmap.legend', view: 'Stats', label: 'Heatmap legend' },
     { id: 'stats.history', view: 'Stats', label: 'Habit history' },
     { id: 'stats.note', view: 'Stats', label: 'Health-score note' },
+    { id: 'habits.folders', view: 'Habits', label: 'Folder management' },
     { id: 'habits.archived', view: 'Habits', label: 'Archived list' },
+    { id: 'global.brand', view: 'Global', label: 'Logo & wordmark' },
+    { id: 'global.theme-btn', view: 'Global', label: 'Theme button' },
+    { id: 'global.fab', view: 'Global', label: 'Add button (FAB)' },
   ];
+
+  // Quick layout presets — each is the list of elements to HIDE.
+  const LAYOUT_PRESETS = {
+    minimal: [
+      'today.greeting', 'today.welcome', 'today.sort', 'today.streak', 'today.weekgoal', 'today.notes',
+      'calendar.hint', 'calendar.dots',
+      'stats.momentum', 'stats.health', 'stats.weekday', 'stats.tod', 'stats.insights',
+      'stats.history', 'stats.note', 'stats.health.spark', 'stats.health.rings', 'stats.heatmap.legend',
+      'habits.archived', 'global.brand',
+    ],
+    balanced: ['today.welcome', 'stats.note', 'stats.history', 'stats.heatmap.legend'],
+    full: [],
+  };
 
   const hidden = (id) => Prefs.isHidden(id);
 
@@ -174,10 +251,15 @@ const Render = (() => {
     const note = Store.getNote(h.id, dateKey);
     const streak = Store.streakFor(h.id);
     const wp = Store.weekProgress(h.id);
+    const showStreak = !hidden('today.streak');
+    const showGoal = !hidden('today.weekgoal');
+    const showNotes = !hidden('today.notes');
+    const showSteppers = !hidden('today.steppers');
     const meta = [];
-    if (streak.current > 0) meta.push(`🔥 ${streak.current}d streak`);
-    else if (streak.best > 0) meta.push(`best ${streak.best}d`);
-    if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
+    if (showStreak && streak.current > 0) meta.push(`🔥 ${streak.current}d streak`);
+    else if (showStreak && streak.best > 0) meta.push(`best ${streak.best}d`);
+    if (showGoal && wp) meta.push(`this week ${wp.done}/${wp.target}`);
+    const metaStr = meta.join(' · ') || (showStreak || showGoal ? 'New habit — go for it!' : '');
     return `
       <div class="habit${isDone ? ' done' : ''}">
         <button class="check${isDone ? ' done' : ''}" data-action="toggle" data-id="${h.id}"
@@ -185,14 +267,14 @@ const Render = (() => {
         <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
         <div class="h-main">
           <div class="h-name">${Utils.esc(h.name)}</div>
-          <div class="h-meta">${meta.join(' · ') || 'New habit — go for it!'}</div>
-          ${wp ? `<div class="weekbar"><div class="weekbar-fill" style="width:${Math.round((wp.done / wp.target) * 100)}%"></div></div>` : ''}
-          ${isDone || note
+          ${metaStr ? `<div class="h-meta">${metaStr}</div>` : ''}
+          ${showGoal && wp ? `<div class="weekbar"><div class="weekbar-fill" style="width:${Math.round((wp.done / wp.target) * 100)}%"></div></div>` : ''}
+          ${showNotes && (isDone || note)
             ? `<input class="note-field" data-action="note" data-id="${h.id}" data-date="${dateKey}" maxlength="240"
                 placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">`
             : ''}
         </div>
-        ${isDone ? stepper(h.id, dateKey, count) : ''}
+        ${showSteppers && isDone ? stepper(h.id, dateKey, count) : ''}
       </div>`;
   }
 
@@ -220,8 +302,8 @@ const Render = (() => {
           ? 'One more to go.'
           : `${total - done} to go — you’ve got this.`;
 
-    // Group into folders when any exist; otherwise keep one flat list.
-    const folderList = Store.folders();
+    // Group into folders when any exist (and grouping is enabled).
+    const folderList = hidden('today.folders') ? [] : Store.folders();
     let listHtml;
     if (!total) {
       listHtml = '';
@@ -252,12 +334,12 @@ const Render = (() => {
 
     const view = UI.q('#view-today');
     view.innerHTML = `
-      <div class="today-head">
+      ${hidden('today.greeting') ? '' : `<div class="today-head">
         <div>
           <h1 class="today-greeting">${greeting} 👋</h1>
           <p class="today-date">${dateStr}</p>
         </div>
-      </div>
+      </div>`}
 
       ${showWelcome && !hidden('today.welcome') ? welcomeCard() : ''}
 
@@ -266,7 +348,7 @@ const Render = (() => {
           <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
           <div class="progress-label"><strong>${done}</strong> of ${total} done · <em>${message}</em></div>
         </div>`}
-        ${sortBar()}
+        ${hidden('today.sort') ? '' : sortBar()}
         ${listHtml}` : empty}
     `;
   }
@@ -294,10 +376,10 @@ const Render = (() => {
             data-action="open-day" data-date="${cell.key}"
             title="${Utils.fmtDayTitle(cell.key)}${more ? ` · ${info.length} habits` : ''}">
             <span class="cal-day">${cell.date.getDate()}</span>
-            <span class="dots">
+            ${hidden('calendar.dots') ? '' : `<span class="dots">
               ${dots.map((d) => `<i class="dot" style="--d:${d.color}"></i>`).join('')}
               ${more > 0 ? `<span class="more">+${more}</span>` : ''}
-            </span>
+            </span>`}
           </button>`;
       })
       .join('');
@@ -364,10 +446,10 @@ const Render = (() => {
           <span class="h-name">${Utils.esc(h.name)}</span>
           ${trendArrow(trend.direction)}
         </div>
-        ${sparkline(trend.points, h.color, 260, 40)}
+        ${hidden('stats.health.spark') ? '' : sparkline(trend.points, h.color, 260, 40)}
         <div class="health-meta">${meta.join(' · ')}</div>
       </div>
-      ${scoreRing(health.score)}
+      ${hidden('stats.health.rings') ? '' : scoreRing(health.score)}
     </div>`;
   }
 
@@ -469,7 +551,7 @@ const Render = (() => {
         </div>
         <div class="heat-months">${monthCells}</div>
         <div class="heat-grid">${cellHtml}</div>
-        <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
+        ${hidden('stats.heatmap.legend') ? '' : `<div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>`}
       </div>`;
   }
 
@@ -487,7 +569,7 @@ const Render = (() => {
           <div class="heat-months">${monthCells}</div>
           <div class="heat-grid">${cellHtml}</div>
         </div>
-        <div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>
+        ${hidden('stats.heatmap.legend') ? '' : `<div class="heat-legend"><span>Less</span>${[0, 1, 2, 3, 4].map((l) => `<i class="heat-cell h${l}"></i>`).join('')}<span>More</span></div>`}
       </div>`;
   }
 
@@ -714,13 +796,13 @@ const Render = (() => {
         <button class="btn primary" data-action="add">＋ New habit</button>
       </div>
 
-      <div class="section-sub-row">
+      ${hidden('habits.folders') ? '' : `<div class="section-sub-row">
         <h3 class="section-sub">Folders</h3>
         <button class="btn ghost small" data-action="new-folder">＋ New folder</button>
       </div>
       ${folders.length
         ? `<div class="manage-list folder-manage">${folders.map(folderRow).join('')}</div>`
-        : `<p class="section-note">No folders yet — group related habits to keep things tidy.</p>`}
+        : `<p class="section-note">No folders yet — group related habits to keep things tidy.</p>`}`}
 
       ${activeHtml}
 
@@ -747,9 +829,10 @@ const Render = (() => {
     return groups;
   }
 
-  function renderSettings() {
-    const theme = document.documentElement.dataset.theme;
+  function renderSettings(activeTheme) {
+    const theme = activeTheme || document.documentElement.dataset.theme;
     const p = Prefs.get();
+    const customThemes = Prefs.customThemes();
     const visByView = {};
     for (const s of SECTIONS) (visByView[s.view] || (visByView[s.view] = [])).push(s);
 
@@ -781,6 +864,22 @@ const Render = (() => {
         </div>`)
       .join('');
 
+    const structField = (key, label) => `
+      <div class="set-field">
+        <label for="set-struct-${key}">${label}</label>
+        <select id="set-struct-${key}" data-action="set-structure" data-key="${key}">
+          ${Prefs.STRUCT_OPTIONS[key].map((o) => `<option value="${o.id}"${p.structure[key] === o.id ? ' selected' : ''}>${o.label}</option>`).join('')}
+        </select>
+      </div>`;
+
+    const layoutPresets = `
+      <div class="set-presets">
+        <span class="set-preset-label">Quick presets</span>
+        ${[['minimal', 'Minimal'], ['balanced', 'Balanced'], ['full', 'Everything']]
+          .map(([id, label]) => `<button class="chip" data-action="layout-preset" data-preset="${id}">${label}</button>`)
+          .join('')}
+      </div>`;
+
     const fontOptions = (selected, bodyOnly) => Prefs.FONT_OPTIONS
       .filter((o) => !bodyOnly || o.body)
       .map((o) => `<option value="${o.id}"${selected === o.id ? ' selected' : ''}>${o.label}</option>`)
@@ -789,22 +888,31 @@ const Render = (() => {
     const view = UI.q('#view-settings');
     view.innerHTML = `
       <div class="settings-head">
-        <button class="icon-btn" data-action="close-settings" aria-label="Back" title="Back">‹</button>
         <div>
           <h2>Customize</h2>
-          <p>Make it yours — colors, fonts, and what each tab shows.</p>
+          <p>Make it yours — themes, colors, fonts, shape, and what each tab shows.</p>
         </div>
       </div>
 
       <div class="card set-card">
-        <div class="section-head"><h3>Theme</h3><span>starting point</span></div>
-        <div class="set-themes">${themePickerHtml(theme)}</div>
-        <p class="set-hint">Picking a theme resets custom colors &amp; fonts below.</p>
+        <div class="section-head"><h3>Theme</h3><span>${customThemes.length ? `${customThemes.length} saved` : 'presets'}</span></div>
+        <div class="theme-gallery">${themeGalleryHtml(theme, customThemes)}</div>
+        <p class="set-hint">Picking a preset resets custom colors, fonts &amp; shape.</p>
+        <div class="btn-row"><button class="btn ghost" data-action="save-theme">＋ Save current look as theme</button></div>
+      </div>
+
+      <div class="card set-card">
+        <div class="section-head"><h3>Shape</h3><span>corners, borders, shadows</span></div>
+        ${structField('radius', 'Corner radius')}
+        ${structField('border', 'Border width')}
+        ${structField('shadow', 'Shadow style')}
+        <div class="btn-row"><button class="btn ghost" data-action="reset-structure">Reset shape</button></div>
       </div>
 
       <div class="card set-card">
         <div class="section-head"><h3>Colors</h3><span>${Prefs.hasCustomColors() ? 'customised' : 'from theme'}</span></div>
         ${colorGroupHtml}
+        <p class="set-hint">Changing the accent auto-derives the gradient &amp; heatmap.</p>
         <div class="btn-row"><button class="btn ghost" data-action="reset-colors">Reset colors</button></div>
       </div>
 
@@ -822,7 +930,8 @@ const Render = (() => {
       </div>
 
       <div class="card set-card">
-        <div class="section-head"><h3>Layout</h3><span>what each tab shows</span></div>
+        <div class="section-head"><h3>Layout</h3><span>show / hide elements</span></div>
+        ${layoutPresets}
         ${layoutHtml}
         <div class="btn-row"><button class="btn ghost" data-action="reset-hidden">Show everything</button></div>
       </div>
@@ -969,6 +1078,18 @@ const Render = (() => {
     return UI.modalShell({ title: draft.id ? 'Edit folder' : 'New folder', body, footer: foot });
   }
 
+  /** Name or rename a saved custom theme. */
+  function customThemeHtml(draft) {
+    const body = UI.el('div', { class: 'editor' }, [
+      htmlToNode(`<div class="form-row"><label>Theme name</label><input class="field" id="ct-name" maxlength="32" placeholder="e.g. My calm dark" value="${Utils.esc(draft.name)}"></div>`),
+    ]);
+    const foot = UI.el('div', { class: 'btn-row' },
+      UI.el('button', { class: 'btn ghost', onclick: UI.closeModal }, 'Cancel'),
+      UI.el('button', { class: 'btn primary', 'data-action': 'save-custom-theme' }, draft.id ? 'Save name' : 'Save theme'),
+    );
+    return UI.modalShell({ title: draft.id ? 'Rename theme' : 'Save current look as theme', body, footer: foot });
+  }
+
   return {
     renderToday,
     renderCalendar,
@@ -978,8 +1099,11 @@ const Render = (() => {
     dayModalHtml,
     habitEditorHtml,
     folderEditorHtml,
+    customThemeHtml,
     themePickerHtml,
+    themeGalleryHtml,
     THEMES,
     SECTIONS,
+    LAYOUT_PRESETS,
   };
 })();
