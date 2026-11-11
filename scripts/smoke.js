@@ -628,4 +628,19 @@ Object.entries(embeddedFirst).forEach(([id, fam]) => {
   assert(Prefs.FONTS[id].trim().startsWith(`"${fam}"`), `${id} leads with embedded ${fam}`);
 });
 
+console.log('— logo mark —');
+assert(Array.isArray(icons.AHA_SEGMENTS) && icons.AHA_SEGMENTS.length === 9, `AHA mark has 9 stroke segments (${icons.AHA_SEGMENTS && icons.AHA_SEGMENTS.length})`);
+assert(icons.AHA_SEGMENTS.every((s) => s.every((n) => n >= 0 && n <= 1)), 'AHA segments live in 0–1 space');
+const indexHtml = fs.readFileSync(path.join(rootDir, 'src', 'index.html'), 'utf8');
+assert(indexHtml.includes('class="logo-mark"') && indexHtml.includes('M23 30L13 72'), 'topbar + favicon use the AHA mark');
+assert(!indexHtml.includes('<span class="logo">A</span>'), 'the old single-A logo is gone');
+const logoSvgMarkup = fs.readFileSync(path.join(rootDir, 'docs', 'logo-variants.html'), 'utf8');
+assert(logoSvgMarkup.includes('id="ahap"') && logoSvgMarkup.includes('Accent H'), 'logo variants gallery present');
+const raster64 = icons.rasterIcon(64, false);
+let hasWhite = false;
+for (let i = 0; i < raster64.length; i += 4) {
+  if (raster64[i] > 240 && raster64[i + 1] > 240 && raster64[i + 2] > 240 && raster64[i + 3] > 200) { hasWhite = true; break; }
+}
+assert(hasWhite, 'rasterized icon contains the white AHA strokes');
+
 console.log('\n✅ All smoke tests passed');

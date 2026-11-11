@@ -522,11 +522,13 @@ button:focus-visible, input:focus-visible {
   background: var(--grad);
   color: var(--on-accent);
   display: grid; place-items: center;
-  font-weight: 800;
-  font-size: 19px;
   box-shadow: var(--glow);
   flex: none;
+  overflow: hidden;
 }
+
+/* "AHA" mark (strokes use currentColor so it follows --on-accent / themes). */
+.logo-mark { width: 27px; height: 27px; display: block; }
 
 .brand-name { font-weight: 700; font-size: 17px; letter-spacing: -.01em; white-space: nowrap; font-family: var(--font-display); text-transform: var(--display-transform); }
 .brand-name small { font-weight: 600; color: var(--text-2); font-size: .72em; }

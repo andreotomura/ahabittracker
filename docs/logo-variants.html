@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AHA(bit) — logo variants</title>
+<style>
+  :root {
+    --grad: linear-gradient(135deg, #6d5df6 0%, #a855f7 45%, #ff5c8a 100%);
+    --ink: #1a1d2b;
+    --muted: #6b7280;
+    --line: #e4e6f2;
+    --bg: #f7f7fb;
+    --card: #fff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 22px 80px;
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); background: var(--bg);
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 40px 0 14px; }
+  p.lead { color: var(--muted); margin: 0 0 8px; }
+  .note { font-size: 13px; color: var(--muted); }
+  code { background: #eceef7; padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .cell { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 1px 2px rgba(24,27,51,.05); }
+  .cell .label { margin-top: 12px; font-weight: 650; font-size: 13.5px; }
+  .cell .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cell .badge { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #16a34a; }
+
+  .tile { width: 104px; height: 104px; border-radius: 22px; display: inline-block; }
+  .tile.small { width: 44px; height: 44px; border-radius: 11px; }
+  .ink { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  .ink.h { stroke: #ffd6eb; }
+  .ink.bold { stroke-width: 9; }
+  .ink.accent { stroke: #6d5df6; }
+  .tile.plain { background: #eef1fb; box-shadow: none; }
+
+  .sizes { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+  .sizes figure { margin: 0; text-align: center; }
+  .sizes figcaption { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+  /* Topbar lockups */
+  .lockups { display: grid; gap: 14px; }
+  .lockup { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
+  .lockup .brand-name { font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+  .lockup .brand-name small { font-weight: 600; color: var(--muted); font-size: .72em; }
+  .lockup .logo { width: 34px; height: 34px; border-radius: 10px; background: var(--grad); color: #fff; display: grid; place-items: center; overflow: hidden; box-shadow: 0 4px 12px rgba(109,93,246,.35); }
+  .lockup .logo.wide { width: 58px; }
+  .lockup .logo svg { width: 27px; height: 27px; }
+  .lockup .logo.wide svg { width: 46px; }
+  .lockup.darkbg { background: #12141c; border-color: #262b41; color: #edeffb; }
+  .lockup.darkbg .brand-name small { color: #a4aac4; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true"><defs>
+  <path id="ahap" d="M23 30L13 72M23 30L33 72M16.57 57L29.43 57M40 30L40 72M60 30L60 72M40 52L60 52M77 30L67 72M77 30L87 72M70.57 57L83.43 57"/>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6d5df6"/><stop offset=".45" stop-color="#a855f7"/><stop offset="1" stop-color="#ff5c8a"/>
+  </linearGradient>
+</defs></svg>
+
+<div class="wrap">
+  <h1>App logo — “AHA” variants</h1>
+  <p class="lead">The mark changed from a single <b>A</b> to <b>AHA</b>. Pick a direction and I’ll make it the default across the topbar, favicon and PWA icons.</p>
+  <p class="note">Variant&nbsp;1 (Classic) is already wired in. The mark is drawn as strokes (not a font), so it stays crisp at any size and follows the theme’s accent/ink colours.</p>
+
+  <h2>Square icon (favicon / PWA)</h2>
+  <div class="grid">
+    <div class="cell">
+      <svg class="tile" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg>
+      <div class="label">Classic</div><div class="sub">white on gradient</div>
+      <div class="badge">● current</div>
+    </div>
+    <div class="cell">
+      <svg class="tile" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink h"/></svg>
+      <div class="label">Accent H</div><div class="sub">middle letter tinted</div>
+    </div>
+    <div class="cell">
+      <svg class="tile" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink bold"/></svg>
+      <div class="label">Bold</div><div class="sub">heavier strokes</div>
+    </div>
+    <div class="cell">
+      <svg class="tile plain" viewBox="0 0 100 100"><use href="#ahap" class="ink accent"/></svg>
+      <div class="label">Mono</div><div class="sub">single colour, no tile</div>
+    </div>
+  </div>
+
+  <h2>Topbar lockups</h2>
+  <div class="lockups">
+    <div class="lockup">
+      <span class="logo"><svg viewBox="0 0 100 100"><use href="#ahap" class="ink"/></svg></span>
+      <span class="brand-name">AHA<small>(bit)</small> tracker</span>
+      <span class="note" style="margin-left:auto">compact tile (34px)</span>
+    </div>
+    <div class="lockup">
+      <span class="logo wide"><svg viewBox="0 0 100 100"><use href="#ahap" class="ink"/></svg></span>
+      <span class="brand-name">AHA<small>(bit)</small> tracker</span>
+      <span class="note" style="margin-left:auto">wide wordmark chip</span>
+    </div>
+    <div class="lockup darkbg">
+      <span class="logo"><svg viewBox="0 0 100 100"><use href="#ahap" class="ink"/></svg></span>
+      <span class="brand-name">AHA<small>(bit)</small> tracker</span>
+      <span class="note" style="margin-left:auto">on a dark theme</span>
+    </div>
+  </div>
+
+  <h2>Sizes (Classic)</h2>
+  <div class="sizes">
+    <figure><svg class="tile" style="width:192px;height:192px;border-radius:40px" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg><figcaption>192 · PWA</figcaption></figure>
+    <figure><svg class="tile" style="width:96px;height:96px;border-radius:20px" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg><figcaption>96</figcaption></figure>
+    <figure><svg class="tile small" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg><figcaption>44</figcaption></figure>
+    <figure><svg style="width:32px;height:32px;border-radius:8px" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg><figcaption>32 · favicon</figcaption></figure>
+    <figure><svg style="width:16px;height:16px;border-radius:4px" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g)"/><use href="#ahap" class="ink"/></svg><figcaption>16</figcaption></figure>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="note">• The mark geometry lives in <code>scripts/icons.js</code> (raster) and the same path is inlined in <code>src/index.html</code> for the topbar and favicon.<br>
+  • Variant “Accent H” is a one-line colour change; “Bold” is <code>stroke-width</code> 9 vs 7; “Mono” drops the gradient tile.<br>
+  • Within the app the tile background is <code>var(--grad)</code> and the strokes use <code>currentColor</code>, so every theme recolours the logo automatically.</p>
+</div>
+</body>
+</html>

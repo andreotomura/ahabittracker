@@ -1,7 +1,7 @@
 /*
  * icons.js — zero-dependency PNG icon generation for the PWA build.
  *
- * Rasterizes the brand mark (gradient rounded square + white check) and encodes
+ * Rasterizes the brand mark (gradient rounded square + white "AHA") and encodes
  * PNGs by hand with Node's built-in `zlib`, so the project keeps its
  * no-npm-dependencies promise. Pure functions — `buildPng(size, {maskable})`
  * returns a Buffer; `writeIconFiles(dir)` writes the standard set.
@@ -89,6 +89,28 @@ function distToSeg(px, py, ax, ay, bx, by) {
 const clamp01 = (n) => Math.max(0, Math.min(1, n));
 
 /**
+ * The "AHA" brand mark as stroke segments in 0–1 space.
+ * Keep in sync with the topbar <svg> and the favicon data URI in
+ * `src/index.html` (both use the equivalent 0–100 path).
+ */
+const AHA_SEGMENTS = (() => {
+  const top = 0.30, bot = 0.72, aw = 0.10, bar = 0.57;
+  const t = (bar - top) / (bot - top);
+  const A = (cx) => [
+    [cx, top, cx - aw, bot],
+    [cx, top, cx + aw, bot],
+    [cx - aw * t, bar, cx + aw * t, bar],
+  ];
+  return [
+    ...A(0.23),
+    [0.40, top, 0.40, bot],
+    [0.60, top, 0.60, bot],
+    [0.40, 0.52, 0.60, 0.52],
+    ...A(0.77),
+  ];
+})();
+
+/**
  * Render the icon to an RGBA buffer.
  * `maskable` draws a full-bleed square (safe for OS masking) with the glyph
  * pulled into the central ~78% safe zone; otherwise a rounded square.
@@ -98,8 +120,13 @@ function rasterIcon(size, maskable) {
   const rgba = Buffer.alloc(size * size * 4);
   const radius = 0.22;
   const scale = maskable ? 0.78 : 1;
-  const glyph = [[0.3, 0.53], [0.45, 0.68], [0.72, 0.34]].map(([x, y]) => [0.5 + (x - 0.5) * scale, 0.5 + (y - 0.5) * scale]);
-  const halfWidth = 0.055 * scale;
+  const halfWidth = 0.035 * scale;
+  const strokes = AHA_SEGMENTS.map(([ax, ay, bx, by]) => [
+    0.5 + (ax - 0.5) * scale,
+    0.5 + (ay - 0.5) * scale,
+    0.5 + (bx - 0.5) * scale,
+    0.5 + (by - 0.5) * scale,
+  ]);
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -122,10 +149,8 @@ function rasterIcon(size, maskable) {
 
           let [cr, cg, cb] = gradient((u + v) / 2);
 
-          const d = Math.min(
-            distToSeg(u, v, glyph[0][0], glyph[0][1], glyph[1][0], glyph[1][1]),
-            distToSeg(u, v, glyph[1][0], glyph[1][1], glyph[2][0], glyph[2][1]),
-          );
+          let d = Infinity;
+          for (const s of strokes) d = Math.min(d, distToSeg(u, v, s[0], s[1], s[2], s[3]));
           const white = clamp01(0.5 - (d - halfWidth) * size);
           cr += (255 - cr) * white;
           cg += (255 - cg) * white;
@@ -161,4 +186,4 @@ function writeIconFiles(dir) {
   return files.map(([name]) => name);
 }
 
-module.exports = { buildPng, writeIconFiles, encodePng, rasterIcon, crc32 };
+module.exports = { buildPng, writeIconFiles, encodePng, rasterIcon, crc32, AHA_SEGMENTS };
