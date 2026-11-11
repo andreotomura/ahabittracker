@@ -19,6 +19,12 @@ const Render = (() => {
     '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#f43f5e', '#64748b',
   ];
 
+  // Emoji choices for folder icons (habits have their own larger set above).
+  const FOLDER_EMOJIS = [
+    '📁', '📚', '💪', '🧘', '🏠', '💼', '💻', '🎯', '🌱', '🎨',
+    '🎵', '🏃', '🍎', '💰', '✈️', '🛠️', '❤️', '🔬', '🎓', '🌍',
+  ];
+
   // Theme registry — single source of truth shared by App (apply/persist) and
   // the picker. `colors` are preview swatches; `color` is the browser/status-bar
   // tint applied to <meta name="theme-color">. CSS token sets live in styles.css.
@@ -102,6 +108,94 @@ const Render = (() => {
       <button class="btn ghost welcome-dismiss" data-action="dismiss-welcome">Got it</button>
     </div>`;
 
+  /** Sort a habit list by the active mode (reads UI prefs; no mutation). */
+  function sortHabits(list, doneKey) {
+    const byMode = {
+      name: (a, b) => a.name.localeCompare(b.name),
+      streak: (a, b) => Store.streakFor(b.id).current - Store.streakFor(a.id).current || a.sort - b.sort,
+      health: (a, b) => (Store.healthScore(b.id) || { score: 0 }).score - (Store.healthScore(a.id) || { score: 0 }).score || a.sort - b.sort,
+      newest: (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+      manual: (a, b) => a.sort - b.sort,
+    };
+    const arr = list.slice().sort(byMode[Prefs.sortMode()] || byMode.manual);
+    // Optional secondary "done last" pass — sort() is stable, so mode order holds.
+    if (doneKey && Prefs.doneLast()) {
+      arr.sort((a, b) => (Store.isDone(a.id, doneKey) ? 1 : 0) - (Store.isDone(b.id, doneKey) ? 1 : 0));
+    }
+    return arr;
+  }
+
+  /** Collapsible folder header with a tiny completion bar. */
+  function folderHeader(folder, doneCount, total, collapsed) {
+    const pct = total ? Math.round((doneCount / total) * 100) : 0;
+    return `
+      <button class="folder-head" data-action="toggle-fold" data-id="${folder.id}"
+        aria-expanded="${collapsed ? 'false' : 'true'}" title="${collapsed ? 'Expand' : 'Collapse'} ${Utils.esc(folder.name)}">
+        <span class="folder-chevron${collapsed ? '' : ' open'}">▸</span>
+        <span class="folder-emoji">${folder.emoji}</span>
+        <span class="folder-name">${Utils.esc(folder.name)}</span>
+        <span class="folder-count">${doneCount}/${total}</span>
+        <span class="folder-bar"><span class="folder-bar-fill" style="width:${pct}%"></span></span>
+      </button>`;
+  }
+
+  /** A folder section (header + rows) for the Today list. */
+  function folderSection(folder, items, dateKey) {
+    const collapsed = Prefs.isCollapsed(folder.id);
+    const doneCount = items.filter((h) => Store.isDone(h.id, dateKey)).length;
+    return `
+      <section class="folder${collapsed ? ' collapsed' : ''}" data-folder="${folder.id}">
+        ${folderHeader(folder, doneCount, items.length, collapsed)}
+        ${collapsed ? '' : `<div class="folder-body">${items.map((h) => habitRow(h, dateKey)).join('')}</div>`}
+      </section>`;
+  }
+
+  /** Sort control bar (sort mode + done-last) above the Today list. */
+  function sortBar() {
+    const opts = Prefs.SORT_MODES
+      .map((m) => `<option value="${m.id}"${Prefs.sortMode() === m.id ? ' selected' : ''}>${m.label}</option>`)
+      .join('');
+    return `
+      <div class="list-bar">
+        <label class="list-sort">Sort
+          <select data-action="set-sort" aria-label="Sort habits">${opts}</select>
+        </label>
+        <label class="list-toggle">
+          <input type="checkbox" data-action="toggle-done-last"${Prefs.doneLast() ? ' checked' : ''}>
+          <span>Done last</span>
+        </label>
+      </div>`;
+  }
+
+  /** One check-in row on the Today list. */
+  function habitRow(h, dateKey) {
+    const isDone = Store.isDone(h.id, dateKey);
+    const count = Store.countFor(h.id, dateKey);
+    const note = Store.getNote(h.id, dateKey);
+    const streak = Store.streakFor(h.id);
+    const wp = Store.weekProgress(h.id);
+    const meta = [];
+    if (streak.current > 0) meta.push(`🔥 ${streak.current}d streak`);
+    else if (streak.best > 0) meta.push(`best ${streak.best}d`);
+    if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
+    return `
+      <div class="habit${isDone ? ' done' : ''}">
+        <button class="check${isDone ? ' done' : ''}" data-action="toggle" data-id="${h.id}"
+          aria-label="${isDone ? 'Mark as not done' : 'Mark as done'}" title="${isDone ? (count > 1 ? `Undo all (×${count})` : 'Undo') : 'Done'}">${checkSvg()}</button>
+        <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
+        <div class="h-main">
+          <div class="h-name">${Utils.esc(h.name)}</div>
+          <div class="h-meta">${meta.join(' · ') || 'New habit — go for it!'}</div>
+          ${wp ? `<div class="weekbar"><div class="weekbar-fill" style="width:${Math.round((wp.done / wp.target) * 100)}%"></div></div>` : ''}
+          ${isDone || note
+            ? `<input class="note-field" data-action="note" data-id="${h.id}" data-date="${dateKey}" maxlength="240"
+                placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">`
+            : ''}
+        </div>
+        ${isDone ? stepper(h.id, dateKey, count) : ''}
+      </div>`;
+  }
+
   function renderToday(showWelcome) {
     const tKey = Utils.todayKey();
     const habits = Store.activeHabits();
@@ -109,10 +203,6 @@ const Render = (() => {
     const total = habits.length;
     const done = doneSet.length;
     const pct = total ? Math.round((done / total) * 100) : 0;
-
-    const sorted = habits
-      .slice()
-      .sort((a, b) => (Store.isDone(a.id, tKey) ? 1 : 0) - (Store.isDone(b.id, tKey) ? 1 : 0) || a.sort - b.sort);
 
     const greeting = (() => {
       const h = new Date().getHours();
@@ -130,35 +220,24 @@ const Render = (() => {
           ? 'One more to go.'
           : `${total - done} to go — you’ve got this.`;
 
-    const rows = sorted
-      .map((h) => {
-        const isDone = Store.isDone(h.id, tKey);
-        const count = Store.countFor(h.id, tKey);
-        const note = Store.getNote(h.id, tKey);
-        const streak = Store.streakFor(h.id);
-        const wp = Store.weekProgress(h.id);
-        const meta = [];
-        if (streak.current > 0) meta.push(`🔥 ${streak.current}d streak`);
-        else if (streak.best > 0) meta.push(`best ${streak.best}d`);
-        if (wp) meta.push(`this week ${wp.done}/${wp.target}`);
-        return `
-          <div class="habit${isDone ? ' done' : ''}">
-            <button class="check${isDone ? ' done' : ''}" data-action="toggle" data-id="${h.id}"
-              aria-label="${isDone ? 'Mark as not done' : 'Mark as done'}" title="${isDone ? (count > 1 ? `Undo all (×${count})` : 'Undo') : 'Done'}">${checkSvg()}</button>
-            <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
-            <div class="h-main">
-              <div class="h-name">${Utils.esc(h.name)}</div>
-              <div class="h-meta">${meta.join(' · ') || 'New habit — go for it!'}</div>
-              ${wp ? `<div class="weekbar"><div class="weekbar-fill" style="width:${Math.round((wp.done / wp.target) * 100)}%"></div></div>` : ''}
-              ${isDone || note
-                ? `<input class="note-field" data-action="note" data-id="${h.id}" data-date="${tKey}" maxlength="240"
-                    placeholder="Add a note…" value="${Utils.esc(note)}" aria-label="Note for ${Utils.esc(h.name)}">`
-                : ''}
-            </div>
-            ${isDone ? stepper(h.id, tKey, count) : ''}
-          </div>`;
-      })
-      .join('');
+    // Group into folders when any exist; otherwise keep one flat list.
+    const folderList = Store.folders();
+    let listHtml;
+    if (!total) {
+      listHtml = '';
+    } else if (!folderList.length) {
+      listHtml = `<div class="habit-list">${sortHabits(habits, tKey).map((h) => habitRow(h, tKey)).join('')}</div>`;
+    } else {
+      const used = new Set();
+      const sections = folderList.map((f) => {
+        const items = sortHabits(habits.filter((h) => h.folderId === f.id), tKey);
+        items.forEach((h) => used.add(h.id));
+        return items.length ? folderSection(f, items, tKey) : '';
+      });
+      const loose = sortHabits(habits.filter((h) => !used.has(h.id)), tKey);
+      if (loose.length) sections.push(folderSection({ id: '__ungrouped', name: 'Ungrouped', emoji: '📄' }, loose, tKey));
+      listHtml = `<div class="folder-list">${sections.join('')}</div>`;
+    }
 
     const empty = total === 0 ? `
       <div class="empty">
@@ -187,7 +266,8 @@ const Render = (() => {
           <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
           <div class="progress-label"><strong>${done}</strong> of ${total} done · <em>${message}</em></div>
         </div>`}
-        <div class="habit-list">${rows}</div>` : empty}
+        ${sortBar()}
+        ${listHtml}` : empty}
     `;
   }
 
@@ -554,17 +634,28 @@ const Render = (() => {
   /* ================= Habits (manage) ================= */
 
   function renderHabits() {
-    const active = Store.allHabits().filter((h) => !h.archived);
-    const archived = Store.allHabits().filter((h) => h.archived);
+    const all = Store.allHabits();
+    const active = all.filter((h) => !h.archived);
+    const archived = all.filter((h) => h.archived);
+    const folders = Store.folders();
 
-    const row = (h) => `
+    const row = (h) => {
+      const group = all
+        .filter((x) => (x.folderId || null) === (h.folderId || null) && !!x.archived === !!h.archived)
+        .sort((a, b) => a.sort - b.sort);
+      const i = group.findIndex((x) => x.id === h.id);
+      const folder = h.folderId ? Store.getFolder(h.folderId) : null;
+      const tag = folder ? ` · ${folder.emoji} ${Utils.esc(folder.name)}` : '';
+      return `
       <div class="mrow card">
         <span class="h-emoji" style="--c:${h.color}">${h.emoji}</span>
         <div class="m-main">
           <div class="m-name">${Utils.esc(h.name)}</div>
-          <div class="m-meta">${freqLabel(h)} · 🔥 best ${Store.streakFor(h.id).best}d</div>
+          <div class="m-meta">${freqLabel(h)} · 🔥 best ${Store.streakFor(h.id).best}d${tag}</div>
         </div>
         <div class="m-actions">
+          <button class="icon-btn" data-action="move-habit" data-id="${h.id}" data-dir="-1" aria-label="Move up" title="Move up"${i <= 0 ? ' disabled' : ''}>↑</button>
+          <button class="icon-btn" data-action="move-habit" data-id="${h.id}" data-dir="1" aria-label="Move down" title="Move down"${i >= group.length - 1 ? ' disabled' : ''}>↓</button>
           <button class="icon-btn" data-action="edit" data-id="${h.id}" aria-label="Edit" title="Edit">✏️</button>
           ${h.archived
             ? `<button class="icon-btn" data-action="unarchive" data-id="${h.id}" aria-label="Restore" title="Restore">↩️</button>`
@@ -572,6 +663,47 @@ const Render = (() => {
           <button class="icon-btn danger" data-action="del" data-id="${h.id}" aria-label="Delete" title="Delete">🗑️</button>
         </div>
       </div>`;
+    };
+
+    const folderRow = (f) => {
+      const i = folders.findIndex((x) => x.id === f.id);
+      const n = all.filter((h) => h.folderId === f.id && !h.archived).length;
+      return `
+        <div class="mrow card folder-row">
+          <span class="folder-emoji">${f.emoji}</span>
+          <div class="m-main">
+            <div class="m-name">${Utils.esc(f.name)}</div>
+            <div class="m-meta">${Utils.plural(n, 'habit')}</div>
+          </div>
+          <div class="m-actions">
+            <button class="icon-btn" data-action="move-folder" data-id="${f.id}" data-dir="-1" aria-label="Move up" title="Move up"${i <= 0 ? ' disabled' : ''}>↑</button>
+            <button class="icon-btn" data-action="move-folder" data-id="${f.id}" data-dir="1" aria-label="Move down" title="Move down"${i >= folders.length - 1 ? ' disabled' : ''}>↓</button>
+            <button class="icon-btn" data-action="edit-folder" data-id="${f.id}" aria-label="Edit folder" title="Edit">✏️</button>
+            <button class="icon-btn danger" data-action="del-folder" data-id="${f.id}" aria-label="Delete folder" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    };
+
+    // Active habits grouped by folder (folder order), then any ungrouped ones.
+    const used = new Set();
+    const groups = folders.map((f) => {
+      const items = active.filter((h) => h.folderId === f.id);
+      items.forEach((h) => used.add(h.id));
+      return { folder: f, items };
+    });
+    const loose = active.filter((h) => !used.has(h.id));
+    const anyGrouped = groups.some((g) => g.items.length);
+
+    const activeHtml = active.length
+      ? groups.filter((g) => g.items.length).map((g) => `
+          <h3 class="section-sub folder-sub">${g.folder.emoji} ${Utils.esc(g.folder.name)}</h3>
+          <div class="manage-list">${g.items.map(row).join('')}</div>`).join('')
+        + (loose.length ? `
+          ${anyGrouped ? '<h3 class="section-sub folder-sub">📄 Ungrouped</h3>' : ''}
+          <div class="manage-list">${loose.map(row).join('')}</div>` : '')
+      : `<div class="empty"><div class="empty-emoji">🌱</div><div class="empty-title">Nothing here yet</div>
+             <div class="empty-sub">Create your first habit — the tiny steps are the big ones.</div>
+             <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div></div>`;
 
     const view = UI.q('#view-habits');
     view.innerHTML = `
@@ -580,10 +712,15 @@ const Render = (() => {
         <button class="btn primary" data-action="add">＋ New habit</button>
       </div>
 
-      ${active.length ? `<div class="manage-list">${active.map(row).join('')}</div>`
-        : `<div class="empty"><div class="empty-emoji">🌱</div><div class="empty-title">Nothing here yet</div>
-             <div class="empty-sub">Create your first habit — the tiny steps are the big ones.</div>
-             <div class="btn-row"><button class="btn primary" data-action="add">＋ Add habit</button></div></div>`}
+      <div class="section-sub-row">
+        <h3 class="section-sub">Folders</h3>
+        <button class="btn ghost small" data-action="new-folder">＋ New folder</button>
+      </div>
+      ${folders.length
+        ? `<div class="manage-list folder-manage">${folders.map(folderRow).join('')}</div>`
+        : `<p class="section-note">No folders yet — group related habits to keep things tidy.</p>`}
+
+      ${activeHtml}
 
       ${!hidden('habits.archived') && archived.length ? `
         <h3 class="section-sub">Archived (${archived.length})</h3>
@@ -785,6 +922,12 @@ const Render = (() => {
         ${DAY_CHIPS.map(([l, d]) => `<button type="button" class="chip${draft.days.includes(d) ? ' sel' : ''}" data-action="pick-day" data-d="${d}">${l}</button>`).join('')}
       </div>`;
 
+    const folderOptions = `
+      <select class="field" id="h-folder">
+        <option value="">No folder</option>
+        ${Store.folders().map((f) => `<option value="${f.id}"${draft.folderId === f.id ? ' selected' : ''}>${f.emoji} ${Utils.esc(f.name)}</option>`).join('')}
+      </select>`;
+
     const archived = draft.id
       ? `<div class="form-row checkrow"><label class="check-label"><input type="checkbox" id="h-arch"${draft.archived ? ' checked' : ''}> Archive <small>(hidden from Today)</small></label></div>`
       : '';
@@ -795,6 +938,7 @@ const Render = (() => {
       htmlToNode(row('Color', swatches)),
       htmlToNode(row('Weekly goal', targets, 'target check-ins per week')),
       htmlToNode(row('Allowed days', days, 'optional — none means any day')),
+      htmlToNode(row('Folder', folderOptions, 'optional — group related habits')),
       htmlToNode(archived),
     ]);
 
@@ -806,6 +950,23 @@ const Render = (() => {
     return UI.modalShell({ title: draft.id ? 'Edit habit' : 'New habit', body, footer: foot });
   }
 
+  /** Folder create/edit modal (name + emoji). */
+  function folderEditorHtml(draft) {
+    const emojiGrid = `
+      <div class="emoji-grid">
+        ${FOLDER_EMOJIS.map((e) => `<button type="button" class="emoji-btn${e === draft.emoji ? ' sel' : ''}" data-action="pick-folder-emoji" data-e="${e}" title="${e}">${e}</button>`).join('')}
+      </div>`;
+    const body = UI.el('div', { class: 'editor' }, [
+      htmlToNode(`<div class="form-row"><label>Name</label><input class="field" id="f-name" maxlength="32" placeholder="e.g. Studies" value="${Utils.esc(draft.name)}"></div>`),
+      htmlToNode(`<div class="form-row"><label>Icon</label>${emojiGrid}</div>`),
+    ]);
+    const foot = UI.el('div', { class: 'btn-row' },
+      UI.el('button', { class: 'btn ghost', onclick: UI.closeModal }, 'Cancel'),
+      UI.el('button', { class: 'btn primary', 'data-action': 'save-folder' }, draft.id ? 'Save folder' : 'Create folder'),
+    );
+    return UI.modalShell({ title: draft.id ? 'Edit folder' : 'New folder', body, footer: foot });
+  }
+
   return {
     renderToday,
     renderCalendar,
@@ -814,6 +975,7 @@ const Render = (() => {
     renderSettings,
     dayModalHtml,
     habitEditorHtml,
+    folderEditorHtml,
     themePickerHtml,
     THEMES,
     SECTIONS,

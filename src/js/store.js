@@ -22,7 +22,7 @@ const Store = (() => {
 
   let db = null;
 
-  const emptyDb = () => ({ version: 1, habits: [], completions: {}, notes: {}, times: {} });
+  const emptyDb = () => ({ version: 1, folders: [], habits: [], completions: {}, notes: {}, times: {} });
 
   function load() {
     try {
@@ -31,8 +31,12 @@ const Store = (() => {
         db = JSON.parse(raw);
         if (!Array.isArray(db.habits) || typeof db.completions !== 'object') db = emptyDb();
         else {
+          if (!Array.isArray(db.folders)) db.folders = []; // pre-folders backups
           if (!db.notes || typeof db.notes !== 'object') db.notes = {}; // pre-notes backups
           if (!db.times || typeof db.times !== 'object') db.times = {}; // pre-timestamps backups
+          // Drop folder references that no longer resolve (defensive).
+          const ids = new Set(db.folders.map((f) => f && f.id));
+          db.habits.forEach((h) => { if (h.folderId && !ids.has(h.folderId)) h.folderId = null; });
         }
       } else {
         db = emptyDb();
@@ -71,6 +75,7 @@ const Store = (() => {
       color: /^#[0-9a-f]{6}$/i.test(fields.color || '') ? fields.color : '#6d5df6',
       target: Utils.clamp(parseInt(fields.target, 10) || 0, 0, 7),
       days: Array.isArray(fields.days) ? fields.days.filter((d) => d >= 1 && d <= 7) : [],
+      folderId: validFolderId(fields.folderId),
       createdAt: Date.now(),
       archived: !!fields.archived,
       sort: db.habits.length,
@@ -89,9 +94,84 @@ const Store = (() => {
     if (patch.color != null && /^#[0-9a-f]{6}$/i.test(patch.color)) h.color = patch.color;
     if (patch.target != null) h.target = Utils.clamp(parseInt(patch.target, 10) || 0, 0, 7);
     if (patch.days != null) h.days = patch.days.filter((d) => d >= 1 && d <= 7);
+    if (patch.folderId !== undefined) h.folderId = validFolderId(patch.folderId);
     if (patch.archived != null) h.archived = !!patch.archived;
     save();
     return h;
+  }
+
+  /* ---------------- Folders ---------------- */
+
+  /** Folders in display order (manual `sort`). */
+  const folders = () => db.folders.slice().sort((a, b) => a.sort - b.sort);
+  const getFolder = (id) => db.folders.find((f) => f.id === id) || null;
+  /** A habit's folder id, or null when ungrouped / orphaned. */
+  const validFolderId = (id) => {
+    if (typeof id !== 'string' || !id) return null;
+    return db.folders.some((f) => f.id === id) ? id : null;
+  };
+
+  function addFolder(fields) {
+    const name = String((fields && fields.name) || '').trim().slice(0, 32);
+    if (!name) return null;
+    const folder = {
+      id: 'f' + Utils.uid(),
+      name,
+      emoji: String((fields && fields.emoji) || '📁').slice(0, 8),
+      sort: db.folders.length,
+    };
+    db.folders.push(folder);
+    save();
+    return folder;
+  }
+
+  function updateFolder(id, patch) {
+    const f = getFolder(id);
+    if (!f) return null;
+    if (patch.name != null) {
+      const n = String(patch.name).trim().slice(0, 32);
+      if (n) f.name = n;
+    }
+    if (patch.emoji != null) f.emoji = String(patch.emoji).slice(0, 8);
+    save();
+    return f;
+  }
+
+  /** Remove a folder; its habits are kept and become ungrouped. */
+  function deleteFolder(id) {
+    db.folders = db.folders.filter((f) => f.id !== id);
+    db.habits.forEach((h) => { if (h.folderId === id) h.folderId = null; });
+    save();
+  }
+
+  /** Move a folder up (-1) or down (+1) in the manual order. */
+  function moveFolder(id, dir) {
+    const list = folders();
+    const i = list.findIndex((f) => f.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    const a = list[i], b = list[j];
+    const t = a.sort;
+    a.sort = b.sort;
+    b.sort = t;
+    save();
+  }
+
+  /** Reorder a habit within its own folder + archived state (manual order). */
+  function moveHabit(id, dir) {
+    const h = getHabit(id);
+    if (!h) return;
+    const group = db.habits
+      .filter((x) => (x.folderId || null) === (h.folderId || null) && !!x.archived === !!h.archived)
+      .sort((a, b) => a.sort - b.sort);
+    const i = group.findIndex((x) => x.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= group.length) return;
+    const a = group[i], b = group[j];
+    const t = a.sort;
+    a.sort = b.sort;
+    b.sort = t;
+    save();
   }
 
   function deleteHabit(id) {
@@ -600,6 +680,23 @@ const Store = (() => {
       if (!data || !Array.isArray(data.habits)) {
         return { ok: false, error: 'Not a valid AHA(bit) backup file.' };
       }
+      const folders = [];
+      if (Array.isArray(data.folders)) {
+        const seenF = new Set();
+        data.folders.forEach((f, i) => {
+          if (!f || typeof f.id !== 'string' || !f.id || typeof f.name !== 'string') return;
+          if (seenF.has(f.id)) return;
+          seenF.add(f.id);
+          folders.push({
+            id: f.id,
+            name: String(f.name).trim().slice(0, 32),
+            emoji: String(f.emoji || '📁').slice(0, 8),
+            sort: Number.isFinite(Number(f.sort)) ? Number(f.sort) : i,
+          });
+        });
+      }
+      const folderIds = new Set(folders.map((f) => f.id));
+
       const habits = data.habits
         .filter((h) => h && typeof h.id === 'string' && typeof h.name === 'string')
         .map((h) => ({
@@ -609,6 +706,7 @@ const Store = (() => {
           color: /^#[0-9a-f]{6}$/i.test(h.color || '') ? h.color : '#6d5df6',
           target: Utils.clamp(parseInt(h.target, 10) || 0, 0, 7),
           days: Array.isArray(h.days) ? h.days.filter((d) => d >= 1 && d <= 7) : [],
+          folderId: folderIds.has(h.folderId) ? h.folderId : null,
           createdAt: Number(h.createdAt) || Date.now(),
           archived: !!h.archived,
           sort: Number(h.sort) || 0,
@@ -664,7 +762,7 @@ const Store = (() => {
           if (Object.keys(out).length) times[hid] = out;
         }
       }
-      return { ok: true, db: { version: 1, habits, completions, notes, times } };
+      return { ok: true, db: { version: 1, folders, habits, completions, notes, times } };
     } catch (_e) {
       return { ok: false, error: 'Could not read the file — invalid JSON.' };
     }
@@ -673,12 +771,21 @@ const Store = (() => {
   function replaceWith(db2) {
     // Normalise: callers (import, tests) may omit optional maps.
     db = Object.assign(emptyDb(), db2);
+    if (!Array.isArray(db.folders)) db.folders = [];
     if (!db.notes || typeof db.notes !== 'object') db.notes = {};
     if (!db.times || typeof db.times !== 'object') db.times = {};
     save();
   }
 
   function mergeWith(db2) {
+    const byFolder = {};
+    db.folders.forEach((f) => (byFolder[f.id] = f));
+    for (const f of db2.folders || []) {
+      if (!byFolder[f.id]) {
+        byFolder[f.id] = f;
+        db.folders.push(f);
+      }
+    }
     const byId = {};
     db.habits.forEach((h) => (byId[h.id] = h));
     for (const h of db2.habits) {
@@ -711,12 +818,17 @@ const Store = (() => {
   /* ---------------- Sample data (first-run helper) ---------------- */
 
   function loadSample() {
+    const folders = [
+      addFolder({ name: 'Health', emoji: '💪' }),
+      addFolder({ name: 'Studies', emoji: '📚' }),
+      addFolder({ name: 'Mind', emoji: '🧘' }),
+    ];
     const fixtures = [
-      { name: 'Drink water', emoji: '💧', color: '#3b82f6', target: 7, prob: 0.85 },
-      { name: 'Read 20 pages', emoji: '📚', color: '#8b5cf6', target: 5, prob: 0.8 },
-      { name: 'Exercise', emoji: '🏃', color: '#f97316', target: 4, prob: 0.55 },
-      { name: 'Meditate', emoji: '🧘', color: '#10b981', target: 6, prob: 0.7 },
-      { name: 'No sugar', emoji: '🍎', color: '#ec4899', target: 5, prob: 0.6 },
+      { name: 'Drink water', emoji: '💧', color: '#3b82f6', target: 7, prob: 0.85, folderId: folders[0].id },
+      { name: 'Read 20 pages', emoji: '📚', color: '#8b5cf6', target: 5, prob: 0.8, folderId: folders[1].id },
+      { name: 'Exercise', emoji: '🏃', color: '#f97316', target: 4, prob: 0.55, folderId: folders[0].id },
+      { name: 'Meditate', emoji: '🧘', color: '#10b981', target: 6, prob: 0.7, folderId: folders[2].id },
+      { name: 'No sugar', emoji: '🍎', color: '#ec4899', target: 5, prob: 0.6, folderId: folders[0].id },
     ];
     const added = fixtures.map((f) => addHabit({ ...f, days: [] }));
     // Backfill the last 90 days so the calendar + heatmap look alive.
@@ -754,7 +866,8 @@ const Store = (() => {
 
   return {
     load, save,
-    activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit,
+    activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit, moveHabit,
+    folders, getFolder, addFolder, updateFolder, deleteFolder, moveFolder,
     completionsFor, isDone, countFor, setCount, toggle, inc, dec,
     timesFor, timesOn,
     doneCount, dailySummary, countsByDay, habitCountsByDay,

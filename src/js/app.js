@@ -12,6 +12,7 @@ const App = {
   prevTab: 'today',
   monthOffset: 0,
   editorDraft: null,
+  folderDraft: null,
 
   WELCOME_KEY: 'ahabit.welcome.v1',
 
@@ -121,8 +122,8 @@ const App = {
   openEditor(habitId) {
     const h = habitId ? Store.getHabit(habitId) : null;
     this.editorDraft = h
-      ? { id: h.id, name: h.name, emoji: h.emoji, color: h.color, target: h.target, days: h.days.slice(), archived: h.archived }
-      : { id: null, name: '', emoji: '⭐', color: '#6d5df6', target: 0, days: [], archived: false };
+      ? { id: h.id, name: h.name, emoji: h.emoji, color: h.color, target: h.target, days: h.days.slice(), folderId: h.folderId || null, archived: h.archived }
+      : { id: null, name: '', emoji: '⭐', color: '#6d5df6', target: 0, days: [], folderId: null, archived: false };
     UI.openModal(Render.habitEditorHtml(this.editorDraft));
   },
 
@@ -139,13 +140,44 @@ const App = {
       return;
     }
     const archived = UI.q('#h-arch')?.checked || false;
-    const fields = { ...d, name, archived };
+    const folderId = UI.q('#h-folder')?.value || null;
+    const fields = { ...d, name, archived, folderId };
     if (d.id) Store.updateHabit(d.id, fields);
     else Store.addHabit(fields);
     UI.closeModal();
     this.editorDraft = null;
     this.renderCurrent();
     UI.toast(d.id ? 'Habit updated ✓' : 'Habit created ✓');
+  },
+
+  /* ---------------- Folder editor ---------------- */
+
+  openFolderEditor(folderId) {
+    const f = folderId ? Store.getFolder(folderId) : null;
+    this.folderDraft = f
+      ? { id: f.id, name: f.name, emoji: f.emoji }
+      : { id: null, name: '', emoji: '📁' };
+    UI.openModal(Render.folderEditorHtml(this.folderDraft));
+  },
+
+  refreshFolderEditor() {
+    UI.updateModal(Render.folderEditorHtml(this.folderDraft));
+  },
+
+  saveFolderEditor() {
+    const d = this.folderDraft;
+    const name = (UI.q('#f-name')?.value || '').trim();
+    if (!name) {
+      UI.toast('Give your folder a name first 🙂', 'warn');
+      UI.q('#f-name')?.focus();
+      return;
+    }
+    if (d.id) Store.updateFolder(d.id, { name, emoji: d.emoji });
+    else Store.addFolder({ name, emoji: d.emoji });
+    UI.closeModal();
+    this.folderDraft = null;
+    this.renderCurrent();
+    UI.toast(d.id ? 'Folder updated ✓' : 'Folder created ✓');
   },
 
   /* ---------------- Day modal ---------------- */
@@ -294,6 +326,26 @@ const App = {
         case 'open-day': this.openDay(date); break;
         case 'cal-prev': this.monthOffset--; Render.renderCalendar(this.monthOffset); break;
         case 'cal-next': this.monthOffset++; Render.renderCalendar(this.monthOffset); break;
+        case 'toggle-fold': Prefs.toggleCollapsed(id); this.renderCurrent(); break;
+        case 'move-habit': Store.moveHabit(id, Number(btn.dataset.dir)); this.renderCurrent(); break;
+        case 'move-folder': Store.moveFolder(id, Number(btn.dataset.dir)); this.renderCurrent(); break;
+        case 'new-folder': this.openFolderEditor(); break;
+        case 'edit-folder': this.openFolderEditor(id); break;
+        case 'del-folder': {
+          const f = Store.getFolder(id);
+          UI.confirmDialog({
+            title: 'Delete folder?',
+            message: `“${f ? f.name : 'This folder'}” will be removed. Its habits are kept and become ungrouped.`,
+            confirmText: 'Delete',
+            danger: true,
+          }).then((ok) => {
+            if (!ok) return;
+            Store.deleteFolder(id);
+            this.renderCurrent();
+            UI.toast('Folder deleted');
+          });
+          break;
+        }
         case 'archive':
           Store.updateHabit(id, { archived: true });
           this.renderCurrent();
@@ -354,6 +406,10 @@ const App = {
           break;
         }
         case 'save-habit': this.saveEditor(); break;
+
+        // Folder editor picks
+        case 'pick-folder-emoji': this.folderDraft.emoji = btn.dataset.e; this.refreshFolderEditor(); break;
+        case 'save-folder': this.saveFolderEditor(); break;
       }
     });
 
@@ -374,6 +430,12 @@ const App = {
         this.renderCurrent();
       } else if (t.dataset.action === 'toggle-section') {
         Prefs.setHidden(t.dataset.section, !t.checked);
+      } else if (t.dataset.action === 'set-sort') {
+        Prefs.setSortMode(t.value);
+        this.renderCurrent();
+      } else if (t.dataset.action === 'toggle-done-last') {
+        Prefs.setDoneLast(t.checked);
+        this.renderCurrent();
       }
     });
   },
@@ -382,7 +444,7 @@ const App = {
     const body = UI.el('div', { class: 'about' },
       UI.el('p', {}, 'A local-first habit tracker that ships as a single HTML file.'),
       UI.el('p', {}, 'Your data never leaves this device unless you export it — and you own it as plain JSON.'),
-      UI.el('p', { class: 'tiny' }, `Version 0.11.1 · no trackers, no network, no cookies.`),
+      UI.el('p', { class: 'tiny' }, `Version 0.12.0 · no trackers, no network, no cookies.`),
     );
     UI.openModal(UI.modalShell({ title: 'About AHA(bit) tracker', body }));
   },

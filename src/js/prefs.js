@@ -61,7 +61,20 @@ const Prefs = (() => {
   FONT_LIST.forEach((f) => (FONTS[f.id] = f.stack));
   const FONT_OPTIONS = FONT_LIST.map((f) => ({ id: f.id, label: f.label, body: f.body !== false }));
 
-  const blank = () => ({ colors: {}, font: 'theme', displayFont: 'theme', hidden: {} });
+  // Sorting of the habit list (Today); manual uses each habit's stored `sort`.
+  const SORT_MODES = [
+    { id: 'manual', label: 'Manual' },
+    { id: 'name', label: 'Name' },
+    { id: 'streak', label: 'Streak' },
+    { id: 'health', label: 'Health' },
+    { id: 'newest', label: 'Newest' },
+  ];
+  const SORT_IDS = SORT_MODES.map((m) => m.id);
+
+  const blank = () => ({
+    colors: {}, font: 'theme', displayFont: 'theme', hidden: {},
+    collapsed: {}, sortMode: 'manual', doneLast: true,
+  });
   let state = blank();
 
   function load() {
@@ -76,6 +89,9 @@ const Prefs = (() => {
         if (typeof p.font === 'string' && p.font in FONTS) state.font = p.font;
         if (typeof p.displayFont === 'string' && p.displayFont in FONTS) state.displayFont = p.displayFont;
         if (p.hidden && typeof p.hidden === 'object') for (const k in p.hidden) if (p.hidden[k]) state.hidden[k] = true;
+        if (p.collapsed && typeof p.collapsed === 'object') for (const k in p.collapsed) if (p.collapsed[k]) state.collapsed[k] = true;
+        if (SORT_IDS.includes(p.sortMode)) state.sortMode = p.sortMode;
+        if (typeof p.doneLast === 'boolean') state.doneLast = p.doneLast;
       }
     } catch (_e) {
       state = blank();
@@ -155,6 +171,36 @@ const Prefs = (() => {
     save();
   }
 
+  /* ---------------- List grouping (folders) ---------------- */
+
+  const isCollapsed = (id) => !!state.collapsed[id];
+
+  function setCollapsed(id, collapsed) {
+    if (collapsed) state.collapsed[id] = true;
+    else delete state.collapsed[id];
+    save();
+  }
+
+  const toggleCollapsed = (id) => {
+    setCollapsed(id, !state.collapsed[id]);
+    return isCollapsed(id);
+  };
+
+  function clearCollapsed() {
+    state.collapsed = {};
+    save();
+  }
+
+  const sortMode = () => state.sortMode;
+
+  function setSortMode(mode) {
+    state.sortMode = SORT_IDS.includes(mode) ? mode : 'manual';
+    save();
+  }
+
+  const doneLast = () => state.doneLast;
+  const setDoneLast = (v) => { state.doneLast = !!v; save(); };
+
   /* ---------------- DOM application ---------------- */
 
   /** Read the effective value of a token (custom override, else computed theme value). */
@@ -196,11 +242,13 @@ const Prefs = (() => {
   }
 
   return {
-    KEY, COLORS, FONTS, FONT_OPTIONS,
+    KEY, COLORS, FONTS, FONT_OPTIONS, SORT_MODES,
     load, save, get, apply, tokenValue,
     setColor, clearColors, hasCustomColors,
     setFont, clearFonts, hasCustomFonts,
     isHidden, setHidden, clearHidden,
+    isCollapsed, setCollapsed, toggleCollapsed, clearCollapsed,
+    sortMode, setSortMode, doneLast, setDoneLast,
     resetAll,
   };
 })();

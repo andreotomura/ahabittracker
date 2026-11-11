@@ -266,6 +266,99 @@ assert(true, 'empty day modal renders without throwing');
 Store.loadSample();
 assert(Store.activeHabits().length > 0, 'sample data reloads after empty-state tests');
 
+console.log('— folders —');
+assert(Store.folders().length === 3, 'sample data creates folders');
+const health = Store.folders().find((f) => f.name === 'Health');
+assert(health && health.emoji, 'folder has id/name/emoji');
+assert(Store.activeHabits().filter((h) => h.folderId === health.id).length === 3, 'habits are grouped in a folder');
+
+// CRUD.
+const f2 = Store.addFolder({ name: '  Work  ', emoji: '💼' });
+assert(f2 && f2.name === 'Work', 'addFolder trims the name');
+assert(!Store.addFolder({ name: '   ' }), 'addFolder rejects an empty name');
+Store.updateFolder(f2.id, { name: 'Career', emoji: '📈' });
+assert(Store.getFolder(f2.id).name === 'Career' && Store.getFolder(f2.id).emoji === '📈', 'updateFolder patches fields');
+Store.moveFolder(f2.id, -1);
+assert(Store.folders().findIndex((x) => x.id === f2.id) === 2, 'moveFolder reorders upward');
+Store.moveFolder(f2.id, 1);
+assert(Store.folders().findIndex((x) => x.id === f2.id) === 3, 'moveFolder reorders downward');
+
+// Assignment + manual reorder within a folder.
+const ja = Store.addHabit({ name: 'Japanese', folderId: health.id });
+const pr = Store.addHabit({ name: 'Programming', folderId: health.id });
+assert(ja.folderId === health.id && pr.folderId === health.id, 'addHabit accepts a folderId');
+const groupIds = () => Store.allHabits().filter((h) => h.folderId === health.id).sort((x, y) => x.sort - y.sort).map((h) => h.id);
+Store.moveHabit(ja.id, 1);
+assert(groupIds().indexOf(ja.id) > groupIds().indexOf(pr.id), 'moveHabit swaps within its own folder');
+Store.updateHabit(ja.id, { folderId: null });
+assert(Store.getHabit(ja.id).folderId === null, 'updateHabit can ungroup a habit');
+Store.updateHabit(ja.id, { folderId: 'nope' });
+assert(Store.getHabit(ja.id).folderId === null, 'unknown folderId is rejected');
+
+// Deleting a folder keeps and ungroups its habits.
+Store.updateHabit(pr.id, { folderId: f2.id });
+Store.deleteFolder(f2.id);
+assert(!Store.getFolder(f2.id) && Store.getHabit(pr.id) && Store.getHabit(pr.id).folderId === null, 'deleteFolder keeps + ungroups habits');
+
+console.log('— folder prefs —');
+Prefs.load();
+assert(Prefs.sortMode() === 'manual' && Prefs.doneLast(), 'sort + done-last default sensibly');
+Prefs.setSortMode('streak');
+Prefs.setDoneLast(false);
+Prefs.toggleCollapsed('__ungrouped');
+Prefs.setCollapsed(health.id, true);
+Prefs.save();
+Prefs.load();
+assert(Prefs.sortMode() === 'streak' && Prefs.doneLast() === false, 'list sort prefs round-trip');
+assert(Prefs.isCollapsed('__ungrouped') && Prefs.isCollapsed(health.id), 'collapse state round-trips');
+Prefs.setSortMode('bogus');
+assert(Prefs.sortMode() === 'manual', 'unknown sort mode falls back to manual');
+Prefs.clearCollapsed();
+assert(!Prefs.isCollapsed(health.id), 'clearCollapsed resets');
+
+console.log('— folder rendering —');
+Render.renderToday();
+const todayHtml = document.querySelector('#view-today').innerHTML;
+assert(todayHtml.includes('folder-head') && todayHtml.includes('Studies'), 'Today renders collapsible folder sections');
+assert(todayHtml.includes('toggle-fold') && todayHtml.includes('data-action="set-sort"'), 'Today renders folder toggle + sort controls');
+Render.renderHabits();
+const habitsHtml = document.querySelector('#view-habits').innerHTML;
+assert(habitsHtml.includes('new-folder') && habitsHtml.includes('edit-folder'), 'Habits renders folder management');
+assert(habitsHtml.includes('move-habit') && habitsHtml.includes('move-folder'), 'Habits renders manual reorder controls');
+assert(typeof Render.folderEditorHtml === 'function', 'folder editor builder is exposed');
+App.openFolderEditor();
+App.openEditor(Store.activeHabits()[0].id);
+UI.closeModal();
+assert(true, 'folder + habit editors render without throwing');
+
+console.log('— folder backup —');
+const craftedF = JSON.stringify({
+  version: 1,
+  folders: [
+    { id: 'fA', name: '  Studies  ', emoji: '📚', sort: 0 },
+    { id: 'fB', name: 'Dup', sort: 1 },
+    { id: 'fA', name: 'Duplicate', sort: 2 },
+    { id: 5, name: 'Bad' },
+  ],
+  habits: [
+    { id: 'h1', name: 'Japanese', folderId: 'fA' },
+    { id: 'h2', name: 'Lost', folderId: 'ghost' },
+  ],
+  completions: {},
+});
+const pf = Store.importJSON(craftedF);
+assert(pf.ok && pf.db.folders.length === 2, 'import sanitizes folders (drops duplicate + invalid)');
+assert(pf.db.folders[0].name === 'Studies', 'import trims the folder name');
+assert(pf.db.habits.find((x) => x.id === 'h1').folderId === 'fA', 'valid folderId is kept');
+assert(pf.db.habits.find((x) => x.id === 'h2').folderId === null, 'unknown folderId becomes ungrouped');
+Store.replaceWith(pf.db);
+assert(Store.folders().length === 2 && Store.getHabit('h1').folderId === 'fA', 'replace restores folders');
+Store.mergeWith({ version: 1, folders: [{ id: 'fC', name: 'New', sort: 5 }], habits: [], completions: {} });
+assert(Store.getFolder('fC') && Store.folders().length === 3, 'merge adds folders');
+Store.replaceWith({ version: 1, habits: [], completions: {} });
+Store.loadSample();
+assert(Store.folders().length === 3, 'sample folders reload cleanly');
+
 console.log('— pwa assets —');
 const png = icons.buildPng(192);
 assert(png.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), 'icon has a valid PNG signature');
