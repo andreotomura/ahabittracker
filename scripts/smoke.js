@@ -420,16 +420,16 @@ assert(Render.THEMES.length >= 4, 'more than one theme is offered');
 assert(Render.THEMES.every((t) => t.id && t.name && t.emoji && t.scheme && t.color && Array.isArray(t.colors) && t.colors.length >= 3), 'theme registry entries are complete');
 assert(Render.THEMES.some((t) => t.id === 'brutalist') && Render.THEMES.some((t) => t.id === 'brutalist-dark'), 'brutalist light + dark themes are offered');
 assert(Render.THEMES.some((t) => t.scheme === 'light') && Render.THEMES.some((t) => t.scheme === 'dark'), 'themes cover both light and dark schemes');
-const picker = Render.themePickerHtml('brutalist');
-assert(Render.THEMES.every((t) => picker.includes(`data-theme="${t.id}"`)), 'picker lists every theme');
-assert(picker.includes('sel') && picker.includes('data-theme="brutalist"'), 'picker marks the active theme');
+const themeGrid = Render.themeGalleryHtml('brutalist');
+assert(Render.THEMES.every((t) => themeGrid.includes(`data-theme="${t.id}"`)), 'gallery lists every theme');
+assert(themeGrid.includes('sel') && themeGrid.includes('data-theme="brutalist"'), 'gallery marks the active theme');
 assert(App.resolveTheme('dark') === 'midnight' && App.resolveTheme('light') === 'zen', 'old light/dark values migrate to themed names');
 assert(App.resolveTheme('brutalist') === 'brutalist', 'known theme ids pass through');
 assert(['zen', 'midnight'].includes(App.resolveTheme('nonsense')), 'unknown theme falls back to a real theme');
 App.setTheme('brutalist');
 assert(localStorage.getItem('ahabit.theme') === 'brutalist', 'setTheme persists the choice');
 assert(document.documentElement.dataset.theme === 'brutalist', 'setTheme applies data-theme to <html>');
-assert(document.querySelector('#theme-pop').innerHTML.includes('data-theme="brutalist"'), 'theme popover re-renders with the active theme');
+assert(App.themeId === 'brutalist', 'App tracks the active theme id');
 App.setTheme('zen');
 assert(document.documentElement.dataset.theme === 'zen', 'setTheme switches back');
 
@@ -540,9 +540,8 @@ assert(Prefs.structure().radius === '8', 'snapshot applies structure');
 Prefs.save();
 Prefs.load();
 assert(Prefs.customThemes().length === 1 && Prefs.getCustomTheme(savedTheme.id).name === 'Renamed', 'custom themes round-trip through storage');
-const picker2 = Render.themePickerHtml(savedTheme.id, Prefs.customThemes());
-assert(picker2.includes(`data-theme="${savedTheme.id}"`) && picker2.includes('data-theme="mono"'), 'picker includes custom + presets');
 const gallery2 = Render.themeGalleryHtml(savedTheme.id, Prefs.customThemes());
+assert(gallery2.includes(`data-theme="${savedTheme.id}"`) && gallery2.includes('data-theme="mono"'), 'gallery includes custom + presets');
 assert(gallery2.includes('custom') && gallery2.includes('edit-custom-theme') && gallery2.includes('del-custom-theme'), 'gallery shows custom theme actions');
 Prefs.deleteCustomTheme(savedTheme.id);
 assert(Prefs.customThemes().length === 0, 'deleteCustomTheme removes it');
@@ -590,8 +589,7 @@ assert(!Prefs.isHidden('today.streak'), 'full preset clears hidden');
 
 console.log('— global chrome toggles —');
 Prefs.setHidden('global.brand', true);
-Prefs.setHidden('global.theme-btn', true);
-assert(document.body.classList.contains('hide-brand') && document.body.classList.contains('hide-theme-btn'), 'brand + theme button hide classes applied');
+assert(document.body.classList.contains('hide-brand'), 'brand hide class applied');
 Prefs.clearHidden();
 assert(!document.body.classList.contains('hide-brand'), 'chrome classes cleared');
 
@@ -642,5 +640,20 @@ for (let i = 0; i < raster64.length; i += 4) {
   if (raster64[i] > 240 && raster64[i + 1] > 240 && raster64[i + 2] > 240 && raster64[i + 3] > 200) { hasWhite = true; break; }
 }
 assert(hasWhite, 'rasterized icon contains the white AHA strokes');
+
+console.log('— header icons —');
+assert(!indexHtml.includes('id="theme-btn"'), 'the icon-only theme button is removed from the header');
+assert(indexHtml.includes('class="ui-ico"') && indexHtml.includes('class="tab-label"'), 'header glyphs are wrapped for toggling');
+Prefs.load();
+assert(Prefs.btnIcons() === true, 'button icons are shown by default');
+Prefs.setBtnIcons(false);
+assert(document.body.classList.contains('no-btn-icons') && Prefs.get().btnIcons === false, 'hiding icons sets the body class + state');
+Prefs.save();
+Prefs.load();
+assert(Prefs.btnIcons() === false, 'button-icon pref round-trips through storage');
+Prefs.setBtnIcons(true);
+assert(!document.body.classList.contains('no-btn-icons'), 're-enabling clears the body class');
+Render.renderSettings('zen');
+assert(document.querySelector('#view-settings').innerHTML.includes('toggle-btn-icons'), 'Customize exposes the button-icon toggle');
 
 console.log('\n✅ All smoke tests passed');

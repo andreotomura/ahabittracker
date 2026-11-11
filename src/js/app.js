@@ -93,37 +93,8 @@ const App = {
       localStorage.setItem('ahabit.theme', custom ? custom.id : theme.id);
     }
     this.themeId = custom ? custom.id : theme.id;
-    const btn = UI.q('#theme-btn');
-    if (btn) btn.textContent = custom ? '🎨' : theme.emoji;
     const meta = UI.q('#theme-color');
     if (meta) meta.setAttribute('content', theme.color);
-    this.syncThemePop();
-  },
-
-  syncThemePop() {
-    const pop = UI.q('#theme-pop');
-    if (pop) pop.innerHTML = Render.themePickerHtml(this.themeId, Prefs.customThemes());
-  },
-
-  closeThemePop() {
-    const pop = UI.q('#theme-pop');
-    const btn = UI.q('#theme-btn');
-    if (pop) pop.classList.add('hidden');
-    if (btn) btn.setAttribute('aria-expanded', 'false');
-  },
-
-  toggleThemePop() {
-    const pop = UI.q('#theme-pop');
-    const willOpen = pop.classList.contains('hidden');
-    if (willOpen) this.syncThemePop();
-    pop.classList.toggle('hidden', !willOpen);
-    UI.q('#theme-btn').setAttribute('aria-expanded', String(willOpen));
-    // opening the theme picker closes the main menu
-    const menu = UI.q('#menu');
-    if (menu) {
-      menu.classList.add('hidden');
-      UI.q('#menu-btn').setAttribute('aria-expanded', 'false');
-    }
   },
 
   /* ---------------- Habit editor ---------------- */
@@ -277,14 +248,6 @@ const App = {
     // Tabs
     UI.qa('.tab').forEach((t) => t.addEventListener('click', () => this.switchTab(t.dataset.tab)));
 
-    // Theme picker
-    const themeBtn = UI.q('#theme-btn');
-    const themePop = UI.q('#theme-pop');
-    themeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleThemePop();
-    });
-
     // Menu
     const menuBtn = UI.q('#menu-btn');
     const menu = UI.q('#menu');
@@ -292,15 +255,11 @@ const App = {
       e.stopPropagation();
       const open = menu.classList.toggle('hidden') === false;
       menuBtn.setAttribute('aria-expanded', open);
-      if (open) this.closeThemePop();
     });
     document.addEventListener('click', (e) => {
       if (!menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== menuBtn) {
         menu.classList.add('hidden');
         menuBtn.setAttribute('aria-expanded', 'false');
-      }
-      if (!themePop.classList.contains('hidden') && !themePop.contains(e.target) && e.target !== themeBtn) {
-        this.closeThemePop();
       }
     });
 
@@ -324,8 +283,6 @@ const App = {
           m.classList.add('hidden');
           UI.q('#menu-btn').setAttribute('aria-expanded', 'false');
         }
-        const tp = UI.q('#theme-pop');
-        if (tp && !tp.classList.contains('hidden')) this.closeThemePop();
       }
     });
 
@@ -465,7 +422,6 @@ const App = {
         case 'reset-all': Prefs.resetAll(); this.renderCurrent(); UI.toast('Customizations reset'); break;
         case 'set-theme':
           this.setTheme(btn.dataset.theme);
-          this.closeThemePop();
           if (this.tab === 'settings') this.renderCurrent();
           break;
         case 'import': UI.q('#import-file').click(); break;
@@ -523,6 +479,9 @@ const App = {
         this.renderCurrent();
       } else if (t.dataset.action === 'toggle-done-last') {
         Prefs.setDoneLast(t.checked);
+        this.renderCurrent();
+      } else if (t.dataset.action === 'toggle-btn-icons') {
+        Prefs.setBtnIcons(t.checked);
         this.renderCurrent();
       }
     });

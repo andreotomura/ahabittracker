@@ -148,7 +148,7 @@ const UI = (() => {
     };
     const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
 
-    const INTERACTIVE = 'a, button, input, textarea, select, [data-action], .habit, .cal-cell, .theme-opt, .chip';
+    const INTERACTIVE = 'a, button, input, textarea, select, [data-action], .habit, .cal-cell, .chip';
     document.addEventListener('mousemove', (e) => {
       tx = e.clientX;
       ty = e.clientY;

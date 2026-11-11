@@ -66,15 +66,6 @@ const Render = (() => {
     return THEMES.concat(customs);
   }
 
-  /** Pickable list of themes, with the active one marked. */
-  const themePickerHtml = (active, customThemes = []) =>
-    allThemes(customThemes).map((t) => `
-      <button class="theme-opt${t.id === active ? ' sel' : ''}" data-action="set-theme" data-theme="${t.id}" role="menuitem" aria-pressed="${t.id === active}">
-        <span class="theme-swatches">${t.colors.map((c) => `<i class="theme-swatch" style="background:${c}"></i>`).join('')}</span>
-        <span class="t-name">${t.emoji} ${Utils.esc(t.name)}</span>
-        ${t.id === active ? '<span class="t-check">✓</span>' : ''}
-      </button>`).join('');
-
   /** Larger gallery cards for the Customize tab (live mini-preview). */
   function themeGalleryHtml(active, customThemes = []) {
     return allThemes(customThemes).map((t) => `
@@ -123,7 +114,6 @@ const Render = (() => {
     { id: 'habits.folders', view: 'Habits', label: 'Folder management' },
     { id: 'habits.archived', view: 'Habits', label: 'Archived list' },
     { id: 'global.brand', view: 'Global', label: 'Logo & wordmark' },
-    { id: 'global.theme-btn', view: 'Global', label: 'Theme button' },
     { id: 'global.fab', view: 'Global', label: 'Add button (FAB)' },
   ];
 
@@ -880,6 +870,14 @@ const Render = (() => {
           .join('')}
       </div>`;
 
+    const buttonIconToggle = `
+      <div class="set-toggle-row">
+        <label class="set-toggle">
+          <input type="checkbox" data-action="toggle-btn-icons"${Prefs.btnIcons() ? ' checked' : ''}>
+          <span>Show icons in tabs &amp; menu</span>
+        </label>
+      </div>`;
+
     const fontOptions = (selected, bodyOnly) => Prefs.FONT_OPTIONS
       .filter((o) => !bodyOnly || o.body)
       .map((o) => `<option value="${o.id}"${selected === o.id ? ' selected' : ''}>${o.label}</option>`)
@@ -932,6 +930,7 @@ const Render = (() => {
       <div class="card set-card">
         <div class="section-head"><h3>Layout</h3><span>show / hide elements</span></div>
         ${layoutPresets}
+        ${buttonIconToggle}
         ${layoutHtml}
         <div class="btn-row"><button class="btn ghost" data-action="reset-hidden">Show everything</button></div>
       </div>
@@ -1100,7 +1099,6 @@ const Render = (() => {
     habitEditorHtml,
     folderEditorHtml,
     customThemeHtml,
-    themePickerHtml,
     themeGalleryHtml,
     THEMES,
     SECTIONS,

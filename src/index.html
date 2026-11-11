@@ -21,27 +21,23 @@
       </div>
 
       <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
-        <button class="tab active" role="tab" aria-selected="true" data-tab="today">☀️ <span>Today</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="calendar">📅 <span>Calendar</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 <span>Stats</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="habits">✨ <span>Habits</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="settings">🎨 <span>Customize</span></button>
+        <button class="tab active" role="tab" aria-selected="true" data-tab="today"><span class="ui-ico">☀️</span><span class="tab-label">Today</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="calendar"><span class="ui-ico">📅</span><span class="tab-label">Calendar</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stats"><span class="ui-ico">📊</span><span class="tab-label">Stats</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="habits"><span class="ui-ico">✨</span><span class="tab-label">Habits</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="settings"><span class="ui-ico">🎨</span><span class="tab-label">Customize</span></button>
       </nav>
 
       <div class="actions">
-        <div class="menu-wrap" id="theme-wrap">
-          <button id="theme-btn" class="icon-btn" aria-label="Theme" title="Theme" aria-expanded="false">🌸</button>
-          <div class="theme-pop hidden" id="theme-pop" role="menu" aria-label="Theme"></div>
-        </div>
         <div class="menu-wrap">
           <button id="menu-btn" class="icon-btn" aria-label="Menu" title="Menu" aria-expanded="false">⋯</button>
           <div class="menu hidden" id="menu" role="menu">
-            <button role="menuitem" data-action="open-settings">🎨 &nbsp;Customize…</button>
+            <button role="menuitem" data-action="open-settings"><span class="ui-ico">🎨</span>Customize…</button>
             <hr>
-            <button role="menuitem" data-action="export">⬇️ &nbsp;Export data (JSON)</button>
-            <button role="menuitem" data-action="import">⬆️ &nbsp;Import data (JSON)</button>
+            <button role="menuitem" data-action="export"><span class="ui-ico">⬇️</span>Export data (JSON)</button>
+            <button role="menuitem" data-action="import"><span class="ui-ico">⬆️</span>Import data (JSON)</button>
             <hr>
-            <button role="menuitem" data-action="about">ℹ️ &nbsp;About</button>
+            <button role="menuitem" data-action="about"><span class="ui-ico">ℹ️</span>About</button>
           </div>
         </div>
       </div>

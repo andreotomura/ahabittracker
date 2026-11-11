@@ -427,7 +427,6 @@ html { color-scheme: light; }
 [data-theme^="brutalist"] .emoji-btn,
 [data-theme^="brutalist"] .h-emoji,
 [data-theme^="brutalist"] .modal-inner,
-[data-theme^="brutalist"] .theme-opt,
 [data-theme^="brutalist"] .swatch,
 [data-theme^="brutalist"] .check,
 [data-theme^="brutalist"] .step-btn,
@@ -559,7 +558,11 @@ button:focus-visible, input:focus-visible {
   white-space: nowrap;
 }
 
-.tab span { font-size: 13.5px; }
+.tab .tab-label { font-size: 13.5px; }
+.ui-ico { display: inline-flex; align-items: center; }
+/* Minimal header (opt-in): hide the emoji glyphs next to button text. */
+body.no-btn-icons .ui-ico { display: none; }
+body.no-btn-icons .tab .tab-label { display: inline; }
 .tab:hover { color: var(--text); }
 .tab:active { transform: scale(.97); }
 .tab.active {
@@ -624,45 +627,6 @@ button:focus-visible, input:focus-visible {
 
 .menu button:hover { background: var(--card-2); }
 .menu hr { border: 0; border-top: 1px solid var(--border); margin: 6px 8px; }
-
-/* Theme picker popover */
-.theme-pop {
-  position: absolute;
-  right: 0; top: calc(100% + 8px);
-  min-width: 236px;
-  background: var(--card);
-  border: var(--border-w) solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lift);
-  padding: 6px;
-  z-index: 60;
-}
-
-.theme-pop.hidden { display: none; }
-
-.theme-opt {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: left;
-  transition: background .15s;
-}
-
-.theme-opt:hover { background: var(--card-2); }
-.theme-opt.sel { background: var(--card-2); box-shadow: inset 0 0 0 2px var(--accent); }
-.theme-swatches { display: flex; gap: 3px; flex: none; }
-.theme-swatch { width: 15px; height: 15px; border-radius: var(--radius-sm); border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); }
-.theme-opt .t-name { flex: 1; }
-.theme-opt .t-check { color: var(--accent); font-weight: 800; }
 
 /* ---------------- Views ---------------- */
 
@@ -1531,9 +1495,6 @@ p { margin: 0; }
   margin: 0 0 8px;
 }
 
-.set-themes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.set-themes .theme-opt { border: var(--border-w) solid var(--border); }
-
 /* Theme gallery (Customize tab) */
 .theme-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .theme-card { position: relative; }
@@ -1574,11 +1535,11 @@ p { margin: 0; }
 
 /* Layout presets */
 .set-presets { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.set-toggle-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
 .set-preset-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-right: 2px; }
 
 /* Global chrome toggles */
 body.hide-brand .brand { display: none; }
-body.hide-theme-btn #theme-wrap { display: none; }
 
 .set-colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(142px, 1fr)); gap: 8px; }
 .set-color {
@@ -1740,7 +1701,7 @@ body.hide-theme-btn #theme-wrap { display: none; }
   .topbar { gap: 10px; }
   .tabs { order: 3; width: 100%; justify-content: space-between; }
   .tab { padding: 8px 10px; flex: 1; justify-content: center; }
-  .tab span { display: none; }
+  .tab .tab-label { display: none; }
   .today-greeting { font-size: 23px; }
   .cal-cell { min-height: 52px; padding: 5px; }
   .h-emoji { width: 36px; height: 36px; font-size: 18px; border-radius: 11px; }
@@ -1759,7 +1720,7 @@ body.hide-theme-btn #theme-wrap { display: none; }
   a, button, select, [role="button"],
   [data-action]:not(input):not(textarea),
   .btn, .tab, .icon-btn, .check, .cal-cell, .chip, .step-btn,
-  .swatch, .emoji-btn, .theme-opt, .fab, .menu button, .check-label,
+  .swatch, .emoji-btn, .fab, .menu button, .check-label,
   input[type="color"], input[type="checkbox"], input[type="radio"] {
     cursor: var(--cursor), auto;
   }

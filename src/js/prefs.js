@@ -118,7 +118,7 @@ const Prefs = (() => {
   const blank = () => ({
     colors: {}, font: 'theme', displayFont: 'theme', hidden: {},
     collapsed: {}, sortMode: 'manual', doneLast: true,
-    structure: { ...STRUCT_DEFAULT }, customThemes: [],
+    structure: { ...STRUCT_DEFAULT }, customThemes: [], btnIcons: true,
   });
   let state = blank();
 
@@ -137,6 +137,7 @@ const Prefs = (() => {
         if (p.collapsed && typeof p.collapsed === 'object') for (const k in p.collapsed) if (p.collapsed[k]) state.collapsed[k] = true;
         if (SORT_IDS.includes(p.sortMode)) state.sortMode = p.sortMode;
         if (typeof p.doneLast === 'boolean') state.doneLast = p.doneLast;
+        if (typeof p.btnIcons === 'boolean') state.btnIcons = p.btnIcons;
         state.structure = sanitizeStructure(p.structure);
         if (Array.isArray(p.customThemes)) {
           const seen = new Set();
@@ -255,6 +256,10 @@ const Prefs = (() => {
   const doneLast = () => state.doneLast;
   const setDoneLast = (v) => { state.doneLast = !!v; save(); };
 
+  /** When false, the header hides the little emoji glyphs next to button text. */
+  const btnIcons = () => state.btnIcons !== false;
+  const setBtnIcons = (v) => { state.btnIcons = !!v; save(); applyChrome(); };
+
   /* ---------------- Structure ---------------- */
 
   const structure = () => ({ ...state.structure });
@@ -355,7 +360,7 @@ const Prefs = (() => {
     const b = document.body;
     if (!b || !b.classList) return;
     b.classList.toggle('hide-brand', isHidden('global.brand'));
-    b.classList.toggle('hide-theme-btn', isHidden('global.theme-btn'));
+    b.classList.toggle('no-btn-icons', !btnIcons());
   }
 
   /* ---------------- DOM application ---------------- */
@@ -448,7 +453,7 @@ const Prefs = (() => {
     customThemes, getCustomTheme, addCustomTheme, updateCustomTheme, deleteCustomTheme, applyThemeSnapshot,
     isHidden, setHidden, setHiddenMap, clearHidden,
     isCollapsed, setCollapsed, toggleCollapsed, clearCollapsed,
-    sortMode, setSortMode, doneLast, setDoneLast,
+    sortMode, setSortMode, doneLast, setDoneLast, btnIcons, setBtnIcons,
     resetAll,
   };
 })();
