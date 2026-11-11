@@ -27,8 +27,8 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell`, custom cursor | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, initCursor` |
 | 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit, moveHabit, folders, getFolder, addFolder, updateFolder, deleteFolder, moveFolder, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, habitCountsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
-| 4 | `src/js/prefs.js` | `Prefs` | UI-only customisation: colour/font overrides, section visibility, folder collapse + list sort (no DB) | `load, apply, get, tokenValue, COLORS, FONTS, FONT_OPTIONS, SORT_MODES, setColor, clearColors, hasCustomColors, setFont, clearFonts, hasCustomFonts, isHidden, setHidden, clearHidden, isCollapsed, setCollapsed, toggleCollapsed, clearCollapsed, sortMode, setSortMode, doneLast, setDoneLast, resetAll` |
-| 5 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, renderSettings, dayModalHtml, habitEditorHtml, folderEditorHtml, THEMES, SECTIONS` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard, themePickerHtml, sortHabits, habitRow, folderSection, sortBar`) |
+| 4 | `src/js/prefs.js` | `Prefs` | UI-only customisation: colours/fonts, **shape (radius/border/shadow)**, **saved custom themes**, element visibility, folder collapse + list sort (no DB) | `load, apply, applyChrome, get, tokenValue, COLORS, FONTS, FONT_OPTIONS, SORT_MODES, STRUCT_OPTIONS, setColor, clearColors, hasCustomColors, setFont, clearFonts, hasCustomFonts, structure, setStructure, clearStructure, hasCustomStructure, customThemes, getCustomTheme, addCustomTheme, updateCustomTheme, deleteCustomTheme, applyThemeSnapshot, isHidden, setHidden, setHiddenMap, clearHidden, isCollapsed, setCollapsed, toggleCollapsed, clearCollapsed, sortMode, setSortMode, doneLast, setDoneLast, resetAll` |
+| 5 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, renderSettings(activeTheme), dayModalHtml, habitEditorHtml, folderEditorHtml, customThemeHtml, themePickerHtml, themeGalleryHtml, THEMES, SECTIONS, LAYOUT_PRESETS` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard, sortHabits, habitRow, folderSection, sortBar, allThemes`) |
 | 6 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, setTheme, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
@@ -123,20 +123,32 @@ DECISIONS §14).
 
 ## Theming
 
-- Themes are named token sets applied via `data-theme="<id>"` on `<html>`.
-  Registry: `Render.THEMES` (`{id, name, emoji, scheme, color, colors}`) — the
-  single source of truth for the picker; the CSS sets live in `src/styles.css`.
+- **11 presets** are named token sets applied via `data-theme="<id>"` on
+  `<html>`: Zen, Midnight, Paper, Brutalist, Brutalist Dark, Graphite, Frost,
+  Gruvbox, Matcha, Synthwave, Mono. Registry: `Render.THEMES`
+  (`{id, name, emoji, scheme, color, colors}`) — the single source of truth for
+  the picker/gallery; the CSS sets live in `src/styles.css`. `colors` is
+  semantic `[bg, surface, accent, accent2]` so gallery previews are truthful.
+- **Custom themes** are UI-only snapshots (`Prefs.customThemes`): a name + base
+  preset + colour/font/structure overrides. `App.setTheme` detects a `ct_*` id,
+  applies the base `data-theme`, then `Prefs.applyThemeSnapshot()`. The active
+  id is stored in `ahabit.theme` (`App.themeId` mirrors it for highlighting);
+  selecting a non-custom preset clears colour/font/structure overrides.
 - Base `:root` = `zen`; each theme overrides only what differs. Shared
   **structural tokens** (`--radius`, `--border-w`, `--check-w`, `--pill`,
   `--shadow*`, `--glow*`, `--on-accent`, `--font`, `--font-display`,
   `--display-tracking`, `--display-transform`) let a theme change shape and
   type, not just colors. `[data-theme^="brutalist"]` holds the few non-token
   overrides (uppercase UI chrome, hard component corners).
+- **Shape** overrides (`Prefs.structure`: radius/border/shadow) are inline CSS
+  vars; an accent change **derives** `--grad`, `--grad-soft`, `--heat-1..4` and
+  `--on-accent` unless those tokens are set explicitly (DECISIONS §23).
 - Flow: `App.initTheme()` → `App.resolveTheme(saved)` (migrates old
-  `light`/`dark`) → `setTheme()` writes `data-theme`, persists `ahabit.theme`,
-  updates the `#theme-color` meta and re-renders the picker popover.
-  Selection arrives via `[data-action="set-theme"]` in the delegated click
-  handler. No external fonts (DECISIONS §7).
+  `light`/`dark`, recognises `ct_*` custom ids) → `setTheme()` writes
+  `data-theme`, applies the snapshot or clears overrides, persists
+  `ahabit.theme`, updates `#theme-color`, the topbar emoji and the picker
+  popover. Selection arrives via `[data-action="set-theme"]` in the delegated
+  click handler. No external fonts (DECISIONS §7).
 - Heatmap cells use `.h0..h4` levels. The all-habits map drives them from
   `var(--heat-*)` per theme; per-habit maps (`.hheat-card`) override h1–h4 with a
   flat ramp of the habit's own `--c` via `color-mix` (DECISIONS §19).
@@ -153,21 +165,31 @@ DECISIONS §14).
 - **Readability floor**: every theme's `--text` / `--text-2` / `--text-3` must be
   ≥ 4.5:1 against its `--card` (DECISIONS §20).
 
-## Customization (`Prefs` + Settings view)
+## Customization (`Prefs` + Customize tab)
 
 - `Prefs` is a UI-only state module (`localStorage['ahabit.prefs.v1']`): colour
-  overrides, font choices, and hidden sections. It never touches the DB.
+  overrides, font choices, shape, saved custom themes, hidden elements and list
+  state. It never touches the DB.
 - Colour overrides are written as **inline CSS custom properties on `<html>`**
   (`Prefs.apply()`), so they layer over the active theme; `--grad` /
-  `--grad-soft` / `--on-accent` are derived from the accents.
+  `--grad-soft` / `--on-accent` (and, when no heat token is set, the heatmap
+  ramp) are derived from the accents. Shape overrides (`--radius*`,
+  `--border-w`, `--shadow*`, glows) are written the same way.
 - Fonts are system stacks only (`Prefs.FONT_LIST`, 15 options; every stack ends
   in a **generic family** so it resolves on any OS; display-only faces are hidden
-  from the body picker). Choosing a theme preset clears
-  colour/font overrides (`App.setTheme` when persisting).
-- `Render.SECTIONS` is the registry of hideable sections; each render function
-  guards with `Prefs.isHidden(id)`. The Settings view is `#view-settings`
-  (opened from the ⋯ menu, route `App.tab === 'settings'`), driven by delegated
-  `set-color`, `set-font`, `toggle-section` events and reset actions.
+  from the body picker). Choosing a preset theme clears colour/font/shape
+  overrides; choosing a custom theme overwrites them with its snapshot
+  (`App.setTheme` when persisting).
+- **Element-level visibility:** `Render.SECTIONS` (~28 entries) is the registry;
+  each render function guards with `Prefs.isHidden(id)`, and static chrome
+  (brand, theme button) is toggled via `body` classes in `Prefs.applyChrome()`.
+  `Render.LAYOUT_PRESETS` drives **Minimal / Balanced / Everything**
+  (`Prefs.setHiddenMap`).
+- The Customize surface is a first-class top nav tab (`#view-settings`, route
+  `App.tab === 'settings'`; the ⋯ menu jumps to it), driven by delegated
+  `set-theme` / `set-color` / `set-font` / `set-structure` / `toggle-section` /
+  `layout-preset` events and reset actions. It leads with a live theme gallery
+  (`Render.themeGalleryHtml`) plus save/rename/delete for custom themes.
 - New themes still must meet the §20 contrast floor; user overrides may
   deliberately exceed/ignore it.
 

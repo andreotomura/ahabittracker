@@ -34,7 +34,7 @@ colors, fonts, per-tab layout). What's next: headless e2e tests and reminders.
 | Tests | `npm test` → `scripts/smoke.js` (Node DOM-stub smoke tests) |
 | Storage | `localStorage["ahabit.db.v1"]` — one versioned JSON document |
 | Output | `dist/index.html` (single file, git-ignored) · `dist/pwa/` (installable) |
-| Themes | `zen` · `midnight` · `paper` · `brutalist` · `brutalist-dark` — registry `Render.THEMES`, tokens in `styles.css` |
+| Themes | 11 presets (`zen` · `midnight` · `paper` · `brutalist` · `brutalist-dark` · `graphite` · `frost` · `gruvbox` · `matcha` · `synthwave` · `mono`) + saved custom themes — registry `Render.THEMES`, tokens in `styles.css` |
 | Commit style | Conventional prefixes: `feat:` `fix:` `docs:` `chore:` `refactor:` `test:` |
 
 **Commands to remember:** `npm run dev` · `npm run build` · `npm run build:pwa` ·
@@ -49,7 +49,7 @@ colors, fonts, per-tab layout). What's next: headless e2e tests and reminders.
 | `src/js/utils.js` | Pure helpers: dates (`YYYY-MM-DD` keys), uid, escaping, month matrix |
 | `src/js/ui.js` | DOM helpers (`q/qa/el`), toasts, modal system, confirm/choice dialogs |
 | `src/js/store.js` | Data layer: folders + habits + completions, streaks, weekly progress, import/export |
-| `src/js/prefs.js` | UI-only prefs: color/font overrides, per-section visibility, folder collapse + list sort (`ahabit.prefs.v1`) |
+| `src/js/prefs.js` | UI-only prefs: colours/fonts/shape, custom themes, element visibility, folder collapse + list sort (`ahabit.prefs.v1`) |
 | `src/js/render.js` | Pure view layer — state → HTML strings/nodes, no mutation |
 | `src/js/app.js` | Controller: tabs, theme, menu, import flow, delegated click + note-input handlers |
 | `build.js` | Zero-dep build tool: `dev [dir]` server / `build` (single file) / `pwa` (installable dir) |
@@ -121,11 +121,13 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 
 ## Current state
 
-**Working (v0.12):** Today check-ins w/ streaks + weekly goals + inline notes +
+**Working (v0.13):** Today check-ins w/ streaks + weekly goals + inline notes +
 count steppers + dismissible first-run welcome card · **habit folders** (flat
 single-membership groups on Today + Habits, collapse/expand, per-folder
 progress, sort modes manual/name/streak/health/newest, ↑/↓ manual reorder) ·
-calendar w/ backfill
+**theme studio** (11 presets, saved custom themes, shape controls, accent-derived
+heatmap, element-level show/hide with Minimal/Balanced/Everything; Customize is
+a top tab) · calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
 streaks, 7-day rate, global + per-habit heatmaps, momentum trend, per-habit
 health scores, weekday rhythm, time-of-day histogram, insights — all inline
@@ -146,7 +148,7 @@ loader · single-file **and** installable PWA builds · dev server · smoke test
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps · v0.10.1 readability · v0.11 customization · v0.12 habit folders — all shipped ✅.
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps · v0.10.1 readability · v0.11 customization · v0.12 habit folders · v0.13 theme studio — all shipped ✅.
 2. Headless-browser e2e tests (would also verify SW install + theme/cursor rendering).
 3. Gentle reminders (while the app is open). The feature backlog is otherwise clear.
 
@@ -168,7 +170,9 @@ folder delete ungroups, never deletes (DECISIONS §22).
   (DECISIONS §20). No external fonts (DECISIONS §7).
 - **UI preferences** (theme, welcome, `Prefs`) live in their own localStorage
   keys — never in `ahabit.db.v1` (DECISIONS §14, §21). Add new hideable sections
-  to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`.
+  to `Render.SECTIONS` and guard with `Prefs.isHidden(id)`; add new presets as a
+  `styles.css` token set + a `Render.THEMES` entry (semantic `colors`
+  `[bg, surface, accent, accent2]`, text ≥ 4.5:1 on `--card`).
 - Run `npm test` before finishing; `npm run build` when HTML/CSS/JS output
   changes. Update `docs/CONTEXT.md` if behavior or commands change.
 - UX tone: fast, friendly, beautiful — emoji are fine, no clutter.
@@ -178,6 +182,7 @@ folder delete ungroups, never deletes (DECISIONS §22).
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-11-11 | Theme studio — presets, custom themes, element toggles (v0.13) | `docs/sessions/2026-11-11-theme-studio.md` |
 | 2026-11-11 | Habit folders — grouping, collapse, sort (v0.12) | `docs/sessions/2026-11-11-habit-folders.md` |
 | 2026-09-16 | More cross-platform font options (v0.11.1) | `docs/sessions/2026-09-16-font-options.md` |
 | 2026-09-16 | Customization tool — colors, fonts, layout (v0.11) | `docs/sessions/2026-09-16-customization.md` |

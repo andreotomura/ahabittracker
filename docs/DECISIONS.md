@@ -508,3 +508,45 @@ personal display choices stay local. Manual reorder uses ↑/↓ buttons —
 touch-friendly, dependency-free, and no drag-and-drop to maintain.
 
 ---
+## 23. Themes: more presets, saved custom themes, shape controls + element-level visibility
+
+**Date:** 2026-11-11 · **Status:** accepted
+
+**Context:** The five presets felt samey (both darks were purple-ish), customisation
+was colour/font only, and show/hide was card-level. Requested: more themes, a
+theme configuration surface, and finer-grained element toggles.
+
+**Decision:**
+- **11 presets.** Added `graphite` (neutral dark), `frost` (cool light),
+  `gruvbox` (warm retro dark), `matcha` (botanical light), `synthwave` (neon
+  dark), `mono` (high-contrast grayscale) alongside the original five. Each is a
+  token set in `styles.css` + an entry in `Render.THEMES`; all new text tokens
+  meet the §20 **≥ 4.5:1** floor. `THEMES[].colors` is now semantic
+  `[bg, surface, accent, accent2]` (was ad-hoc swatches) so the gallery previews
+  are truthful.
+- **Custom themes are UI-only snapshots** (`Prefs.customThemes`,
+  `localStorage['ahabit.prefs.v1']`) — never in the exported DB (cf. §14/§21). A
+  snapshot stores `{id: ct_*, name, base preset, colors, fonts, structure}`.
+  Selecting one applies it over its base theme; the active id lives in
+  `ahabit.theme`. Rename/delete are supported; **theme JSON import/export is
+  deferred**.
+- **Shape controls** (`Prefs.structure`): corner radius, border width and shadow
+  style (theme / hard / none), written as inline CSS custom properties on
+  `<html>` so they layer over the active theme. Customising the accent
+  **auto-derives `--grad`, `--grad-soft`, `--heat-1..4` and `--on-accent`**
+  unless the user set those tokens explicitly.
+- **Element-level visibility:** `Render.SECTIONS` grew from 13 card-level
+  entries to ~28 element-level ones (streaks, notes, steppers, folder grouping,
+  sparklines, rings, heatmap legend, brand, theme button, FAB…). Static chrome
+  is toggled via `body` classes in `Prefs.applyChrome()`. `Render.LAYOUT_PRESETS`
+  adds **Minimal / Balanced / Everything** quick presets. Still UI-only.
+- **Surface:** `Customize` is now a first-class top nav tab next to Habits (the
+  ⋯ menu still jumps to it), with a live theme **gallery**, shape controls,
+  colours, fonts, and layout toggles.
+
+**Consequences:** A lot more range without a single dependency; presets stay
+accessible and user snapshots stay portable only if exported manually (deferred).
+User overrides may deliberately exceed the §20 contrast floor (their call), but
+every built-in preset passes it.
+
+---

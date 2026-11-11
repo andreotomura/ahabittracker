@@ -35,6 +35,7 @@ database fully owned by the user as JSON.
 | Readability + cursor consistency (v0.10.1) | ✅ | Text tokens ≥ 4.5:1; themed dot on every element (DECISIONS §20) |
 | **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides (15 font stacks) + per-tab section visibility (DECISIONS §21) |
 | **Habit folders (v0.12)** | ✅ | Flat single-membership groups on Today + Habits; collapse/expand, per-folder progress, sort modes (manual/name/streak/health/newest) (DECISIONS §22) |
+| **Theme studio + element toggles (v0.13)** | ✅ | 11 presets, saved custom themes, shape controls, accent-derived heatmap, element-level show/hide + Minimal/Balanced/Everything; Customize is a tab (DECISIONS §23) |
 | In-app reminders (Notification API) | 💡 | While the tab is open |
 | Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 
@@ -223,6 +224,22 @@ dependency, still one self-contained HTML file.
    sanitisation, and folder-aware Today/Habits rendering.
 8. **Version** — bumped to 0.12.0.
 
+## Shipped milestone: Theme studio + element toggles (v0.13)
+
+1. **Six new presets** — Graphite, Frost, Gruvbox, Matcha, Synthwave, Mono
+   (11 total); all new text tokens pass the ≥4.5:1 floor (DECISIONS §23).
+2. **Custom theme gallery** — live previews for every preset; save the current
+   look as a named theme (`ct_*`), rename, delete; UI-only snapshots.
+3. **Shape controls** — corner radius, border width, shadow style, written as
+   inline CSS vars; accent changes auto-derive gradient + heatmap ramp.
+4. **Element-level show/hide** — ~28 toggles across Today/Calendar/Stats/
+   Habits/Global, with **Minimal / Balanced / Everything** presets; static
+   chrome toggled via body classes.
+5. **Customize tab** — first-class nav tab next to Habits (⋯ menu jumps there).
+6. **Tests** — preset presence + CSS token sets, gallery/picker with custom
+   themes, structure vars, snapshot round-trip, element hiding, presets, chrome.
+7. **Version** — bumped to 0.13.0.
+
 ## Open questions
 
 - ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
@@ -237,6 +254,8 @@ dependency, still one self-contained HTML file.
 
 - 💡 **Folder filtering** (folder chips, search, hide-done) — deliberately
   deferred in v0.12; not needed at ≤10 habits (DECISIONS §22).
+- 💡 **Theme JSON export/import** — custom themes are currently local-only
+  (DECISIONS §23).
 - *(Nothing else queued — see “Next up” in `docs/CONTEXT.md` and the status
   table for what's planned.)*
 

@@ -83,10 +83,13 @@ worker caches the app shell, so it keeps working with no connection.
   time-of-day histogram, insights, plus a global **and per-habit** GitHub-style
   heatmap (per-habit maps use the habit's own colour)
 - ✨ **Habits** — emoji, color, weekly goal (× / week), allowed weekdays, archive
-- 🎨 **Themes** — Zen, Midnight, Paper, Brutalist, and Brutalist Dark
-  (switch from the palette button in the topbar)
-- 🎛️ **Customize** — a settings view to override colors and fonts and to show
-  or hide sections on each tab (⋯ → Customize…)
+- 🎨 **Themes** — 11 presets: Zen, Midnight, Paper, Brutalist, Brutalist Dark,
+  Graphite, Frost, Gruvbox, Matcha, Synthwave, and Mono (palette button in the
+  topbar, or the gallery in the Customize tab)
+- 🎛️ **Customize** — a dedicated tab to **build and save your own themes**
+  (colors, fonts, corner radius, borders, shadows), and to **show or hide
+  individual elements** per tab — no code, with Minimal / Balanced / Everything
+  presets
 - 💾 **Backup** — export / import your whole database as one `.json`
   (replace or merge on import)
 - 📱 **Installable PWA** — offline-capable hosted build (`npm run build:pwa`)
@@ -174,10 +177,11 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 ## Roadmap
 
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
-polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
-including new-brutalist) · time-of-day analytics · custom cursor · per-habit
-heatmaps · customization tool (colors, fonts, layout) · habit folders (groups,
-collapse/expand, sorting).
+polish (onboarding, empty states, motion) · PWA packaging · theming ·
+time-of-day analytics · custom cursor · per-habit heatmaps · customization tool
+(colors, fonts, layout) · habit folders (groups, collapse/expand, sorting) ·
+theme studio (11 presets, saved custom themes, shape controls, element-level
+show/hide).
 
 Next up:
 
