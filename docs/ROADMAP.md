@@ -34,6 +34,7 @@ database fully owned by the user as JSON.
 | **Per-habit heatmaps (v0.10)** | ✅ | GitHub-style map per habit, flat habit-colour ramp (DECISIONS §19) |
 | Readability + cursor consistency (v0.10.1) | ✅ | Text tokens ≥ 4.5:1; themed dot on every element (DECISIONS §20) |
 | **Customization tool (v0.11)** | ✅ | Settings view: colour/font overrides (15 font stacks) + per-tab section visibility (DECISIONS §21) |
+| **Habit folders (v0.12)** | ✅ | Flat single-membership groups on Today + Habits; collapse/expand, per-folder progress, sort modes (manual/name/streak/health/newest) (DECISIONS §22) |
 | In-app reminders (Notification API) | 💡 | While the tab is open |
 | Headless-browser e2e tests | 💡 | Would need a dev-only dep (Playwright/Puppeteer) — ask first |
 
@@ -203,6 +204,25 @@ dependency, still one self-contained HTML file.
 6. **Tests** — prefs round-trip, validation, section gating, settings render.
 7. **Version** — bumped to 0.11.0.
 
+## Shipped milestone: Habit folders (v0.12)
+
+1. **Schema** — additive `folders: [{id, name, emoji, sort}]` + `folderId` on
+   each habit (`null` = ungrouped); one level, one folder per habit (DECISIONS §22).
+2. **Store** — `folders/addFolder/updateFolder/deleteFolder/moveFolder` and
+   `moveHabit`; delete-folder ungroups (never deletes), unknown `folderId`
+   rejected, import/merge sanitise + union folders.
+3. **Today** — collapsible folder sections with `done/total` + mini progress
+   bar, ungrouped last, plus a sort bar (sort mode + “Done last”); flat list
+   preserved when no folders exist.
+4. **Habits** — folder management block (new/rename/re-icon/delete/reorder) and
+   habits grouped under folder sub-headers with ↑/↓ manual reorder.
+5. **Editor** — a “Folder” select in the habit editor; emoji + name folder modal.
+6. **Prefs** — collapse state, sort mode and done-last live in `ahabit.prefs.v1`
+   (UI-only, never exported).
+7. **Tests** — folder CRUD/ordering/ungroup, prefs round-trip, import/merge
+   sanitisation, and folder-aware Today/Habits rendering.
+8. **Version** — bumped to 0.12.0.
+
 ## Open questions
 
 - ~~Should analytics cover archived habits?~~ **Decided** (DECISIONS §11):
@@ -215,7 +235,9 @@ dependency, still one self-contained HTML file.
 
 ## Backlog / ideas
 
-- *(Nothing queued right now — see “Next up” in `docs/CONTEXT.md` and the status
+- 💡 **Folder filtering** (folder chips, search, hide-done) — deliberately
+  deferred in v0.12; not needed at ≤10 habits (DECISIONS §22).
+- *(Nothing else queued — see “Next up” in `docs/CONTEXT.md` and the status
   table for what's planned.)*
 
 ## Non-goals (for now)

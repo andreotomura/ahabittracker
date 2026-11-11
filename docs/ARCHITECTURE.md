@@ -26,9 +26,9 @@ Render.*          (pure: state → HTML)  → innerHTML of the active #view-…
 | --- | --- | --- | --- | --- |
 | 1 | `src/js/utils.js` | `Utils` | dates (`keyOf/parseKey/addDays`), `YYYY-MM-DD` key convention, Monday-start week, month matrix, `uid`, `esc` | `todayKey, monthMatrix, weekEnding, fmtDayTitle, esc` |
 | 2 | `src/js/ui.js` | `UI` | DOM helpers, toast, modal (open/update/close), confirm/choice dialogs, `modalShell`, custom cursor | `q, qa, el, toast, openModal, updateModal, closeModal, confirmDialog, choiceDialog, initCursor` |
-| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, addHabit, updateHabit, deleteHabit, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, habitCountsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
-| 4 | `src/js/prefs.js` | `Prefs` | UI-only customisation: colour/font token overrides + per-section visibility | `load, apply, get, tokenValue, COLORS, FONTS, FONT_OPTIONS, setColor, clearColors, hasCustomColors, setFont, clearFonts, hasCustomFonts, isHidden, setHidden, clearHidden, resetAll` |
-| 5 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, renderSettings, dayModalHtml, habitEditorHtml, THEMES, SECTIONS` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard, themePickerHtml`) |
+| 3 | `src/js/store.js` | `Store` | the whole data layer | `load, save, activeHabits, allHabits, getHabit, addHabit, updateHabit, deleteHabit, moveHabit, folders, getFolder, addFolder, updateFolder, deleteFolder, moveFolder, toggle, setCount, inc, dec, countFor, isDone, getNote, setNote, timesFor, timesOn, dailySummary, countsByDay, habitCountsByDay, streakFor, weekProgress, statsOverview, habitTrend, healthScore, weekdayRates, overallTrend, insights, hourHistogram, timeOfDay, habitPeakPeriod, exportJSON, importJSON, replaceWith, mergeWith, loadSample` |
+| 4 | `src/js/prefs.js` | `Prefs` | UI-only customisation: colour/font overrides, section visibility, folder collapse + list sort (no DB) | `load, apply, get, tokenValue, COLORS, FONTS, FONT_OPTIONS, SORT_MODES, setColor, clearColors, hasCustomColors, setFont, clearFonts, hasCustomFonts, isHidden, setHidden, clearHidden, isCollapsed, setCollapsed, toggleCollapsed, clearCollapsed, sortMode, setSortMode, doneLast, setDoneLast, resetAll` |
+| 5 | `src/js/render.js` | `Render` | pure view builders | `renderToday(showWelcome), renderCalendar, renderStats, renderHabits, renderSettings, dayModalHtml, habitEditorHtml, folderEditorHtml, THEMES, SECTIONS` (internal: `sparkline, scoreRing, healthCard, weekdayBars, timeOfDayCard, stepper, heatmapGrid, heatmapCard, habitHeatmapCard, welcomeCard, themePickerHtml, sortHabits, habitRow, folderSection, sortBar`) |
 | 6 | `src/js/app.js` | `App` | controller + boot | `init, switchTab, openEditor, saveEditor, openDay, importFlow, showWelcome, dismissWelcome, setTheme, bindEvents` |
 
 `build.js` `JS_ORDER` must stay in sync with the list above.
@@ -60,6 +60,17 @@ call `App.refreshEditor()` → `UI.updateModal(Render.habitEditorHtml(draft))`.
 `save-habit` reads `#h-name` / `#h-arch` from the DOM, calls
 `Store.addHabit|updateHabit`, closes, re-renders.
 
+### Folders (Today + Habits)
+Folder data lives in the DB (`folders[]` + `habit.folderId`); collapse/sort
+choices live in `Prefs` (UI-only). Today's `renderToday` groups `activeHabits`
+by folder when any exist (flat list otherwise) and calls `habitRow` per habit
+inside a `folderSection` (collapsible header + mini progress). The sort bar
+posts `set-sort` / `toggle-done-last`; `toggle-fold` flips
+`Prefs.toggleCollapsed(id)` and re-renders. The Habits view adds folder CRUD
+(`new-folder` / `edit-folder` / `del-folder`) and `move-habit` / `move-folder`
+(↑/↓ swaps `sort` with the adjacent sibling). The habit editor gained an
+`#h-folder` select (DECISIONS §22).
+
 ### Import
 Menu → `#import-file` input → `FileReader` → `App.importFlow(text)` →
 `Store.importJSON(text)` (parse + sanitize) → `UI.choiceDialog` (Replace /
@@ -89,6 +100,10 @@ DECISIONS §14).
   mark-done logic everywhere tests `count ≥ 1` (truthiness), so multi counts
   don't change streaks/analytics (DECISIONS §13).
 - Streaks/heatmap are computed on the fly (fast enough up to years of data).
+- **Folders** are a top-level `folders[]` (id/name/emoji/sort); a habit points
+  at one via `folderId` (or `null`). One level, single membership. Deleting a
+  folder ungroups its habits; import drops duplicate/invalid folders and any
+  `folderId` that doesn't resolve (DECISIONS §22).
 - `countsByDay(startKey, endKey)` string-compares keys — safe because
   `YYYY-MM-DD` sorts lexicographically.
 - localStorage holds the whole DB as one JSON string; export/import is just a

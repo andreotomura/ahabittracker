@@ -48,8 +48,8 @@ colors, fonts, per-tab layout). What's next: headless e2e tests and reminders.
 | `src/styles.css` | All styling; light/dark themes via `[data-theme]` CSS variables |
 | `src/js/utils.js` | Pure helpers: dates (`YYYY-MM-DD` keys), uid, escaping, month matrix |
 | `src/js/ui.js` | DOM helpers (`q/qa/el`), toasts, modal system, confirm/choice dialogs |
-| `src/js/store.js` | Data layer: habits + completions, streaks, weekly progress, import/export |
-| `src/js/prefs.js` | UI-only prefs: color/font overrides + per-section visibility (`ahabit.prefs.v1`) |
+| `src/js/store.js` | Data layer: folders + habits + completions, streaks, weekly progress, import/export |
+| `src/js/prefs.js` | UI-only prefs: color/font overrides, per-section visibility, folder collapse + list sort (`ahabit.prefs.v1`) |
 | `src/js/render.js` | Pure view layer — state → HTML strings/nodes, no mutation |
 | `src/js/app.js` | Controller: tabs, theme, menu, import flow, delegated click + note-input handlers |
 | `build.js` | Zero-dep build tool: `dev [dir]` server / `build` (single file) / `pwa` (installable dir) |
@@ -69,10 +69,14 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 ```jsonc
 {
   "version": 1,
+  "folders": [
+    // id: uid string ("f…") · name: string (≤32) · emoji · sort: number
+  ],
   "habits": [
     // id: uid string · name · emoji · color: #hex · archived: bool · sort: number
     // target: weekly goal 0–7 (0 = any day / no goal)
     // days: allowed weekdays [1..7], Mon=1; [] = any day
+    // folderId: folder id, or null = ungrouped
     // createdAt: epoch ms
   ],
   "completions": {
@@ -117,8 +121,11 @@ attaches to a global: `Utils`, `UI`, `Store`, `Prefs`, `Render`, `App`. No bundl
 
 ## Current state
 
-**Working (v0.11):** Today check-ins w/ streaks + weekly goals + inline notes +
-count steppers + dismissible first-run welcome card · calendar w/ backfill
+**Working (v0.12):** Today check-ins w/ streaks + weekly goals + inline notes +
+count steppers + dismissible first-run welcome card · **habit folders** (flat
+single-membership groups on Today + Habits, collapse/expand, per-folder
+progress, sort modes manual/name/streak/health/newest, ↑/↓ manual reorder) ·
+calendar w/ backfill
 via day modal (notes + steppers + empty states) · stats & analytics (totals,
 streaks, 7-day rate, global + per-habit heatmaps, momentum trend, per-habit
 health scores, weekday rhythm, time-of-day histogram, insights — all inline
@@ -139,7 +146,7 @@ loader · single-file **and** installable PWA builds · dev server · smoke test
 
 ## Next up (details in `docs/ROADMAP.md`)
 
-1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps · v0.10.1 readability · v0.11 customization — all shipped ✅.
+1. v0.2 analytics · v0.3 notes · v0.4 multi check-ins · v0.5 polish · v0.6 PWA · v0.7 themes · v0.8 time-of-day · v0.9 cursor · v0.10 per-habit heatmaps · v0.10.1 readability · v0.11 customization · v0.12 habit folders — all shipped ✅.
 2. Headless-browser e2e tests (would also verify SW install + theme/cursor rendering).
 3. Gentle reminders (while the app is open). The feature backlog is otherwise clear.
 
@@ -151,6 +158,9 @@ loader · single-file **and** installable PWA builds · dev server · smoke test
 - Escape ALL user content with `Utils.esc()` in HTML strings.
 - New UI controls: use `data-action` delegation, not scattered listeners.
 - `Render.*` = pure; keep it that way (App wires events, Store mutates).
+- **Folders** live in the DB (`folders[]` + `habit.folderId`, one level,
+single membership); collapse state and list sort live in `Prefs` (UI-only). A
+folder delete ungroups, never deletes (DECISIONS §22).
 - **Theming**: define a theme as a token set in `src/styles.css`
   (`[data-theme="<id>"]`) and register it in `Render.THEMES`; prefer the shared
   structural tokens over hardcoded px so a theme can change shape/type, not just
@@ -168,6 +178,7 @@ loader · single-file **and** installable PWA builds · dev server · smoke test
 
 | Date | Topic | File |
 | --- | --- | --- |
+| 2026-11-11 | Habit folders — grouping, collapse, sort (v0.12) | `docs/sessions/2026-11-11-habit-folders.md` |
 | 2026-09-16 | More cross-platform font options (v0.11.1) | `docs/sessions/2026-09-16-font-options.md` |
 | 2026-09-16 | Customization tool — colors, fonts, layout (v0.11) | `docs/sessions/2026-09-16-customization.md` |
 | 2026-09-16 | Readability + cursor consistency (v0.10.1) | `docs/sessions/2026-09-16-readability-cursor.md` |

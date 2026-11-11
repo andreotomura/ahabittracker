@@ -73,6 +73,9 @@ worker caches the app shell, so it keeps working with no connection.
 
 ## Features
 
+- 🗂️ **Folders** — group related habits (e.g. Studies → Japanese, Programming)
+  into collapsible sections with per-folder progress; sort by manual order,
+  name, streak, health, or newest
 - ☀️ **Today** — one-tap check-ins, per-day notes, multi-check-in steppers,
   streaks, weekly targets
 - 📅 **Calendar** — monthly overview with per-day dots; click any day to backfill
@@ -98,6 +101,9 @@ Everything is stored in `localStorage` under one versioned key (`ahabit.db.v1`):
 ```json
 {
   "version": 1,
+  "folders": [
+    { "id": "f9x8y7z6", "name": "Studies", "emoji": "📚", "sort": 0 }
+  ],
   "habits": [
     {
       "id": "a1b2c3d4",
@@ -106,6 +112,7 @@ Everything is stored in `localStorage` under one versioned key (`ahabit.db.v1`):
       "color": "#3b82f6",
       "target": 7,            // weekly goal; 0 = any day
       "days": [],             // allowed weekdays (1=Mon…7=Sun); empty = any day
+      "folderId": "f9x8y7z6", // folder id, or null = ungrouped
       "createdAt": 1726000000000,
       "archived": false,
       "sort": 0
@@ -169,7 +176,8 @@ Deep dives when needed: `docs/ARCHITECTURE.md` (modules, data flows, build),
 **Shipped:** analytics & graphs · per-check-in notes · multiple check-ins/day ·
 polish (onboarding, empty states, motion) · PWA packaging · theming (5 themes,
 including new-brutalist) · time-of-day analytics · custom cursor · per-habit
-heatmaps · customization tool (colors, fonts, layout).
+heatmaps · customization tool (colors, fonts, layout) · habit folders (groups,
+collapse/expand, sorting).
 
 Next up:
 

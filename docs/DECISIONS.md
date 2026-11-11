@@ -473,3 +473,38 @@ most common self-inflicted contrast bug.
 ---
 
 *(New entries go below.)*
+
+---
+
+## 22. Habit folders are a flat, single-membership grouping (DB) + UI-only list state
+
+**Date:** 2026-11-11 · **Status:** accepted
+
+**Context:** Requested grouping habits into folders (e.g. studies → japanese,
+programming) with expand/collapse plus sorting.
+
+**Decision:**
+- **Schema (additive, `version: 1`):** a top-level `folders: [{ id, name,
+  emoji, sort }]` array; each habit gains `folderId` (string, or `null` =
+  ungrouped). One folder per habit, **one level only** — no nesting, no tags.
+  Old backups import unchanged (`folders` defaults to `[]`, a dangling
+  `folderId` becomes ungrouped). Same additive pattern as notes (§12) and
+  times (§17) — no version bump.
+- **Deleting a folder never deletes habits** — they become ungrouped.
+- **Ordering** reuses each entity's existing `sort` field. `moveFolder` /
+  `moveHabit` swap `sort` with the adjacent sibling **within the same folder +
+  archived state**; cross-folder ties are harmless because rendering groups by
+  folder first.
+- **Collapse, sort mode and “done last” are UI-only** (`Prefs`,
+  `localStorage['ahabit.prefs.v1']`, cf. §14/§21) — never exported.
+- **Sort modes** (`manual` · `name` · `streak` · `health` · `newest`) apply
+  *within* each folder. “Done last” is a stable secondary sort (default **on**,
+  preserving pre-folders Today behaviour). **No filtering** for now.
+- **Scope:** folders affect the **Today** and **Habits** views only; Calendar
+  and Stats keep operating on all habits.
+
+**Consequences:** Grouping is portable (it lives in the JSON backup) while
+personal display choices stay local. Manual reorder uses ↑/↓ buttons —
+touch-friendly, dependency-free, and no drag-and-drop to maintain.
+
+---
